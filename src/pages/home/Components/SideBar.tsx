@@ -1,5 +1,4 @@
 import "../styles/sidebar.css";
-import logo from "../img/prime-logo.png";
 import { FaCog, FaUser, FaSignOutAlt, } from "react-icons/fa";
 import { IoChatbubbleEllipsesSharp, IoRestaurant } from "react-icons/io5";
 import { IoIosHelpCircle, IoMdInformationCircle } from "react-icons/io";
@@ -16,8 +15,6 @@ const Icon = ({ icon }: { icon: JSX.Element }) => (
 function SideBar() {
   return (
     <header>
-      <img src={logo} alt="logo" />
-
       <div className="top-menu">
         <div className="side-icon"><Link to="/"><MdDashboard title="Order" /></Link></div>
         <div className="side-icon"><Link to="/chat"><IoChatbubbleEllipsesSharp title="Chat with sales rep"/></Link></div>
