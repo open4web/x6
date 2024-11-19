@@ -1,4 +1,5 @@
-# X6 Merchant Service Order System
+# X6
+>Merchant Service Order System
 
 A simple and efficient order management system designed for merchants to manage customer orders seamlessly. The application provides an intuitive interface for creating, editing, and tracking orders while offering features like:
 
