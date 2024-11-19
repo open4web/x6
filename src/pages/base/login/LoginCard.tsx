@@ -19,7 +19,7 @@ const LoginCard: React.FC<LoginCardProps> = ({ loading, color }) => {
     const translate = useTranslate();
 
     return (
-        <Card sx={{minWidth: 300, borderRadius: 3}}>
+        <Card sx={{minWidth: 300, borderRadius: 2}}>
             <Box
                 sx={{
                     display: "flex",
@@ -29,16 +29,6 @@ const LoginCard: React.FC<LoginCardProps> = ({ loading, color }) => {
                 <Avatar sx={{bgcolor: color}}>
                     <LockIcon/>
                 </Avatar>
-            </Box>
-            <Box
-                sx={{
-                    marginTop: "1em",
-                    display: "flex",
-                    justifyContent: "center",
-                    color: (theme) => theme.palette.grey[500],
-                }}
-            >
-                {"CHANGE ME: put your title here"}
             </Box>
             <Box sx={{padding: "0 1em 1em 1em"}}>
                 <Box sx={{marginTop: "1em"}}>

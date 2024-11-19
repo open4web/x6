@@ -1,23 +1,20 @@
 import * as React from 'react';
 import { Grid } from '@mui/material';
-import MyShop from "../home/Components/Shop";
 import Details from "../home/Components/Details";
-import {useState} from "react";
 import {toast} from "react-toastify";
-import TopSect from "../home/Components/TopSect";
-import Cart from "../home/Components/Cart";
-import MenuProps from "../home/Components/Props";
+import MyCartDrawer from "../home/Components/MyCartDrawer";
+import {CartItem} from "../home/Components/MyCart";
 
 export const Dashboard = () => {
-    const [show, setShow] = useState(true);
-    const [cart, setCart] = useState<any[]>([]);
     const [open, setOpen] = React.useState(false);
+    // 指定 cartItems 的类型为 CartItem[]
+    const [cartItems, setCartItems] = React.useState<CartItem[]>([]);
 
-    const handleClick = (item: any) => {
-        setOpen(true)
+    const handleClick = (item: CartItem) => {
+        setOpen(true);
         // 如果已经存在购物车，则直接加数字
-        if (cart.some((cartItem) => cartItem.id === item.id)) {
-            toast.success(item.title + ' +1', {
+        if (cartItems.some((cartItem: CartItem) => cartItem.id === item.id)) {
+            toast.success(item.name + ' +1', {
                 position: "top-center",
                 autoClose: 2000,
                 hideProgressBar: false,
@@ -28,10 +25,10 @@ export const Dashboard = () => {
                 theme: "light",
             });
             // 直接增加amount
-            setCart((prevCart) =>
-                prevCart.map((cartItem) => {
+            setCartItems((prevCart) =>
+                prevCart.map((cartItem: CartItem) => {
                     if (cartItem.id === item.id) {
-                        const updatedAmount = cartItem.amount + 1;
+                        const updatedAmount = cartItem.quantity + 1;
                         return { ...cartItem, amount: updatedAmount > 0 ? updatedAmount : 1 };
                     }
                     return cartItem;
@@ -39,7 +36,7 @@ export const Dashboard = () => {
             );
         } else {
             // append new item into cart
-            setCart([...cart, item]);
+            setCartItems([...cartItems, item]);
             toast.success('商品已加入购物车', {
                 position: "top-center",
                 autoClose: 2000,
@@ -55,11 +52,11 @@ export const Dashboard = () => {
 
     const handleChange = (item: any, d: number) => {
 
-        console.log("cartItem.amount -->", cart)
-        setCart((prevCart) =>
+        console.log("cartItem.amount -->", cartItems)
+        setCartItems((prevCart) =>
             prevCart.map((cartItem) => {
                 if (cartItem.id === item.id) {
-                    const updatedAmount = cartItem.amount + d;
+                    const updatedAmount = cartItem.quantity + d;
                     return { ...cartItem, amount: updatedAmount > 0 ? updatedAmount : 1 };
                 }
                 return cartItem;
@@ -91,10 +88,15 @@ export const Dashboard = () => {
         };
     }
 
+    const myCartProps = {
+        cartItems,
+        setCartItems,
+    };
+
     return (<Grid container spacing={2} mt={1}>
         <Grid item xs={12} md={9}>
             <React.Fragment>
-                <MenuProps setOpen={setOpen} open={open}/>
+                <MyCartDrawer setOpen={setOpen} open={open} x={myCartProps}/>
                 <Details handleClick={handleClick} />
             </React.Fragment>
         </Grid>

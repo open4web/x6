@@ -60,8 +60,8 @@ const MyCard = (props: Props) => {
                         X
                     </Avatar>
                 }
-                title={item?.title}
-                subheader="September 14, 2016"
+                title={item?.name}
+                subheader={item?.price}
             />
             <CardMedia
                 component="img"
@@ -73,7 +73,7 @@ const MyCard = (props: Props) => {
             {!expanded && (
                 <CardContent>
                     <Typography variant="body2" color="text.secondary">
-                        This impressive paella is a perfect party dish
+                        {item?.desc}
                     </Typography>
                 </CardContent>
             )}

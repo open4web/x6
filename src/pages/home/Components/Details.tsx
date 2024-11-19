@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Cards from './Cards';
 import axios from 'axios';
 import { Grid } from '@mui/material';
 import MyCard from "../MyCard";
@@ -19,10 +18,11 @@ interface Resp {
 export interface ProductItem {
   id: string;
   img: string;
-  title: string;
-  amount: number;
+  name: string;
+  quantity: number;
   price: number;
   kind: string;
+  desc: string;
   // Add more properties as needed
 }
 
@@ -58,7 +58,6 @@ function Details({ handleClick }: DetailsProps) {
       const cm = response?.data?.categories
       const pd = response?.data?.products
 
-      console.log("logs-->", cm)
       setCategories(cm)
       setData(pd);
     } catch (error) {
@@ -75,48 +74,20 @@ function Details({ handleClick }: DetailsProps) {
   };
 
   // @ts-ignore
-  // @ts-ignore
   return (
-    // <>
-    //   <section className="container pt-4 mx-auto w-full bg-bgColor">
-    //     <section className="px-6 flex flex-row justify-between">
-    //       <div className="relative w-80 h-11 mt-4">
-    //       </div>
-    //       <div className="flex flex-wrap mt-4 lg:mb-4 mb-8">
-    //         { // @ts-ignore
-    //           categories?.map((i) => (
-    //             <button
-    //                 key={i.id}
-    //                 value={i.id}
-    //                 onClick={() => handleBtns(i.id)}
-    //                 className={
-    //               `mr-2 text-brandColor border-brandColor border-2 py-1 md:w-24 h-10 rounded-lg text-lg ${
-    //                   // @ts-ignore
-    //                     activeTab === i.id ? 'bg-brandColor outline-none text-white' : ''
-    //                 }`}
-    //             >
-    //               {i.name}
-    //             </button>
-    //         ))}
-    //       </div>
-    //
-    //     </section>
           <Grid container spacing={2}>
             {data?.filter(title => {
               if (query === '') {
                 return title;
-              } else if (title.title.toLowerCase().includes(query.toLowerCase())) {
+              } else if (title.name.toLowerCase().includes(query.toLowerCase())) {
                 return title;
               }
             }).map((item) => (
               <Grid xs={3} columnSpacing={2}>
-                {/*<Cards key={item.id} item={item} handleClick={handleClick}/>*/}
                 <MyCard item={item} handleClick={handleClick}/>
             </Grid>
             ))}
           </Grid>
-    //   </section>
-    // </>
   );
 }
 
