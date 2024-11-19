@@ -1,0 +1,1 @@
+{"version":3,"file":"ResourceConfigurationContext.js","sourceRoot":"","sources":["../../../src/ResourceConfiguration/ResourceConfigurationContext.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAE,MAAM,OAAO,CAAC;AAGtC,MAAM,CAAC,IAAM,4BAA4B,GAAG,aAAa,CAEvD;IACE,EAAE;IACF;QACI,WAAW,EAAE,cAAO,CAAC;QACrB,cAAc,EAAE,cAAO,CAAC;QACxB,cAAc,EAAE,cAAO,CAAC;KAC3B;CACJ,CAAC,CAAC"}

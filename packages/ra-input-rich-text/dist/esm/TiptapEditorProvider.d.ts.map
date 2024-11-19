@@ -1,0 +1,1 @@
+{"version":3,"file":"TiptapEditorProvider.d.ts","sourceRoot":"","sources":["../../src/TiptapEditorProvider.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAC/B,OAAO,EAAE,MAAM,EAAE,MAAM,eAAe,CAAC;AAGvC,eAAO,MAAM,oBAAoB,yBAG9B,yBAAyB,gBAI3B,CAAC;AAEF,oBAAY,yBAAyB,GAAG;IACpC,QAAQ,EAAE,KAAK,CAAC,SAAS,CAAC;IAC1B,KAAK,EAAE,MAAM,CAAC;CACjB,CAAC"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"getResponseParser.d.ts","sourceRoot":"","sources":["../../src/getResponseParser.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,mBAAmB,EAAE,oBAAoB,EAAE,MAAM,iBAAiB,CAAC;AAC5E,OAAO,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAC7C,OAAO,EAAE,iBAAiB,EAAE,MAAM,gBAAgB,CAAC;+CAEb,mBAAmB,qBACtC,MAAM,YACX,oBAAoB,aACnB,kBAAkB,gBACjB,kBAAkB,GAAG,CAAC;;;;;;;AAJtC,wBAmBE"}
