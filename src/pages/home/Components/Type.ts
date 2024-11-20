@@ -19,3 +19,42 @@ export interface ScanPayRequest {
     at?: string; // 可选属性需要添加 "?" 符号
     code: string;
 }
+
+export interface OrderRequest {
+    at: string; // 订单下单位置
+    buckets: Buckets[];
+    pick: number; // 取餐方式
+    seat: string; // 座位
+}
+
+export interface Buckets {
+    ID: string;
+    Number: number;
+    // OriginAmount: string;
+    Price: Number;
+    // Unit: string;
+    // Property: PropertyInfo[];
+    // Image: string;
+    // Amount: string;
+    Name: string;
+}
+
+export interface OrderResp {
+    identity: IdentityInfo;
+    result_code: string;
+}
+
+export interface IdentityInfo {
+    // 备注信息 （后台管理员操作）
+    remark: string;
+    // 脚注信息（客户提交）
+    postscript: string;
+    // 排队序号 （自动生成）
+    sort_num: string;
+    // 订单号 （自动生成）
+    order_no: string;
+    // 座位号 (自主选择/店铺分配）
+    table_no: string;
+    // 当前排队号
+    current_pos: number;
+}
