@@ -15,9 +15,7 @@ import MyDataProvider from './dataProvider/customeProvider';
 
 // 加载业务
 
-import {SendHeartbeatRequest} from "./utils/heartbeat";
 import MyAuthProvider from "./common/MyAuthProvider";
-import MyShop from "./pages/home/Components/Shop";
 import {Dashboard} from "./pages/dashboard/Dashboard";
 
 // 国际化
