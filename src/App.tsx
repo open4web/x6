@@ -51,7 +51,7 @@ const App = () => {
                 authProvider={MyAuthProvider}
                 dashboard={Dashboard}
                 loginPage={Login}
-                // layout={Layout}
+                layout={Layout}
                 i18nProvider={i18nProvider}
                 disableTelemetry
                 // theme={radiantLightTheme}

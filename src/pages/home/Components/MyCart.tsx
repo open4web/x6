@@ -15,6 +15,9 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleNumber from "./PeopleNumber";
+import MerchantSeats from "../../../common/Seats";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
 
 export interface CartItem {
     id: string;
@@ -31,6 +34,22 @@ export interface MyCartProps {
 export default function MyCart({ cartItems, setCartItems }: MyCartProps) {
     const [diningOption, setDiningOption] = React.useState('dineIn');
     const [peopleCount, setPeopleCount] = React.useState(1);
+    const [openSeats, setOpenSeats] = React.useState(false);
+    const [takeout, setTakeout] = React.useState(0);
+
+    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+        setTakeout(newValue)
+        console.log("inside eating ==>", newValue)
+        localStorage.setItem('current_pickup_method', String(newValue));
+        if (newValue == 2) {
+            console.log("inside eating")
+            setOpenSeats(true)
+        }else{
+            console.log("take food out")
+            localStorage.setItem("takeout", "0");
+            localStorage.removeItem("selectedImage")
+        }
+    };
 
     const handleQuantityChange = (id: string, newQuantity: number) => {
         setCartItems((prevItems) =>
@@ -91,21 +110,33 @@ export default function MyCart({ cartItems, setCartItems }: MyCartProps) {
                 总计: ¥{totalPrice.toFixed(2)}
             </Typography>
             <Divider sx={{ my: 2 }} />
-            <Box sx={{ mb: 2 }}>
-                <FormControl fullWidth>
-                    <InputLabel>Dining Option</InputLabel>
-                    <Select
-                        value={diningOption}
-                        onChange={(e) => setDiningOption(e.target.value)}
-                    >
-                        <MenuItem value="dineIn">堂食</MenuItem>
-                        <MenuItem value="takeAway">外卖</MenuItem>
-                    </Select>
-                </FormControl>
-            </Box>
+            <Tabs
+                value={takeout}
+                onChange={handleTabChange}
+                indicatorColor="primary"
+                textColor="inherit"
+                variant="fullWidth"
+                aria-label="full width tabs example"
+            >
+                <Tab label="自提" {...a11yProps(0)} />
+                <Tab label="外卖" {...a11yProps(1)} disabled={true} />
+                <Tab
+                    label={`堂食${localStorage.getItem('selectedSeatId') ? ` ${localStorage.getItem('selectedSeatId')}` : ''}`}
+                    {...a11yProps(2)}
+                />
+            </Tabs>
+
+            {/*选择堂食则弹出座位选项*/}
+            <MerchantSeats setOpen={setOpenSeats} open={openSeats}/>
+
+            {/*选择就餐人数*/}
+            <Divider sx={{ my: 2 }} />
             <Box sx={{ mb: 2 }}>
                 <PeopleNumber/>
             </Box>
+
+            {/*选择订单结算方式*/}
+            <Divider sx={{ my: 2 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
                 <Button variant="outlined" color="warning" fullWidth onClick={handleHoldOrder}>
                     挂单
@@ -116,4 +147,11 @@ export default function MyCart({ cartItems, setCartItems }: MyCartProps) {
             </Box>
         </Box>
     );
+}
+
+function a11yProps(index: number) {
+    return {
+        id: `full-width-tab-${index}`,
+        'aria-controls': `full-width-tabpanel-${index}`,
+    };
 }

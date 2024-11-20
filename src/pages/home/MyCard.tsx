@@ -67,7 +67,7 @@ const MyCard = (props: Props) => {
                 component="img"
                 height="194"
                 image={item?.img}
-                alt="Paella dish"
+                alt="暂无图片"
             />
             {/* Conditional rendering for CardContent */}
             {!expanded && (

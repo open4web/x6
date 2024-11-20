@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import Logo from './Logo';
 import {AppBarToolbar} from './AppBarToolbar';
+import MerchantSelect from "../common/MerchantSelect";
 
 const CustomAppBar = (props: any) => {
     const isLargeEnough = useMediaQuery<Theme>(theme =>
@@ -17,12 +18,13 @@ const CustomAppBar = (props: any) => {
             {...props}
             color="secondary"
             // toolbar={<AppBarToolbar />}
-            userMenu={<AppBarToolbar/>}
+            // userMenu={<AppBarToolbar/>}
             // elevation={1}
             // userMenu={<CustomUserMenu />}
         >
 
             {/*<MyAppBadge/>*/}
+            <MerchantSelect/>
             {isLargeEnough && <Logo/>}
             {isLargeEnough && <Box component="span" sx={{flex: 1}}/>}
         </AppBar>
