@@ -103,6 +103,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                 console.log("Request was successful. Response data:", response);
                 const responseData: OrderResp = response.data;
                 console.log("Out order_id No:", responseData?.identity?.order_no);
+                setPrice(responseData.price)
 
                 if (responseData.result_code === "SUCCESS") {
                     toast.success("下单成功", {

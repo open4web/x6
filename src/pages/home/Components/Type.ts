@@ -42,6 +42,7 @@ export interface Buckets {
 export interface OrderResp {
     identity: IdentityInfo;
     result_code: string;
+    price: number;
 }
 
 export interface IdentityInfo {
