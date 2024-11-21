@@ -67,12 +67,6 @@ function Details({ handleClick }: DetailsProps) {
   //search functionality
   const [query, setQuery] = useState("")
 
-  const handleBtns = (category_id: string) => {
-    console.log("current category_id", category_id)
-    localStorage.setItem("current_category", category_id)
-    setActiveTab(category_id);
-  };
-
   // @ts-ignore
   return (
           <Grid container spacing={2}>
