@@ -3,5 +3,5 @@ import AppBar from './AppBar';
 import Menu from './Menu';
 
 export default (props: LayoutProps) => {
-    return <Layout {...props} appBar={AppBar}/>;
+    return <Layout {...props} appBar={AppBar} menu={Menu}/>;
 };

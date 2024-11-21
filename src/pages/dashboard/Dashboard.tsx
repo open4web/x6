@@ -50,44 +50,6 @@ export const Dashboard = () => {
         }
     };
 
-    const handleChange = (item: any, d: number) => {
-
-        console.log("cartItem.amount -->", cartItems)
-        setCartItems((prevCart) =>
-            prevCart.map((cartItem) => {
-                if (cartItem.id === item.id) {
-                    const updatedAmount = cartItem.quantity + d;
-                    return { ...cartItem, amount: updatedAmount > 0 ? updatedAmount : 1 };
-                }
-                return cartItem;
-            })
-        );
-
-        if (d > 0) {
-            toast.success(item.title + ' +1', {
-                position: "top-center",
-                autoClose: 1000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
-        } else {
-            toast.warning(item.title + ' -1', {
-                position: "top-center",
-                autoClose: 1000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
-        };
-    }
-
     const myCartProps = {
         cartItems,
         setCartItems,
