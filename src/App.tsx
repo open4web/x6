@@ -1,9 +1,9 @@
 import * as React from 'react';
 import {Admin, CustomRoutes, houseDarkTheme, houseLightTheme, radiantDarkTheme, radiantLightTheme} from 'react-admin';
 import polyglotI18nProvider from 'ra-i18n-polyglot';
-import { Route } from 'react-router';
+import {Route} from 'react-router';
 
-import { Login, Layout } from './layout';
+import {Login, Layout} from './layout';
 import chineseMessages from './i18n/zh';
 
 // @ts-ignore
@@ -16,7 +16,8 @@ import MyDataProvider from './dataProvider/customeProvider';
 // 加载业务
 
 import MyAuthProvider from "./common/MyAuthProvider";
-import {Dashboard} from "./pages/dashboard/Dashboard";
+import {MyHome} from "./pages/dashboard/MyHome";
+import {MyCartProvider} from "./dataProvider/MyCartProvider";
 
 // 国际化
 const i18nProvider = polyglotI18nProvider(locale => {
@@ -42,31 +43,33 @@ const App = () => {
     //     return () => clearInterval(interval);
     // }, []);
 
-        return (<React.Fragment>
-            <Admin
-                title={"This is Templates "}
-                dataProvider={MyDataProvider}
-                authProvider={MyAuthProvider}
-                dashboard={Dashboard}
-                loginPage={Login}
-                layout={Layout}
-                i18nProvider={i18nProvider}
-                disableTelemetry
-                // theme={radiantLightTheme}
-                // lightTheme={houseLightTheme}
-                darkTheme={houseDarkTheme}
-                defaultTheme={"dark"}
-                requireAuth
+    return (<React.Fragment>
+            <MyCartProvider>
+                <Admin
+                    title={"This is Templates "}
+                    dataProvider={MyDataProvider}
+                    authProvider={MyAuthProvider}
+                    dashboard={MyHome}
+                    loginPage={Login}
+                    layout={Layout}
+                    i18nProvider={i18nProvider}
+                    disableTelemetry
+                    // theme={radiantLightTheme}
+                    // lightTheme={houseLightTheme}
+                    darkTheme={houseDarkTheme}
+                    defaultTheme={"dark"}
+                    requireAuth
 
-            >
-                <CustomRoutes>
-                    <Route path="/configuration" element={<Configuration/>}/>
-                    {/* 图表 */}
-                    <Route path="/" element={<Dashboard/>}/>
-                </CustomRoutes>
+                >
+                    <CustomRoutes>
+                        <Route path="/configuration" element={<Configuration/>}/>
+                        {/* 图表 */}
+                        <Route path="/" element={<MyHome/>}/>
+                    </CustomRoutes>
 
-                {/* 基础权限系统 */}
-            </Admin>
+                    {/* 基础权限系统 */}
+                </Admin>
+            </MyCartProvider>
         </React.Fragment>
     );
 };

@@ -31,7 +31,7 @@ interface Category {
   name: string;
 }
 
-function Details({ handleClick }: DetailsProps) {
+function MyProducts({ handleClick }: DetailsProps) {
   const [data, setData] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<Category[]>();
   const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
@@ -77,7 +77,7 @@ function Details({ handleClick }: DetailsProps) {
                 return title;
               }
             }).map((item) => (
-              <Grid xs={3} columnSpacing={2}>
+              <Grid xs={2} columnSpacing={4}>
                 <MyCard item={item} handleClick={handleClick}/>
             </Grid>
             ))}
@@ -85,4 +85,4 @@ function Details({ handleClick }: DetailsProps) {
   );
 }
 
-export default Details;
+export default MyProducts;

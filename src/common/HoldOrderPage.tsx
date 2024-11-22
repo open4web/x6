@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Box, Paper, Typography, Button, Divider, ListItemButton, ListItemText } from '@mui/material';
-import { CartItemHolder } from "../pages/home/Components/MyCart";
+import {CartItem, CartItemHolder} from "../pages/home/Components/MyCart";
+import {useCartContext} from "../dataProvider/MyCartProvider";
 
 type HoldOrderPageProps = {
     open: boolean;
 };
 
 export default function HoldOrderPage({ open }: HoldOrderPageProps) {
+    // 指定 cartItems 的类型为 CartItem[]
+    const { setCartItems, setDrawerOpen } = useCartContext();
+
     // 从 localStorage 初始化 holdOrders 列表
     const [holdOrders, setHoldOrders] = useState<CartItemHolder[]>(
         JSON.parse(localStorage.getItem("holdOrders") || "[]")
@@ -21,6 +25,13 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
         setHoldOrders(updatedOrders);
         localStorage.setItem("holdOrders", JSON.stringify(updatedOrders));
     };
+
+
+    const handleContinueOrder = (order: CartItemHolder) => {
+        setCartItems(order.cartItems);
+        setDrawerOpen(true);
+    };
+
 
     return (
         <Box
@@ -122,6 +133,7 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                                         textTransform: 'none',
                                         minWidth: '100px',
                                     }}
+                                    onClick={() => handleContinueOrder(order)}
                                 >
                                     继续
                                 </Button>

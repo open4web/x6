@@ -13,7 +13,7 @@ import { red } from '@mui/material/colors';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import PropsChoose from "./Components/PropsChoose";
-import { ProductItem } from "./Components/Details";
+import { ProductItem } from "./Components/MyProducts";
 import Box from "@mui/material/Box";
 
 interface ExpandMoreProps extends IconButtonProps {
