@@ -28,6 +28,7 @@ import Slide from "@mui/material/Slide";
 import {Buckets, OrderRequest, OrderResp} from "./Type";
 import axios from "axios";
 import {toast} from "react-toastify";
+import {FormatDate} from "../../../common/MyDatetime";
 
 export interface CartItem {
     id: string;
@@ -39,6 +40,12 @@ export interface CartItem {
 export interface MyCartProps {
     cartItems: CartItem[];
     setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+}
+
+export interface CartItemHolder {
+    id: number;
+    createdAt: string;
+    cartItems: CartItem[];
 }
 
 export default function MyCart({cartItems, setCartItems}: MyCartProps) {
@@ -137,8 +144,44 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         }
     };
 
-    const handleHoldOrder = () => {
-        alert('Order Held Successfully!');
+    const holdOrder = () => {
+        console.log("Holding order...");
+
+        // 获取当前已存储的 holdOrders 列表（如果不存在，返回空数组）
+        const holdOrders = JSON.parse(localStorage.getItem("holdOrders") || "[]");
+
+        // 生成新的自增 ID
+        const newId = holdOrders.length > 0 ? holdOrders[holdOrders.length - 1].id + 1 : 1;
+
+        // 构建新的 holdOrder 对象
+        const newHoldOrder = {
+            id: newId, // 使用自增 ID
+            cartItems: cartItems, // 保存当前购物车的内容
+            createdAt: FormatDate(new Date()), // 保存创建时间
+        };
+
+        // 将新订单添加到 holdOrders 数组中
+        holdOrders.push(newHoldOrder);
+
+        // 更新到 localStorage
+        localStorage.setItem("holdOrders", JSON.stringify(holdOrders));
+
+        // 清空购物车
+        setCartItems([]);
+
+        // 通知用户订单已被保存
+        toast.success("订单已保存到挂单列表", {
+            position: "top-center",
+            autoClose: 1000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+        });
+
+        console.log("Hold order stored:", newHoldOrder);
     };
 
     const totalPrice = cartItems.reduce(
@@ -208,7 +251,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             {/*选择订单结算方式*/}
             <Divider sx={{my: 2}}/>
             <Box sx={{display: 'flex', justifyContent: 'space-between', gap: 2}}>
-                <Button variant="outlined" color="warning" fullWidth onClick={handleHoldOrder}>
+                <Button variant="outlined" color="warning" fullWidth onClick={holdOrder}>
                     挂单
                 </Button>
                 <Button variant="contained" color="success" fullWidth onClick={handlePayment}>

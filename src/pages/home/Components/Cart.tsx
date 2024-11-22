@@ -158,7 +158,45 @@ const Cart = ({ cart, setCart, handleChange }: CartProps) => {
   const onClose = () => {
     console.log('closed')
   }
+  const holdOrder = () => {
+    console.log("Holding order...");
 
+    // 获取当前已存储的 holdOrders 列表（如果不存在，返回空数组）
+    const holdOrders = JSON.parse(localStorage.getItem("holdOrders") || "[]");
+
+    // 生成新的自增 ID
+    const newId = holdOrders.length > 0 ? holdOrders[holdOrders.length - 1].id + 1 : 1;
+
+    // 构建新的 holdOrder 对象
+    const newHoldOrder = {
+      id: newId, // 使用自增 ID
+      cartItems: cart, // 保存当前购物车的内容
+      createdAt: new Date().toISOString(), // 保存创建时间
+    };
+
+    // 将新订单添加到 holdOrders 数组中
+    holdOrders.push(newHoldOrder);
+
+    // 更新到 localStorage
+    localStorage.setItem("holdOrders", JSON.stringify(holdOrders));
+
+    // 清空购物车
+    setCart([]);
+
+    // 通知用户订单已被保存
+    toast.success("订单已保存到挂单列表", {
+      position: "top-center",
+      autoClose: 1000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
+    console.log("Hold order stored:", newHoldOrder);
+  };
   const placeOrder = async () => {
     console.log('place order now -->', price)
 

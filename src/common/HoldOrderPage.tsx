@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Paper, Typography, Button, Divider } from '@mui/material';
+import {Box, Paper, Typography, Button, Divider, ListItemButton, ListItemText} from '@mui/material';
+import {CartItemHolder} from "../pages/home/Components/MyCart";
 
 type Order = {
     id: number;
@@ -9,78 +10,15 @@ type Order = {
     status: string;
 };
 
-const orders: Order[] = [
-    {
-        id: 1,
-        item: "Coffee",
-        quantity: 2,
-        price: "$5.00",
-        status: "Pending Payment",
-    },
-    {
-        id: 2,
-        item: "Sandwich",
-        quantity: 1,
-        price: "$8.00",
-        status: "Pending Payment",
-    },
-    {
-        id: 3,
-        item: "Cake Slice",
-        quantity: 3,
-        price: "$12.00",
-        status: "Pending Payment",
-    },
-    // Add more orders here
-    {
-        id: 4,
-        item: "Coffee",
-        quantity: 2,
-        price: "$5.00",
-        status: "Pending Payment",
-    },
-    {
-        id: 5,
-        item: "Sandwich",
-        quantity: 1,
-        price: "$8.00",
-        status: "Pending Payment",
-    },
-    {
-        id: 6,
-        item: "Cake Slice",
-        quantity: 3,
-        price: "$12.00",
-        status: "Pending Payment",
-    },
-    {
-        id: 7,
-        item: "Coffee",
-        quantity: 2,
-        price: "$5.00",
-        status: "Pending Payment",
-    },
-    {
-        id: 8,
-        item: "Sandwich",
-        quantity: 1,
-        price: "$8.00",
-        status: "Pending Payment",
-    },
-    {
-        id: 9,
-        item: "Cake Slice",
-        quantity: 3,
-        price: "$12.00",
-        status: "Pending Payment",
-    },
-];
-
 type HoldOrderPageProps = {
     open: boolean;
 };
 
 export default function HoldOrderPage({ open }: HoldOrderPageProps) {
+    // 获取当前已存储的 holdOrders 列表（如果不存在，返回空数组）
+    const holdOrders = JSON.parse(localStorage.getItem("holdOrders") || "[]");
+
+
     return (
         <Box
             sx={{
@@ -94,7 +32,7 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                 bgcolor: 'background.default',
             }}
         >
-            {orders.map((order) => (
+            {holdOrders.map((order: CartItemHolder) => (
                 <Paper
                     key={order.id}
                     sx={{
@@ -113,9 +51,46 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                                 Order #{order.id}
                             </Typography>
                             <Divider sx={{ my: 1, width: '100%' }} />
-                            <Typography variant="body1">Item: {order.item}</Typography>
-                            <Typography variant="body1">Quantity: {order.quantity}</Typography>
-                            <Typography variant="body1">Price: {order.price}</Typography>
+
+                            {order?.cartItems?.map((item) => (
+                                <ListItemButton
+                                    key={item.id}
+                                    sx={{
+                                        py: 0,
+                                        minHeight: 32,
+                                        color: 'rgba(255,255,255,.8)',
+                                        display: 'flex',
+                                        justifyContent: 'space-between'
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            flexGrow: 1,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'flex-start',
+                                        }}
+                                    >
+                                        <ListItemText
+                                            primary={item.name}
+                                            primaryTypographyProps={{ fontSize: 14, fontWeight: 'medium' }}
+                                        />
+                                    </Box>
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'flex-end',
+                                        }}
+                                    >
+                                        <ListItemText
+                                            primary={item.quantity}
+                                            primaryTypographyProps={{ fontSize: 14, fontWeight: 'medium' }}
+                                        />
+                                    </Box>
+                                </ListItemButton>
+                            ))}
+                            <Typography variant="body1">{order.createdAt}</Typography>
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -133,7 +108,7 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                                         minWidth: '100px',
                                     }}
                                 >
-                                    Cancel
+                                    删除
                                 </Button>
                                 <Button
                                     variant="contained"
@@ -144,7 +119,7 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                                         minWidth: '100px',
                                     }}
                                 >
-                                    Pay Now
+                                    继续
                                 </Button>
                             </Box>
                         </>
