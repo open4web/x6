@@ -1,31 +1,19 @@
 import * as React from 'react';
-import { Grid } from '@mui/material';
+import { Fab, Grid } from '@mui/material';
 import MyProducts from "../home/Components/MyProducts";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import MyCartDrawer from "../home/Components/MyCartDrawer";
-import {CartItem} from "../home/Components/MyCart";
-import {useCartContext} from "../../dataProvider/MyCartProvider";
+import { CartItem } from "../home/Components/MyCart";
+import { useCartContext } from "../../dataProvider/MyCartProvider";
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 export const MyHome = () => {
-    // 指定 cartItems 的类型为 CartItem[]
     const { cartItems, setCartItems, drawerOpen, setDrawerOpen } = useCartContext();
-
 
     const handleClick = (item: CartItem) => {
         setDrawerOpen(true);
-        // 如果已经存在购物车，则直接加数字
         if (cartItems.some((cartItem: CartItem) => cartItem.id === item.id)) {
-            toast.success(item.name + ' +1', {
-                position: "top-center",
-                autoClose: 2000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
-            // 直接增加amount
+            toast.success(item.name + ' +1', { position: "top-center", autoClose: 2000 });
             setCartItems((prevCart) =>
                 prevCart.map((cartItem: CartItem) => {
                     if (cartItem.id === item.id) {
@@ -36,32 +24,36 @@ export const MyHome = () => {
                 })
             );
         } else {
-            // append new item into cart
             setCartItems([...cartItems, item]);
-            toast.success('商品已加入购物车', {
-                position: "top-center",
-                autoClose: 2000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            });
+            toast.success('商品已加入购物车', { position: "top-center", autoClose: 2000 });
         }
     };
 
-    const myCartProps = {
-        cartItems,
-        setCartItems,
-    };
+    const myCartProps = { cartItems, setCartItems };
 
-    return (<Grid container spacing={2} mt={1}>
-        <Grid item xs={12} md={12}>
-            <React.Fragment>
-                <MyCartDrawer setOpen={setDrawerOpen} open={drawerOpen} x={myCartProps}/>
-                <MyProducts handleClick={handleClick} />
-            </React.Fragment>
+    return (
+        <Grid container spacing={2} mt={1}>
+            <Grid item xs={12} md={12}>
+                <React.Fragment>
+                    <MyCartDrawer setOpen={setDrawerOpen} open={drawerOpen} x={myCartProps} />
+                    <MyProducts handleClick={handleClick} />
+
+                    {/* Floating Action Button */}
+                    <Fab
+                        aria-label="Expand"
+                        color="inherit"
+                        sx={{
+                            position: 'fixed',
+                            bottom: 16, // Distance from bottom
+                            right: 16, // Distance from left
+                            zIndex: 1000, // Ensure it is above other components
+                        }}
+                        onClick={() => setDrawerOpen(true)} // 点击时打开购物车抽屉
+                    >
+                        <ShoppingCartIcon  fontSize="large" color={'error'}/>
+                    </Fab>
+                </React.Fragment>
+            </Grid>
         </Grid>
-    </Grid>)
-}
+    );
+};
