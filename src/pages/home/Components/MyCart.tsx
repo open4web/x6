@@ -147,15 +147,15 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const holdOrder = () => {
         console.log("Holding order...");
 
-        // 获取当前已存储的 holdOrders 列表（如果不存在，返回空数组）
+        // 从 localStorage 获取当前已存储的 holdOrders 列表
         const holdOrders = JSON.parse(localStorage.getItem("holdOrders") || "[]");
 
-        // 生成新的自增 ID
-        const newId = holdOrders.length > 0 ? holdOrders[holdOrders.length - 1].id + 1 : 1;
+        // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
+        let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
 
         // 构建新的 holdOrder 对象
         const newHoldOrder = {
-            id: newId, // 使用自增 ID
+            id: uniqueId, // 使用全局唯一 ID
             cartItems: cartItems, // 保存当前购物车的内容
             createdAt: FormatDate(new Date()), // 保存创建时间
         };
@@ -163,8 +163,11 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         // 将新订单添加到 holdOrders 数组中
         holdOrders.push(newHoldOrder);
 
-        // 更新到 localStorage
+        // 更新 holdOrders 到 localStorage
         localStorage.setItem("holdOrders", JSON.stringify(holdOrders));
+
+        // 更新 uniqueId 到 localStorage，确保每次调用都递增
+        localStorage.setItem("uniqueId", (uniqueId + 1).toString());
 
         // 清空购物车
         setCartItems([]);

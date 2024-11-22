@@ -50,9 +50,9 @@ const Menu = () => {
     return (
         <Box
             sx={{
-                width: open ? 360 : 50,
-                marginTop: 1,
-                marginBottom: 1,
+                width: open ? 360 : 60,
+                marginTop: 0.2,
+                marginBottom: 0.2,
                 transition: theme =>
                     theme.transitions.create('width', {
                         easing: theme.transitions.easing.sharp,

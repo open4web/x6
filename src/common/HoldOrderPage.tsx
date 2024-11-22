@@ -1,23 +1,26 @@
-import React from 'react';
-import {Box, Paper, Typography, Button, Divider, ListItemButton, ListItemText} from '@mui/material';
-import {CartItemHolder} from "../pages/home/Components/MyCart";
-
-type Order = {
-    id: number;
-    item: string;
-    quantity: number;
-    price: string;
-    status: string;
-};
+import React, { useState } from 'react';
+import { Box, Paper, Typography, Button, Divider, ListItemButton, ListItemText } from '@mui/material';
+import { CartItemHolder } from "../pages/home/Components/MyCart";
 
 type HoldOrderPageProps = {
     open: boolean;
 };
 
 export default function HoldOrderPage({ open }: HoldOrderPageProps) {
-    // 获取当前已存储的 holdOrders 列表（如果不存在，返回空数组）
-    const holdOrders = JSON.parse(localStorage.getItem("holdOrders") || "[]");
+    // 从 localStorage 初始化 holdOrders 列表
+    const [holdOrders, setHoldOrders] = useState<CartItemHolder[]>(
+        JSON.parse(localStorage.getItem("holdOrders") || "[]")
+    );
 
+    // 删除订单的处理函数
+    const handleDeleteOrder = (orderId: number) => {
+        // 过滤掉被删除的订单
+        const updatedOrders = holdOrders.filter(order => order.id !== orderId);
+
+        // 更新状态和 localStorage
+        setHoldOrders(updatedOrders);
+        localStorage.setItem("holdOrders", JSON.stringify(updatedOrders));
+    };
 
     return (
         <Box
@@ -27,8 +30,8 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                 alignItems: 'left',
                 justifyContent: 'left',
                 padding: 0,
-                maxHeight: '100vh', // Limit height for scrolling
-                overflowY: 'auto', // Enable vertical scrolling
+                maxHeight: '100vh', // 限制高度以支持滚动
+                overflowY: 'auto', // 启用垂直滚动
                 bgcolor: 'background.default',
             }}
         >
@@ -45,11 +48,12 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                     }}
                 >
                     {open ? (
-                        // Show full details when open
+                        // 展开显示详细信息
                         <>
                             <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                Order #{order.id}
+                                #{order.id}
                             </Typography>
+                            <Typography variant="body2">{order.createdAt}</Typography>
                             <Divider sx={{ my: 1, width: '100%' }} />
 
                             {order?.cartItems?.map((item) => (
@@ -90,7 +94,6 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                                     </Box>
                                 </ListItemButton>
                             ))}
-                            <Typography variant="body1">{order.createdAt}</Typography>
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -107,6 +110,7 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                                         textTransform: 'none',
                                         minWidth: '100px',
                                     }}
+                                    onClick={() => handleDeleteOrder(order.id)} // 点击时调用删除函数
                                 >
                                     删除
                                 </Button>
@@ -124,7 +128,7 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                             </Box>
                         </>
                     ) : (
-                        // Show only Order ID when closed
+                        // 收起时仅显示 Order ID
                         <Typography variant="h6" sx={{ textAlign: 'center', fontWeight: 'bold' }}>
                             #{order.id}
                         </Typography>
