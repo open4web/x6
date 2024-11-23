@@ -80,8 +80,21 @@ const MyCard = (props: Props) => {
             <CardActions disableSpacing>
                 {/* Hide "Add to Cart" when expanded */}
                 {!expanded && (
-                    <IconButton aria-label="add to cart" onClick={handleAddToCart}>
-                        <AddShoppingCartIcon />
+                    <IconButton
+                        aria-label="add to cart"
+                        onClick={handleAddToCart}
+                        sx={{
+                            color: 'success', // 显著的颜色，可以替换为其他颜色
+                            '&:hover': {
+                                color: 'darkorange', // 悬停时的颜色
+                            },
+                        }}
+                    >
+                        <AddShoppingCartIcon
+                            sx={{
+                                fontSize: 40, // 增大图标尺寸，默认是 24
+                            }}
+                        />
                     </IconButton>
                 )}
                 <ExpandMore
@@ -98,8 +111,21 @@ const MyCard = (props: Props) => {
                     <PropsChoose open={open} setOpen={setOpen} />
                     {/* Add "Add to Cart" button to the bottom when expanded */}
                     <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
-                        <IconButton aria-label="add to cart" onClick={handleAddToCart}>
-                            <AddShoppingCartIcon />
+                        <IconButton
+                            aria-label="add to cart"
+                            onClick={handleAddToCart}
+                            sx={{
+                                color: 'primary', // 显著的颜色，可以替换为其他颜色
+                                '&:hover': {
+                                    color: 'darkorange', // 悬停时的颜色
+                                },
+                            }}
+                        >
+                            <AddShoppingCartIcon
+                                sx={{
+                                    fontSize: 40, // 增大图标尺寸，默认是 24
+                                }}
+                            />
                         </IconButton>
                     </Box>
                 </CardContent>

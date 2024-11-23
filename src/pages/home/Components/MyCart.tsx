@@ -29,6 +29,7 @@ import {Buckets, OrderRequest, OrderResp} from "./Type";
 import axios from "axios";
 import {toast} from "react-toastify";
 import {FormatDate} from "../../../common/MyDatetime";
+import {useCartContext} from "../../../dataProvider/MyCartProvider";
 
 export interface CartItem {
     id: string;
@@ -49,6 +50,8 @@ export interface CartItemHolder {
 }
 
 export default function MyCart({cartItems, setCartItems}: MyCartProps) {
+    const {holdOrders, setHoldOrders } = useCartContext();
+
     const [price, setPrice] = React.useState(0);
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const [orderID, setOrderID] = React.useState("");
@@ -165,6 +168,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
 
         // 更新 holdOrders 到 localStorage
         localStorage.setItem("holdOrders", JSON.stringify(holdOrders));
+        setHoldOrders(holdOrders)
 
         // 更新 uniqueId 到 localStorage，确保每次调用都递增
         localStorage.setItem("uniqueId", (uniqueId + 1).toString());

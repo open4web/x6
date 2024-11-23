@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { CartItem } from '../pages/home/Components/MyCart';
+import {CartItem, CartItemHolder} from '../pages/home/Components/MyCart';
 
 type CartContextType = {
     cartItems: CartItem[];
     setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
     drawerOpen: boolean;
     setDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    holdOrders: CartItemHolder[];
+    setHoldOrders: React.Dispatch<React.SetStateAction<CartItemHolder[]>>;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -21,9 +23,12 @@ export const useCartContext = () => {
 export const MyCartProvider = ({ children }: { children: ReactNode }) => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [drawerOpen, setDrawerOpen] = useState(false);
-
+    // 从 localStorage 初始化 holdOrders 列表
+    const [holdOrders, setHoldOrders] = useState<CartItemHolder[]>(
+        JSON.parse(localStorage.getItem("holdOrders") || "[]")
+    );
     return (
-        <CartContext.Provider value={{ cartItems, setCartItems, drawerOpen, setDrawerOpen }}>
+        <CartContext.Provider value={{ cartItems, setCartItems, drawerOpen, setDrawerOpen, holdOrders, setHoldOrders }}>
             {children}
         </CartContext.Provider>
     );

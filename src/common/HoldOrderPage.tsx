@@ -9,12 +9,7 @@ type HoldOrderPageProps = {
 
 export default function HoldOrderPage({ open }: HoldOrderPageProps) {
     // 指定 cartItems 的类型为 CartItem[]
-    const { setCartItems, setDrawerOpen } = useCartContext();
-
-    // 从 localStorage 初始化 holdOrders 列表
-    const [holdOrders, setHoldOrders] = useState<CartItemHolder[]>(
-        JSON.parse(localStorage.getItem("holdOrders") || "[]")
-    );
+    const { setCartItems, setDrawerOpen,holdOrders, setHoldOrders } = useCartContext();
 
     // 删除订单的处理函数
     const handleDeleteOrder = (orderId: number) => {
