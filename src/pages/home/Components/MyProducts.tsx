@@ -77,7 +77,7 @@ function MyProducts({ handleClick }: DetailsProps) {
                 return title;
               }
             }).map((item) => (
-              <Grid xs={2} columnSpacing={4}>
+                <Grid item xs={2.4} key={item.id}> {/* xs={2.4} 分布较均匀 */}
                 <MyCard item={item} handleClick={handleClick}/>
             </Grid>
             ))}

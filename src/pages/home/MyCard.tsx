@@ -53,7 +53,7 @@ const MyCard = (props: Props) => {
     };
 
     return (
-        <Card sx={{ maxWidth: 445, margin: 2 }}>
+        <Card sx={{ maxWidth: 445, margin: 1 }}>
             <CardHeader
                 avatar={
                     <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
@@ -111,6 +111,7 @@ const MyCard = (props: Props) => {
                     <PropsChoose open={open} setOpen={setOpen} />
                     {/* Add "Add to Cart" button to the bottom when expanded */}
                     <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
+
                         <IconButton
                             aria-label="add to cart"
                             onClick={handleAddToCart}
