@@ -10,7 +10,8 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import axios from "axios";
 import {ChannelType, ScanPayRequest} from "./types";
 import {toast} from "react-toastify";
-import { redirect } from 'react-router';
+import {redirect} from 'react-router';
+import QRScanner from "./ScanCode";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -29,7 +30,7 @@ interface PayResp {
 }
 
 function CustomTabPanel(props: TabPanelProps) {
-    const { children, value, index, ...other } = props;
+    const {children, value, index, ...other} = props;
 
     return (
         <div
@@ -40,7 +41,7 @@ function CustomTabPanel(props: TabPanelProps) {
             {...other}
         >
             {value === index && (
-                <Box sx={{ p: 5, borderRadius: "3px"}}>
+                <Box sx={{p: 5, borderRadius: "3px"}}>
                     <Typography>{children}</Typography>
                 </Box>
             )}
@@ -56,7 +57,7 @@ function a11yProps(index: number) {
 }
 
 // @ts-ignore
-export default function PayChannel({ setCart, price, setOpen, orderID }) {
+export default function PayChannel({setCart, price, setOpen, orderID}) {
     const [value, setValue] = React.useState(0);
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
@@ -91,8 +92,9 @@ export default function PayChannel({ setCart, price, setOpen, orderID }) {
         }
     };
 
-    const submitPay  = async () => {
+    const submitPay = async () => {
 
+        console.log("code is from scan=>", code)
         // 定义一个 UserData 对象
         const userData: ScanPayRequest = {
             channel: ChannelType.WeChatPay,
@@ -142,7 +144,6 @@ export default function PayChannel({ setCart, price, setOpen, orderID }) {
                 }
 
 
-
             } else if (response.status === 401) {
                 console.error("Unauthorized - redirecting to login");
                 window.location.href = "/login";
@@ -163,7 +164,7 @@ export default function PayChannel({ setCart, price, setOpen, orderID }) {
 
     useEffect(() => {
         // code 是异步更新的，因此在这里检测其真实的值
-        if  (code.length === 18) {
+        if (code.length === 18) {
             // 在组件挂载后将焦点定位到输入框
             setValue(0);
             // setVerified(true)
@@ -219,6 +220,7 @@ export default function PayChannel({ setCart, price, setOpen, orderID }) {
                     <Tab label="微信" {...a11yProps(1)} />
                     <Tab label="卡拉卡" {...a11yProps(2)} />
                     <Tab label="支付宝" {...a11yProps(3)} />
+                    <Tab label="扫码" {...a11yProps(4)} />
                 </Tabs>
             </Box>
             <CustomTabPanel value={value} index={0}>
@@ -232,6 +234,24 @@ export default function PayChannel({ setCart, price, setOpen, orderID }) {
             </CustomTabPanel>
             <CustomTabPanel value={value} index={3}>
                 {payCodeInput()}
+            </CustomTabPanel>
+            <CustomTabPanel value={value} index={4}>
+                {
+                    <QRScanner
+                        onScanSuccess={(scannedCode: string) => {
+                            console.log("Scanned QR Code:", scannedCode);
+                            setCode(scannedCode); // 更新 code 状态
+                            submitPay();          // 调用支付逻辑
+                        }}
+                        onScanLimitReached={() => {
+                            // 提示用户并处理限制达到的情况
+                            toast.warning("扫描尝试次数已达到限制，请重新加载页面或检查设备。", {
+                                position: "top-center",
+                                autoClose: 5000,
+                            });
+                        }}
+                    />
+                }
             </CustomTabPanel>
         </Box>
     );

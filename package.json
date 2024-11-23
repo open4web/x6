@@ -27,6 +27,7 @@
         "graphql": "^15.6.0",
         "graphql-tag": "^2.12.6",
         "hooks": "^0.3.2",
+        "html5-qrcode": "^2.3.8",
         "i-devices": "^0.1.4",
         "inflection": "~1.12.0",
         "jwt-decode": "^3.1.2",

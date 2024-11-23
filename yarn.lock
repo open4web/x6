@@ -2867,6 +2867,11 @@ hotscript@^1.0.12:
   resolved "https://registry.yarnpkg.com/hotscript/-/hotscript-1.0.13.tgz#6eb5de757e9b33444ffc22555e98dbc17fa31fb4"
   integrity sha512-C++tTF1GqkGYecL+2S1wJTfoH6APGAsbb7PAWQ3iVIwgG/EFseAfEVOKFgAFq4yK3+6j1EjUD4UQ9dRJHX/sSQ==
 
+html5-qrcode@^2.3.8:
+  version "2.3.8"
+  resolved "https://registry.yarnpkg.com/html5-qrcode/-/html5-qrcode-2.3.8.tgz#0b0cdf7a9926cfd4be530e13a51db47592adfa0d"
+  integrity sha512-jsr4vafJhwoLVEDW3n1KvPnCCXWaQfRng0/EEYk1vNcQGcG/htAdhJX0be8YyqMoSz7+hZvOZSTAepsabiuhiQ==
+
 husky@^8.0.1:
   version "8.0.3"
   resolved "https://registry.yarnpkg.com/husky/-/husky-8.0.3.tgz#4936d7212e46d1dea28fef29bb3a108872cd9184"
