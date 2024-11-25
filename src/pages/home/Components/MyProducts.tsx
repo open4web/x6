@@ -2,38 +2,15 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Grid } from '@mui/material';
 import MyCard from "../MyCard";
+import {DetailsProps, ProductCategory, ProductItem} from "./Type";
 
 const demoHost = ""
 
-interface DetailsProps {
-  handleClick: (item: any) => void;
-}
 
-interface Resp {
-  categories: Category[];
-  products: ProductItem[];
-}
-
-// Define the type for your data
-export interface ProductItem {
-  id: string;
-  img: string;
-  name: string;
-  quantity: number;
-  price: number;
-  kind: string;
-  desc: string;
-  // Add more properties as needed
-}
-
-interface Category {
-  id: string;
-  name: string;
-}
 
 function MyProducts({ handleClick }: DetailsProps) {
   const [data, setData] = useState<ProductItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>();
+  const [categories, setCategories] = useState<ProductCategory[]>();
   const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
   useEffect(() => {
     fetchData().then(r => {

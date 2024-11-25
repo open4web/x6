@@ -22,6 +22,10 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanLimitReached
                     console.log(`Scanned Code: ${decodedText}`);
                     setScanCount((prev) => prev + 1); // 增加扫描计数
                     onScanSuccess(decodedText); // 调用成功回调
+                    // 达到限制次数，停止扫描
+                    html5QrCode.stop().then(() => {
+                        console.warn("Scan successful. Stopping scanner.");
+                    });
                 },
                 (errorMessage) => {
                     setScanCount((prev) => {
@@ -39,6 +43,10 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanLimitReached
             )
             .catch((err) => {
                 console.error("Error starting scanner: ", err);
+                // 达到限制次数，停止扫描
+                html5QrCode.stop().then(() => {
+                    console.warn("Scan failed. Stopping scanner.");
+                });
             });
 
         // 清理函数，组件卸载时停止扫描器

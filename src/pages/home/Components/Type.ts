@@ -59,3 +59,42 @@ export interface IdentityInfo {
     // 当前排队号
     current_pos: number;
 }
+
+export interface DetailsProps {
+    handleClick: (item: any) => void;
+}
+
+export interface Resp {
+    categories: ProductCategory[];
+    products: ProductItem[];
+}
+
+// Define the type for your data
+export interface ProductItem {
+    id: string;
+    img: string;
+    name: string;
+    quantity: number;
+    price: number;
+    kind: string;
+    desc: string;
+    // Add more properties as needed
+    spiceOptions: PropsOptions[];
+}
+
+export interface PropsOptions  {
+    name: string;
+    id: string;
+    spiceOptions: SpiceOptions[];
+}
+
+export interface SpiceOptions  {
+    id: string;
+    name: string;
+    price: number;
+}
+
+export interface ProductCategory {
+    id: string;
+    name: string;
+}

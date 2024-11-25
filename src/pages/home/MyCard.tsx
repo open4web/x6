@@ -13,8 +13,8 @@ import { red } from '@mui/material/colors';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import PropsChoose from "./Components/PropsChoose";
-import { ProductItem } from "./Components/MyProducts";
 import Box from "@mui/material/Box";
+import {ProductItem} from "./Components/Type";
 
 interface ExpandMoreProps extends IconButtonProps {
     expand: boolean;
@@ -108,7 +108,7 @@ const MyCard = (props: Props) => {
             </CardActions>
             <Collapse in={expanded} timeout="auto" unmountOnExit>
                 <CardContent>
-                    <PropsChoose open={open} setOpen={setOpen} />
+                    <PropsChoose items={item.spiceOptions} />
                     {/* Add "Add to Cart" button to the bottom when expanded */}
                     <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
 

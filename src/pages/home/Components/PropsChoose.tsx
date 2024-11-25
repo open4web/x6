@@ -2,43 +2,15 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 import PropToggleButton from "./Prop";
+import {ProductItem, PropsOptions} from "./Type";
 
-type FullScreenDialogProps = {
-    open: boolean;
-    setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-};
+interface Props {
+    items: PropsOptions[];
+}
 
-export default function PropsChoose({ open, setOpen }: FullScreenDialogProps) {
-    const menuOptions = [
-        {
-            name: "辣度",
-            id: "1001",
-            spiceOptions: [
-                { id: '1', name: '特辣' },
-                { id: '2', name: '中辣' },
-                { id: '3', name: '不辣' },
-            ]
-        },
-        {
-            name: "粉量",
-            id: "1002",
-            spiceOptions: [
-                { id: '1', name: '一两' },
-                { id: '2', name: '二两' },
-                { id: '3', name: '三两' },
-            ]
-        },
-        {
-            name: "配菜",
-            id: "1003",
-            spiceOptions: [
-                { id: '1', name: '空心菜' },
-                { id: '2', name: '白菜' },
-                { id: '3', name: '芥菜' },
-                { id: '4', name: '油麦菜' },
-            ]
-        },
-    ];
+export default function PropsChoose(props : Props) {
+    const { items} = props;
+    // @ts-ignore
     return (
         <Box
             sx={{
@@ -57,7 +29,7 @@ export default function PropsChoose({ open, setOpen }: FullScreenDialogProps) {
                     gap: 0.1, // Space between items
                 }}
             >
-                {menuOptions.map((option) => (
+                {items?.map((option) => (
                     <Box
                         key={option.id}
                         sx={{
@@ -69,7 +41,7 @@ export default function PropsChoose({ open, setOpen }: FullScreenDialogProps) {
                             alignItems: 'center', // Center the PropToggleButton
                         }}
                     >
-                        <PropToggleButton options={option.spiceOptions} />
+                        <PropToggleButton items={option?.spiceOptions} />
                     </Box>
                 ))}
             </List>

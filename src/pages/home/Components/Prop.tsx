@@ -2,15 +2,9 @@ import * as React from 'react';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { styled } from '@mui/material/styles';
+import {SpiceOptions} from "./Type";
 
-type Option = {
-    id: string;
-    name: string;
-};
 
-type MyPropToggleButtonProps = {
-    options: Option[];
-};
 
 const StyledToggleButton = styled(ToggleButton)(({ theme }) => ({
     borderRadius: '16px',
@@ -31,7 +25,13 @@ const StyledToggleButton = styled(ToggleButton)(({ theme }) => ({
     },
 }));
 
-export default function PropToggleButton({ options }: MyPropToggleButtonProps) {
+interface Props {
+    items: SpiceOptions[];
+}
+
+export default function PropToggleButton( props: Props) {
+    const { items} = props;
+
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
     const handleChange = (
@@ -59,7 +59,7 @@ export default function PropToggleButton({ options }: MyPropToggleButtonProps) {
                 padding: '4px',     // Add padding to the group
             }}
         >
-            {options.map((option) => (
+            {items?.map((option) => (
                 <StyledToggleButton key={option.id} value={option.id}>
                     {option.name}
                 </StyledToggleButton>
