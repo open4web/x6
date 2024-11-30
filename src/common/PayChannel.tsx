@@ -107,9 +107,9 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
         const fetchData = useFetchData()
         fetchData('/v1/pay/scan/pay', (response) => {
             // 访问返回的数据
-            const responseData: PayResp = response.data;
-            console.log("Out Trade No:", responseData.out_trade_no);
-            console.log("Transaction ID:", responseData.transaction_id);
+            // const responseData: PayResp = response.data;
+            // console.log("Out Trade No:", responseData.out_trade_no);
+            // console.log("Transaction ID:", responseData.transaction_id);
             // 清空购物车
             // @ts-ignore
             setCart([]);
