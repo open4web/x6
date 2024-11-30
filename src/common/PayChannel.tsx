@@ -7,11 +7,10 @@ import Box from '@mui/material/Box';
 import {FilledInput, FormControl, IconButton, InputAdornment, InputLabel} from "@mui/material";
 import VerifiedIcon from '@mui/icons-material/Verified';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import axios from "axios";
 import {ChannelType, ScanPayRequest} from "./types";
 import {toast} from "react-toastify";
-import {redirect} from 'react-router';
 import QRScanner from "./ScanCode";
+import {useFetchData} from "./FetchData";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -105,61 +104,23 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
             code: code,
         };
 
-        try {
-            const response = await axios.post<PayResp>('/v1/pay/scan/pay', userData, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+        const fetchData = useFetchData()
+        fetchData('/v1/pay/scan/pay', (response) => {
+            // 访问返回的数据
+            const responseData: PayResp = response.data;
+            console.log("Out Trade No:", responseData.out_trade_no);
+            console.log("Transaction ID:", responseData.transaction_id);
+            // 清空购物车
+            // @ts-ignore
+            setCart([]);
 
-            // 检查状态码
-            if (response.status === 200) {
-                console.log("Request was successful. Response data:", response.data);
-                // 访问返回的数据
-                const responseData: PayResp = response.data;
-                console.log("Out Trade No:", responseData.out_trade_no);
-                console.log("Transaction ID:", responseData.transaction_id);
-                if (responseData.result_code === "SUCCESS") {
-                    toast.success("支付成功", {
-                        position: "top-center",
-                        autoClose: 1000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                        theme: "light",
-                    });
+            // 当支付完成后就退出支付渠道选择弹窗
+            setOpen(false)
 
-                    // 清空购物车
-                    // @ts-ignore
-                    setCart([]);
-
-                    // 当支付完成后就退出支付渠道选择弹窗
-                    setOpen(false)
-
-                    // 更新订单小票
-                    // 做一个动画专场
-                    // 将已经支付的订单收集到一个位置，方便后续查看
-                }
-
-
-            } else if (response.status === 401) {
-                console.error("Unauthorized - redirecting to login");
-                window.location.href = "/login";
-            } else {
-                console.error('Request failed with status code:', response.status);
-            }
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response?.status === 401) {
-                console.error("Unauthorized - redirecting to login");
-                window.location.href = "/login";
-            } else {
-                console.error('Error processing payment:', error);
-            }
-        }
-
-
+            // 更新订单小票
+            // 做一个动画专场
+            // 将已经支付的订单收集到一个位置，方便后续查看
+        }, "POST", userData);
     }
 
     useEffect(() => {
