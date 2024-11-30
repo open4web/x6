@@ -60,6 +60,7 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
     const [value, setValue] = React.useState(0);
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
+    const fetchData = useFetchData()
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -104,7 +105,6 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
             code: code,
         };
 
-        const fetchData = useFetchData()
         fetchData('/v1/pay/scan/pay', (response) => {
             // 访问返回的数据
             // const responseData: PayResp = response.data;
