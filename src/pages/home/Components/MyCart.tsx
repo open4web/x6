@@ -9,10 +9,6 @@ import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleNumber from "./PeopleNumber";
 import MerchantSeats from "../../../common/Seats";
@@ -26,10 +22,10 @@ import DialogActions from "@mui/material/DialogActions";
 import {TransitionProps} from "@mui/material/transitions";
 import Slide from "@mui/material/Slide";
 import {Buckets, OrderRequest, OrderResp} from "./Type";
-import axios from "axios";
 import {toast} from "react-toastify";
 import {FormatDate} from "../../../common/MyDatetime";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
+import {useFetchData} from "../../../common/FetchData";
 
 export interface CartItem {
     id: string;
@@ -50,13 +46,14 @@ export interface CartItemHolder {
 }
 
 export default function MyCart({cartItems, setCartItems}: MyCartProps) {
-    const {holdOrders, setHoldOrders } = useCartContext();
+    const {holdOrders, setHoldOrders} = useCartContext();
 
     const [price, setPrice] = React.useState(0);
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const [orderID, setOrderID] = React.useState("");
     const [openSeats, setOpenSeats] = React.useState(false);
     const [takeout, setTakeout] = React.useState(0);
+    const fetchData = useFetchData()
 
     const handleClose = () => {
         setOpenPayChannel(false);
@@ -100,51 +97,15 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             seat: localStorage.getItem("selectedSeatId") as string,
         };
 
-        try {
-            const response = await axios.post<OrderResp>('/v1/order/pos', userData, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Cookies: Cookie,
-                },
-                withCredentials: true, // Include credentials with the request
-            });
+        fetchData('/v1/product/pos/menu', (response) => {
+            console.log("Request was successful. Response data:", response);
+            const responseData: OrderResp = response.data;
+            console.log("Out order_id No:", responseData?.identity?.order_no);
+            setPrice(responseData.price)
+            setOpenPayChannel(true);
+            setOrderID(responseData?.identity?.order_no);
 
-            if (response.status === 200) {
-                console.log("Request was successful. Response data:", response);
-                const responseData: OrderResp = response.data;
-                console.log("Out order_id No:", responseData?.identity?.order_no);
-                setPrice(responseData.price)
-
-                if (responseData.result_code === "SUCCESS") {
-                    toast.success("下单成功", {
-                        position: "top-center",
-                        autoClose: 1000,
-                        hideProgressBar: false,
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                        progress: undefined,
-                        theme: "light",
-                    });
-                }
-
-                setOpenPayChannel(true);
-                setOrderID(responseData?.identity?.order_no);
-
-            } else if (response.status === 401) {
-                window.location.href = "/login"; // Redirect to login on 401
-            } else {
-                console.error('Unexpected response status:', response.status);
-            }
-
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response?.status === 401) {
-                console.error("Unauthorized access - redirecting to login");
-                window.location.href = "/login";
-            } else {
-                console.error("Error placing order:", error);
-            }
-        }
+        }, "POST", userData);
     };
 
     const holdOrder = () => {
