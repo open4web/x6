@@ -115,11 +115,9 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
 
         fetchData('/v1/order/pos', (response) => {
             console.log("Request was successful. Response data:", response);
-            const responseData: OrderResp = response.data;
-            console.log("Out order_id No:", responseData?.identity?.order_no);
-            setPrice(responseData.price)
+            setPrice(response.price)
             setOpenPayChannel(true);
-            setOrderID(responseData?.identity?.order_no);
+            setOrderID(response?.identity?.order_no);
 
         }, "POST", userData);
     };
