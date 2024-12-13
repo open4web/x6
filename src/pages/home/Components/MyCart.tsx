@@ -113,7 +113,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             phone: localStorage.getItem("phoneNumber") as string,
         };
 
-        fetchData('/v1/product/pos/menu', (response) => {
+        fetchData('/v1/order/pos', (response) => {
             console.log("Request was successful. Response data:", response);
             const responseData: OrderResp = response.data;
             console.log("Out order_id No:", responseData?.identity?.order_no);
