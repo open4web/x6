@@ -26,12 +26,19 @@ import {toast} from "react-toastify";
 import {FormatDate} from "../../../common/MyDatetime";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {useFetchData} from "../../../common/FetchData";
+import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
+import Filter6Icon from '@mui/icons-material/Filter6';
 
+export interface MyProductProps {
+    id: string;
+    name: string;
+}
 export interface CartItem {
     id: string;
     name: string;
     price: number;
     quantity: number;
+    propsOptions: MyProductProps[];
 }
 
 export interface MyCartProps {
@@ -52,6 +59,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const [orderID, setOrderID] = React.useState("");
     const [openSeats, setOpenSeats] = React.useState(false);
+    const [openTicket, setOpenTicket] = React.useState(false);
     const [takeout, setTakeout] = React.useState(0);
     const fetchData = useFetchData()
 
@@ -157,34 +165,64 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         0
     );
 
+    const bindTicket = () => {
+        setOpenTicket(true)
+    }
+
     return (
-        <Box sx={{width: 300, padding: 1}}>
+        <Box sx={{width: 360, padding: 1}}>
             <Typography variant="h5" sx={{textAlign: 'center', mb: 2}}>
                 购物车
             </Typography>
             <List>
-                {cartItems.map((item) => (
-                    <ListItem key={item.id} sx={{display: 'flex', alignItems: 'center'}}>
-                        <ListItemText
-                            primary={item.name}
-                            secondary={`单价: ¥${item.price.toFixed(2)}`}
-                        />
-                        <TextField
-                            type="number"
-                            size="small"
-                            value={item.quantity}
-                            onChange={(e) =>
-                                handleQuantityChange(item.id, Math.max(1, Number(e.target.value)))
+                {cartItems.map((item) => {
+                    // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
+                    let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
+
+                    // 生成缓存键
+                    let allChoose = ''
+                    item?.propsOptions?.map((j) => {
+                        const fullPropsKey = `selectedSpiceLevel:${uniqueId+1}:${item.id}:${j.id}`;
+                        const storedValue = localStorage.getItem(fullPropsKey);
+                        // 解析存储的数据
+                        let cachedData: { id: string; name: string } | null = null;
+                        if (storedValue) {
+                            try {
+                                cachedData = JSON.parse(storedValue);
+                                allChoose = allChoose + cachedData?.name + ','
+                            } catch (error) {
+                                console.error('Error parsing cached data:', error);
                             }
-                            sx={{width: 60, mx: 1}}
-                        />
-                        <ListItemSecondaryAction>
-                            <IconButton edge="end" onClick={() => handleRemoveItem(item.id)}>
-                                <DeleteIcon/>
-                            </IconButton>
-                        </ListItemSecondaryAction>
-                    </ListItem>
-                ))}
+                        }
+                    })
+                    allChoose.trimEnd()
+
+
+                    return (<ListItem key={item.id} sx={{display: 'flex', alignItems: 'center'}}>
+                            <ListItemText
+                                primary={item.name}
+                                secondary={`${allChoose}`}
+                            />
+                            <ListItemText
+                                secondary={`¥${item.price.toFixed(2)}`}
+                            />
+                            <TextField
+                                type="number"
+                                size="small"
+                                value={item.quantity}
+                                onChange={(e) =>
+                                    handleQuantityChange(item.id, Math.max(1, Number(e.target.value)))
+                                }
+                                sx={{width: 60, mx: 1}}
+                            />
+                            <ListItemSecondaryAction>
+                                <IconButton edge="end" onClick={() => handleRemoveItem(item.id)}>
+                                    <DeleteIcon/>
+                                </IconButton>
+                            </ListItemSecondaryAction>
+                        </ListItem>
+                    );
+                })}
             </List>
             <Divider sx={{my: 2}}/>
             <Typography variant="h6" sx={{textAlign: 'right'}}>
@@ -215,6 +253,16 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             <Box sx={{mb: 2}}>
                 <PeopleNumber/>
             </Box>
+
+            {/*选择就餐人数*/}
+            <Divider sx={{my: 2}}/>
+            <Box sx={{mb: 2}}>
+                <IconButton aria-label="delete">
+                    <Filter6Icon onClick={bindTicket} />
+                </IconButton>
+            <NumericKeyboardDialog setOpen={setOpenTicket} open={openTicket}/>
+            </Box>
+
 
             {/*选择订单结算方式*/}
             <Divider sx={{my: 2}}/>

@@ -26,11 +26,14 @@ const StyledToggleButton = styled(ToggleButton)(({ theme }) => ({
 }));
 
 interface Props {
+    uniqueId: number;
+    propId: string;
+    productId: string;
     items: SpiceOptions[];
 }
 
 export default function PropToggleButton( props: Props) {
-    const { items} = props;
+    const {uniqueId, propId, productId, items} = props;
 
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
@@ -39,8 +42,16 @@ export default function PropToggleButton( props: Props) {
         newId: string | null
     ) => {
         if (newId !== null) {
+            // 找到选中的选项的完整对象
+            const selectedOption = items.find((item) => item.id === newId);
+            const newName = selectedOption?.name || '';
+
+            // 将 id 和 name 一起存储
+            const fullPropsKey = 'selectedSpiceLevel:' + uniqueId + ':'+ productId + ':' + propId;
+            const storedValue = JSON.stringify({ id: newId, name: newName });
+            localStorage.setItem(fullPropsKey, storedValue);
+            // 标识当前选择项
             setSelectedId(newId);
-            localStorage.setItem('selectedSpiceLevel', newId); // Save selected id to localStorage
         }
     };
 

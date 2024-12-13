@@ -1,15 +1,10 @@
 import * as React from 'react';
 import Drawer from '@mui/material/Drawer';
-import MyCart, {MyCartProps} from "./MyCart";
+import MyCart from "./MyCart";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 
-type MyCartDrawerProps = {
-    open: boolean;
-    setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    x: MyCartProps;
-};
 
-export default function MyCartDrawer({ open, setOpen, x}: MyCartDrawerProps) {
+export default function MyCartDrawer() {
     const { cartItems, setCartItems, drawerOpen, setDrawerOpen } = useCartContext();
 
     const toggleDrawer = (newOpen: boolean) => () => {

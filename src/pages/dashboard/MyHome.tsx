@@ -11,6 +11,7 @@ export const MyHome = () => {
     const { cartItems, setCartItems, drawerOpen, setDrawerOpen } = useCartContext();
 
     const handleClick = (item: CartItem) => {
+
         setDrawerOpen(true);
         if (cartItems.some((cartItem: CartItem) => cartItem.id === item.id)) {
             toast.success(item.name + ' +1', { position: "top-center", autoClose: 2000 });
@@ -35,7 +36,7 @@ export const MyHome = () => {
         <Grid container spacing={2} mt={1}>
             <Grid item xs={12} md={12}>
                 <React.Fragment>
-                    <MyCartDrawer setOpen={setDrawerOpen} open={drawerOpen} x={myCartProps} />
+                    <MyCartDrawer />
                     <MyProducts handleClick={handleClick} />
 
                     {/* Floating Action Button */}

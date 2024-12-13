@@ -15,6 +15,7 @@ import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import PropsChoose from "./Components/PropsChoose";
 import Box from "@mui/material/Box";
 import {ProductItem} from "./Components/Type";
+import {MyProductProps} from "./Components/MyCart";
 
 interface ExpandMoreProps extends IconButtonProps {
     expand: boolean;
@@ -41,11 +42,40 @@ const MyCard = (props: Props) => {
     const [expanded, setExpanded] = React.useState(false);
     const [open, setOpen] = React.useState(false);
 
+    // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
+    let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
+
     const handleExpandClick = () => {
         setExpanded(!expanded);
     };
 
     const handleAddToCart = () => {
+        // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
+        let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
+
+        // 检查当前订单是否有勾选配置，如果有则将配置嵌入item中
+        //
+        // item?.spiceOptions?.map((j) => {
+        //     const fullPropsKey = `selectedSpiceLevel:${uniqueId+1}:${item.id}:${j}`;
+        //     const storedValue = localStorage.getItem(fullPropsKey);
+        //     // 解析存储的数据
+        //     let cachedData: { id: string; name: string } | null = null;
+        //     if (storedValue) {
+        //         try {
+        //             // 解析存储的数据
+        //             const cachedData: MyProductProps = JSON.parse(storedValue);
+        //
+        //             // 确保数据未重复添加后再插入
+        //             if (!item.spiceOptions.some((o) => o.id === cachedData.id)) {
+        //                 item.spiceOptions.push(cachedData);
+        //             }
+        //         } catch (error) {
+        //             console.error('Error parsing cached data:', error);
+        //         }
+        //     }
+        // })
+
+
         // Perform the "Add to Cart" action
         handleClick(item);
         // Close the Collapse and restore CardContent
@@ -108,7 +138,7 @@ const MyCard = (props: Props) => {
             </CardActions>
             <Collapse in={expanded} timeout="auto" unmountOnExit>
                 <CardContent>
-                    <PropsChoose items={item.spiceOptions} />
+                    <PropsChoose uniqueId={uniqueId + 1} productID={item.id} items={item.spiceOptions} />
                     {/* Add "Add to Cart" button to the bottom when expanded */}
                     <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
 

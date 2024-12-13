@@ -5,11 +5,14 @@ import PropToggleButton from "./Prop";
 import {ProductItem, PropsOptions} from "./Type";
 
 interface Props {
+    uniqueId: number;
+    productID: string;
     items: PropsOptions[];
+
 }
 
 export default function PropsChoose(props : Props) {
-    const { items} = props;
+    const { uniqueId, productID, items} = props;
     // @ts-ignore
     return (
         <Box
@@ -41,7 +44,7 @@ export default function PropsChoose(props : Props) {
                             alignItems: 'center', // Center the PropToggleButton
                         }}
                     >
-                        <PropToggleButton items={option?.spiceOptions} />
+                        <PropToggleButton uniqueId={uniqueId} propId={option.id} productId={productID} items={option?.spiceOptions} />
                     </Box>
                 ))}
             </List>
