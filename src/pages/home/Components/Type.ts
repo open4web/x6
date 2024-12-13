@@ -27,6 +27,7 @@ export interface OrderRequest {
     seat: string; // 座位
     ticket: string; // 台号
     people: string;
+    phone: string;
 }
 
 export interface Buckets {
