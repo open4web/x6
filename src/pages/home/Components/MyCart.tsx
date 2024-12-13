@@ -27,7 +27,8 @@ import {FormatDate} from "../../../common/MyDatetime";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {useFetchData} from "../../../common/FetchData";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
-import Filter6Icon from '@mui/icons-material/Filter6';
+import NumbersIcon from '@mui/icons-material/Numbers';
+import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
 
 export interface MyProductProps {
     id: string;
@@ -60,6 +61,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const [orderID, setOrderID] = React.useState("");
     const [openSeats, setOpenSeats] = React.useState(false);
     const [openTicket, setOpenTicket] = React.useState(false);
+    const [openPeople, setOpenPeople] = React.useState(false);
     const [takeout, setTakeout] = React.useState(0);
     const fetchData = useFetchData()
 
@@ -103,6 +105,8 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             buckets: convertToOrderRequest(cartItems),
             pick: localStorage.getItem("current_pickup_method") as unknown as number,
             seat: localStorage.getItem("selectedSeatId") as string,
+            ticket: localStorage.getItem("ticketNumber") as string,
+            people: localStorage.getItem("peopleNumber") as string,
         };
 
         fetchData('/v1/product/pos/menu', (response) => {
@@ -168,6 +172,20 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const bindTicket = () => {
         setOpenTicket(true)
     }
+
+    const handleSaveResult = (value: string) => {
+        console.log("保存的数字是:", value);
+        localStorage.setItem("ticketNumber", value);
+    };
+
+    const bindPeople = () => {
+        setOpenPeople(true)
+    }
+
+    const handleSavePeopleResult = (value: string) => {
+        console.log("保存的数字是:", value);
+        localStorage.setItem("peopleNumber", value);
+    };
 
     return (
         <Box sx={{width: 360, padding: 1}}>
@@ -257,10 +275,20 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             {/*选择就餐人数*/}
             <Divider sx={{my: 2}}/>
             <Box sx={{mb: 2}}>
-                <IconButton aria-label="delete">
-                    <Filter6Icon onClick={bindTicket} />
+                <IconButton aria-label="bindTicket">
+                    <NumbersIcon onClick={bindTicket} />
+                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindTicket}>
+                        {localStorage.getItem('ticketNumber') || "未选择"} {/* 默认显示"未选择" */}
+                    </Typography>
                 </IconButton>
-            <NumericKeyboardDialog setOpen={setOpenTicket} open={openTicket}/>
+                <IconButton aria-label="bindPeople">
+                    <EmojiPeopleIcon onClick={bindPeople} />
+                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindPeople}>
+                        {localStorage.getItem('peopleNumber') || "未选择"} {/* 默认显示"未选择" */}
+                    </Typography>
+                </IconButton>
+                <NumericKeyboardDialog setOpen={setOpenTicket} open={openTicket} onSave={handleSaveResult}/>
+                <NumericKeyboardDialog setOpen={setOpenPeople} open={openPeople} onSave={handleSavePeopleResult}/>
             </Box>
 
 

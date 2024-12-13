@@ -9,20 +9,15 @@ import {
     TextField,
 } from "@mui/material";
 
-// const handleSaveResult = (value) => {
-//     setResult(value);
-//     console.log("保存的数字是:", value);
-// };
-
 interface Props {
     open: boolean; // 传入的 open 状态
     setOpen: React.Dispatch<React.SetStateAction<boolean>>; // 用于更新 open 状态的函数
-    // onSave:
+    onSave: (value: string) => void; // 保存时触发的回调函数，接收一个字符串参数
 }
 
 export default function  NumericKeyboardDialog  (props: Props) {
 
-    const { open, setOpen } = props;
+    const { open, setOpen, onSave } = props;
     const [inputValue, setInputValue] = useState("");
 
     // 数字按钮点击事件
@@ -42,7 +37,7 @@ export default function  NumericKeyboardDialog  (props: Props) {
 
     // 保存操作
     const handleSave = () => {
-        // onSave(inputValue); // 将输入值传递给外部
+        onSave(inputValue); // 将输入值传递给外部
         setOpen(false); // 关闭弹窗
     };
 

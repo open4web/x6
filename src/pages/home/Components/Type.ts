@@ -25,6 +25,8 @@ export interface OrderRequest {
     buckets: Buckets[];
     pick: number; // 取餐方式
     seat: string; // 座位
+    ticket: string; // 台号
+    people: string;
 }
 
 export interface Buckets {
