@@ -4,12 +4,11 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Button from '@mui/material/Button';
-// @ts-ignore
 import QRCode from "qrcode";
 import {useEffect, useState} from "react";
 import {Avatar, Box, CircularProgress} from "@mui/material";
 import {useNotify, useRedirect, useTranslate} from "react-admin";
-import {authApi} from "../../../utils/axios";
+import {authApi} from "../../utils/axios";
 import OtpInput from "react-otp-input";
 import TokenIcon from '@mui/icons-material/Token';
 

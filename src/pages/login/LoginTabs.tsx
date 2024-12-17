@@ -39,7 +39,7 @@ const LoginTabs: React.FC<LoginTabsProps> = ({ loading }) => {
 
     // @ts-ignore
     return (
-        <Card sx={{minWidth: 300, marginTop: "6em", borderRadius: 5}}>
+        <Card sx={{minWidth: 400, marginTop: "6em", borderRadius: 2}}>
             <Box
             >
                 <TabContext value={currentLoginStep}>
