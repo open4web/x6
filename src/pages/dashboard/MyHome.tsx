@@ -6,9 +6,12 @@ import MyCartDrawer from "../home/Components/MyCartDrawer";
 import { CartItem } from "../home/Components/MyCart";
 import { useCartContext } from "../../dataProvider/MyCartProvider";
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import GradingIcon from '@mui/icons-material/Grading';
+import MyOrder from "../home/Components/MyOrder";
+import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 
 export const MyHome = () => {
-    const { cartItems, setCartItems, drawerOpen, setDrawerOpen } = useCartContext();
+    const { cartItems, setCartItems, drawerOpen, setDrawerOpen, setOrderDrawerOpen } = useCartContext();
 
     const handleClick = (item: CartItem) => {
 
@@ -37,6 +40,7 @@ export const MyHome = () => {
             <Grid item xs={12} md={12}>
                 <React.Fragment>
                     <MyCartDrawer />
+                    <MyOrderDrawer/>
                     <MyProducts handleClick={handleClick} />
 
                     {/* Floating Action Button */}
@@ -52,6 +56,19 @@ export const MyHome = () => {
                         onClick={() => setDrawerOpen(true)} // 点击时打开购物车抽屉
                     >
                         <ShoppingCartIcon  fontSize="large" color={'error'}/>
+                    </Fab>
+                    <Fab
+                        aria-label="Expand"
+                        color="inherit"
+                        sx={{
+                            position: 'fixed',
+                            bottom: 80, // Distance from bottom
+                            right: 16, // Distance from left
+                            zIndex: 1000, // Ensure it is above other components
+                        }}
+                        onClick={() => setOrderDrawerOpen(true)} // 点击时打开购物车抽屉
+                    >
+                        <GradingIcon  fontSize="large" color={'warning'}/>
                     </Fab>
                 </React.Fragment>
             </Grid>
