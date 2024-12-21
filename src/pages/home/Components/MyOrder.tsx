@@ -177,7 +177,7 @@ function MyOrder() {
                                     {`#${order?.identity?.order_no}`}
                                 </Typography>
                                 <Typography variant="body2" sx={{ color: '#6d4c41' }}>
-                                    {`@:${order?.identity?.table_no}`}
+                                    {`@${order?.identity?.table_no}`}
                                 </Typography>
 
                                 {/* 商品详情部分 */}
@@ -190,11 +190,21 @@ function MyOrder() {
                                                     <TableRow key={bucket.id}>
                                                         <TableRow key={bucket.id}>
                                                             {/* 商品名称 */}
-                                                            <TableCell sx={{ color: '#333333' }}>{bucket.name}</TableCell>
+                                                            <TableCell align="left" sx={{ color: '#333333', padding: '4px 8px' }}>
+                                                                {bucket.name}
+                                                            </TableCell>
                                                             {/* 商品数量和单位 */}
-                                                            <TableCell sx={{ color: '#333333' }}>{`${bucket.number} ${bucket.unit}`}</TableCell>
+                                                            <TableCell align="left" sx={{ color: '#333333', padding: '4px 8px' }}>
+                                                                {`${bucket.number} ${bucket.unit}`}
+                                                            </TableCell>
                                                             {/* 商品价格 */}
-                                                            <TableCell sx={{ color: '#333333' }}>{`¥${bucket.price}`}</TableCell>
+                                                            <TableCell align="left" sx={{ color: '#333333', padding: '4px 8px' }}>
+                                                                {`¥${bucket.price}`}
+                                                            </TableCell>
+                                                            {/* 商品属性 */}
+                                                            <TableCell align="left" sx={{ color: '#333333', padding: '4px 8px' }}>
+                                                                {bucket.props_text}
+                                                            </TableCell>
                                                         </TableRow>
                                                     </TableRow>
                                                 ))}
