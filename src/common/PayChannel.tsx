@@ -19,9 +19,8 @@ interface TabPanelProps {
     value: number;
 }
 
-// 定义 TypeScript 接口
 interface PayResp {
-    time_end?: string; // 注意在 TypeScript 中，可选属性需要添加 "?"
+    time_end?: string;
     out_trade_no: string;
     transaction_id: string;
     open_id: string;
@@ -29,9 +28,7 @@ interface PayResp {
     result_code: string;
 }
 
-function CustomTabPanel(props: TabPanelProps) {
-    const {children, value, index, ...other} = props;
-
+function CustomTabPanel({children, value, index, ...other}: TabPanelProps) {
     return (
         <div
             role="tabpanel"
@@ -56,125 +53,86 @@ function a11yProps(index: number) {
     };
 }
 
-// @ts-ignore
-export default function PayChannel({setCart, price, setOpen, orderID}) {
+export default function PayChannel({setCart, price, setOpen, orderID}: any) {
     const [value, setValue] = React.useState(0);
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
-    const {  setDrawerOpen, setOrderDrawerOpen } = useCartContext();
+    const {setDrawerOpen, setOrderDrawerOpen} = useCartContext();
 
-    const fetchData = useFetchData()
+    const fetchData = useFetchData();
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
     };
 
-    const handleResetInput = () => {
-        setCode('')
-    };
+    const handleResetInput = () => setCode('');
 
-    const handleMouseDown = (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault();
-    };
-
-    const handleCodeChange = (event: { target: { value: string | any[]; }; }) => {
-        let inputValue = event.target.value;
-
-        let newValue: string = inputValue as string;
-        setCode(newValue);
-        if (code.length > 18) {
-            // 如果超过18个字符，则只保留后面的部分
-            const newCode = code.slice(-18);
-            setCode(newCode)
-        }
-
-        if (newValue.length === 18) {
-            setVerified(true)
-        } else {
-            setVerified(false)
-        }
+    const handleCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const inputValue = event.target.value;
+        const trimmedValue = inputValue.slice(-18); // 保留最多18位字符
+        setCode(trimmedValue);
+        setVerified(trimmedValue.length === 18);
     };
 
     const submitPay = async (scannedCode: string) => {
-
-        console.log("code is from scan=>", scannedCode)
-        // 定义一个 UserData 对象
         const userData: ScanPayRequest = {
             channel: ChannelType.WeChatPay,
             order_id: orderID,
             desc: '一碗粉',
             amount: price,
             at: localStorage.getItem("current_store_id") as string,
-            code: code,
+            code: scannedCode,
         };
 
-        fetchData('/v1/pay/scan/pay', (response) => {
-            // 访问返回的数据
-            // const responseData: PayResp = response.data;
-            // console.log("Out Trade No:", responseData.out_trade_no);
-            // console.log("Transaction ID:", responseData.transaction_id);
-            // 清空购物车
-            // @ts-ignore
-            setCart([]);
-
-            // 当支付完成后就退出支付渠道选择弹窗
-            setOpen(false)
-
-            // 更新订单小票
-            // 做一个动画专场
-            // 将已经支付的订单收集到一个位置，方便后续查看
-        }, "POST", userData);
-    }
+        try {
+            await fetchData('/v1/pay/scan/pay', () => {}, "POST", userData);
+            setCart([]); // 清空购物车
+            setOpen(false); // 关闭支付弹窗
+            toast.success("支付成功", {position: "top-center", autoClose: 3000});
+        } catch (error) {
+            toast.error("支付失败，请重试", {position: "top-center", autoClose: 3000});
+        }
+    };
 
     useEffect(() => {
-        // code 是异步更新的，因此在这里检测其真实的值
+        let interval: NodeJS.Timeout | null = null;
+
         if (code.length === 18) {
-            // setVerified(true)
-            submitPay(code).then(r => {
-                console.log("pay success by scan gun")
-                setCode('')
-                setVerified(false)
+            submitPay(code).then(() => {
+                setCode('');
+                setVerified(false);
             });
-            // 在组件挂载后将焦点定位到输入框
-            setValue(0);
         }
 
-        const interval = setInterval(() => {
-            // 刷新页面
-            // setValue()
-            setCode('')
-            setVerified(false)
-        }, 15000); // 刷新间隔，这里设置为每60秒刷新一次
+        interval = setInterval(() => {
+            setCode('');
+            setVerified(false);
+        }, 15000);
 
-        return () => clearInterval(interval); // 组件销毁时清除定时器
-    }, [code, verified]);
+        return () => {
+            if (interval) {
+                clearInterval(interval);
+            }
+        };
+    }, [code]);
 
-
-    function payCodeInput() {
-        return <FormControl sx={{m: 2, width: '45ch', alignContent: "center"}} variant="filled">
-            <InputLabel htmlFor="filled-adornment-password">支付授权码</InputLabel>
+    const payCodeInput = (
+        <FormControl sx={{m: 2, width: '45ch'}} variant="filled">
+            <InputLabel htmlFor="filled-adornment-code">支付授权码</InputLabel>
             <FilledInput
-                id="code"
-                name={"code"}
-                type={'text'}
-                onChange={handleCodeChange}
+                id="filled-adornment-code"
                 value={code}
-                autoComplete={"false"}
+                onChange={handleCodeChange}
                 endAdornment={
                     <InputAdornment position="end">
-                        <IconButton
-                            aria-label="toggle password visibility"
-                            onClick={handleResetInput}
-                            onMouseDown={handleMouseDown}
-                            edge="end"
-                        >
-                            {verified ? <VerifiedIcon color={"success"}/> : <RestartAltIcon/>}
+                        <IconButton onClick={handleResetInput} edge="end">
+                            {verified ? <VerifiedIcon color="success"/> : <RestartAltIcon/>}
                         </IconButton>
                     </InputAdornment>
                 }
             />
-        </FormControl>;
-    }
+        </FormControl>
+    );
 
     return (
         <Box sx={{width: '100%', borderRadius: "6px"}}>
@@ -187,45 +145,20 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
                     <Tab label="扫码" {...a11yProps(4)} />
                 </Tabs>
             </Box>
-            <CustomTabPanel value={value} index={0}>
-                {payCodeInput()}
-            </CustomTabPanel>
-            <CustomTabPanel value={value} index={1}>
-                {payCodeInput()}
-            </CustomTabPanel>
-            <CustomTabPanel value={value} index={2}>
-                {payCodeInput()}
-            </CustomTabPanel>
-            <CustomTabPanel value={value} index={3}>
-                {payCodeInput()}
-            </CustomTabPanel>
+            {[0, 1, 2, 3].map(index => (
+                <CustomTabPanel key={index} value={value} index={index}>
+                    {payCodeInput}
+                </CustomTabPanel>
+            ))}
             <CustomTabPanel value={value} index={4}>
-                {
-                    <QRScanner
-                        onScanSuccess={(scannedCode: string) => {
-                            console.log("Scanned QR Code:", scannedCode);
-                            // setCode(scannedCode); // 更新 code 状态
-                            submitPay(scannedCode).then(r => {
-                            //     弹出支付后的订单页面
-                            //     setOrderDrawerOpen(true)
-                            //     setDrawerOpen(false)
-                                toast.success("支付成功", {
-                                    position: "top-center",
-                                    autoClose: 5000,
-                                });
-                                console.log("submit pay success")
-                            });          // 调用支付逻辑
-                            console.log("submit pay done")
-                        }}
-                        onScanLimitReached={() => {
-                            // 提示用户并处理限制达到的情况
-                            toast.warning("扫描尝试次数已达到限制，请重新加载页面或检查设备。", {
-                                position: "top-center",
-                                autoClose: 5000,
-                            });
-                        }}
-                    />
-                }
+                <QRScanner
+                    onScanSuccess={(scannedCode: string) => {
+                        submitPay(scannedCode);
+                    }}
+                    onScanLimitReached={() => {
+                        toast.warning("扫描尝试次数已达到限制，请重新加载页面或检查设备。", {position: "top-center", autoClose: 5000});
+                    }}
+                />
             </CustomTabPanel>
         </Box>
     );
