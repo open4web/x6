@@ -7,7 +7,6 @@ import { CartItem } from "../home/Components/MyCart";
 import { useCartContext } from "../../dataProvider/MyCartProvider";
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import GradingIcon from '@mui/icons-material/Grading';
-import MyOrder from "../home/Components/MyOrder";
 import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 
 export const MyHome = () => {
