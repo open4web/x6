@@ -11,6 +11,7 @@ import {ChannelType, ScanPayRequest} from "./types";
 import {toast} from "react-toastify";
 import QRScanner from "./ScanCode";
 import {useFetchData} from "./FetchData";
+import {useCartContext} from "../dataProvider/MyCartProvider";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -60,6 +61,8 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
     const [value, setValue] = React.useState(0);
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
+    const {  setDrawerOpen, setOrderDrawerOpen } = useCartContext();
+
     const fetchData = useFetchData()
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -202,7 +205,13 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
                         onScanSuccess={(scannedCode: string) => {
                             console.log("Scanned QR Code:", scannedCode);
                             setCode(scannedCode); // 更新 code 状态
-                            submitPay();          // 调用支付逻辑
+                            submitPay().then(r => {
+                            //     弹出支付后的订单页面
+                                setOrderDrawerOpen(true)
+                                setDrawerOpen(false)
+                                console.log("submit pay success")
+                            });          // 调用支付逻辑
+                            console.log("submit pay done")
                         }}
                         onScanLimitReached={() => {
                             // 提示用户并处理限制达到的情况
