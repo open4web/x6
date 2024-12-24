@@ -58,7 +58,7 @@ export default function PayChannel({setCart, price, setOpen, orderID}: any) {
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
     const {setDrawerOpen, setOrderDrawerOpen} = useCartContext();
-
+    const [isScanning, setIsScanning] = React.useState(true); // 控制是否启用扫描
     const fetchData = useFetchData();
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -153,7 +153,10 @@ export default function PayChannel({setCart, price, setOpen, orderID}: any) {
             <CustomTabPanel value={value} index={4}>
                 <QRScanner
                     onScanSuccess={(scannedCode: string) => {
-                        submitPay(scannedCode);
+                        if (isScanning) {
+                            setIsScanning(false); // 暂时停止扫描，避免重复触发
+                            submitPay(scannedCode).finally(() => setIsScanning(true)); // 支付完成后允许再次扫描
+                        }
                     }}
                     onScanLimitReached={() => {
                         toast.warning("扫描尝试次数已达到限制，请重新加载页面或检查设备。", {position: "top-center", autoClose: 5000});
