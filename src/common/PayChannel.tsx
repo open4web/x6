@@ -207,8 +207,12 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
                             // setCode(scannedCode); // 更新 code 状态
                             submitPay(scannedCode).then(r => {
                             //     弹出支付后的订单页面
-                                setOrderDrawerOpen(true)
-                                setDrawerOpen(false)
+                            //     setOrderDrawerOpen(true)
+                            //     setDrawerOpen(false)
+                                toast.success("支付成功", {
+                                    position: "top-center",
+                                    autoClose: 5000,
+                                });
                                 console.log("submit pay success")
                             });          // 调用支付逻辑
                             console.log("submit pay done")
