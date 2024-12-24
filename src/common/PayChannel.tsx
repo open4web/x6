@@ -95,9 +95,9 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
         }
     };
 
-    const submitPay = async () => {
+    const submitPay = async (scannedCode: string) => {
 
-        console.log("code is from scan=>", code)
+        console.log("code is from scan=>", scannedCode)
         // 定义一个 UserData 对象
         const userData: ScanPayRequest = {
             channel: ChannelType.WeChatPay,
@@ -129,14 +129,14 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
     useEffect(() => {
         // code 是异步更新的，因此在这里检测其真实的值
         if (code.length === 18) {
-            // 在组件挂载后将焦点定位到输入框
-            setValue(0);
             // setVerified(true)
-            submitPay().then(r => {
-                console.log("pay success")
+            submitPay(code).then(r => {
+                console.log("pay success by scan gun")
                 setCode('')
                 setVerified(false)
             });
+            // 在组件挂载后将焦点定位到输入框
+            setValue(0);
         }
 
         const interval = setInterval(() => {
@@ -204,8 +204,8 @@ export default function PayChannel({setCart, price, setOpen, orderID}) {
                     <QRScanner
                         onScanSuccess={(scannedCode: string) => {
                             console.log("Scanned QR Code:", scannedCode);
-                            setCode(scannedCode); // 更新 code 状态
-                            submitPay().then(r => {
+                            // setCode(scannedCode); // 更新 code 状态
+                            submitPay(scannedCode).then(r => {
                             //     弹出支付后的订单页面
                                 setOrderDrawerOpen(true)
                                 setDrawerOpen(false)
