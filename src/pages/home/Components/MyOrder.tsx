@@ -31,7 +31,7 @@ function getStatusColor(status: number) {
 
 // 获取数据并设置状态
 function MyOrder() {
-    const [orders, setOrders] = useState<Order[]>(ordersData);
+    const [orders, setOrders] = useState<Order[]>([]);
     const [viewMode, setViewMode] = useState('list');
     const fetchData = useFetchData();
 
@@ -44,7 +44,7 @@ function MyOrder() {
         }, "GET", {}).catch(() => {
             // 如果请求失败，使用模拟的订单数据
             console.log("Failed to fetch data, using example orders.");
-            setOrders(ordersData);
+            // setOrders(ordersData);
         });
     }, []); // Empty dependency array ensures the effect runs only once
 

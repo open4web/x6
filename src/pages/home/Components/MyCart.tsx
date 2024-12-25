@@ -10,7 +10,6 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
 import DeleteIcon from '@mui/icons-material/Delete';
-import PeopleNumber from "./PeopleNumber";
 import MerchantSeats from "../../../common/Seats";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -21,7 +20,7 @@ import PayChannel from "../../../common/PayChannel";
 import DialogActions from "@mui/material/DialogActions";
 import {TransitionProps} from "@mui/material/transitions";
 import Slide from "@mui/material/Slide";
-import {Buckets, OrderRequest, OrderResp} from "./Type";
+import {Buckets, OrderRequest} from "./Type";
 import {toast} from "react-toastify";
 import {FormatDate} from "../../../common/MyDatetime";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
@@ -36,6 +35,7 @@ export interface MyProductProps {
     id: string;
     name: string;
 }
+
 export interface CartItem {
     id: string;
     name: string;
@@ -214,7 +214,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                     // 生成缓存键
                     let allChoose = ''
                     item?.propsOptions?.map((j) => {
-                        const fullPropsKey = `selectedSpiceLevel:${uniqueId+1}:${item.id}:${j.id}`;
+                        const fullPropsKey = `selectedSpiceLevel:${uniqueId + 1}:${item.id}:${j.id}`;
                         const storedValue = localStorage.getItem(fullPropsKey);
                         // 解析存储的数据
                         let cachedData: { id: string; name: string } | null = null;
@@ -288,7 +288,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
 
             {/*选择就餐人数*/}
             <Divider sx={{my: 2}}/>
-            <Box    sx={{
+            <Box sx={{
                 m: 1, // 外边距
                 display: 'flex', // 启用 flex 布局
                 justifyContent: 'flex-start', // 水平方向从左到右排列
@@ -298,28 +298,28 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                 overflowX: 'auto', // 横向滚动
             }}>
                 <IconButton aria-label="bindTicket">
-                    <NumbersIcon onClick={bindTicket} />
-                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindTicket}>
+                    <NumbersIcon onClick={bindTicket}/>
+                    <Typography variant="body1" sx={{ml: 1}} onClick={bindTicket}>
                         {localStorage.getItem('ticketNumber') || "未选择"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
                 <IconButton aria-label="bindPeople">
-                    <EmojiPeopleIcon onClick={bindPeople} />
-                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindPeople}>
+                    <EmojiPeopleIcon onClick={bindPeople}/>
+                    <Typography variant="body1" sx={{ml: 1}} onClick={bindPeople}>
                         {localStorage.getItem('peopleNumber') || "未选择"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
                 <IconButton aria-label="bindPhone">
-                    <PhoneIphoneIcon onClick={bindPhone} />
-                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindPhone}>
+                    <PhoneIphoneIcon onClick={bindPhone}/>
+                    <Typography variant="body1" sx={{ml: 1}} onClick={bindPhone}>
                         {localStorage.getItem('phoneNumber')
                             ? localStorage.getItem('phoneNumber')?.slice(-4) // 仅展示后 4 位
                             : "未选择"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
                 <IconButton aria-label="bindPeople">
-                    <CardGiftcardIcon onClick={bindPeople} />
-                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindPeople}>
+                    <CardGiftcardIcon onClick={bindPeople}/>
+                    <Typography variant="body1" sx={{ml: 1}} onClick={bindPeople}>
                         {localStorage.getItem('peopleNumber') || "未选择"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
