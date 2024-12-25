@@ -15,7 +15,6 @@ import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import PropsChoose from "./Components/PropsChoose";
 import Box from "@mui/material/Box";
 import {ProductItem} from "./Components/Type";
-import {MyProductProps} from "./Components/MyCart";
 
 interface ExpandMoreProps extends IconButtonProps {
     expand: boolean;

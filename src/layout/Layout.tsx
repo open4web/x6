@@ -1,7 +1,7 @@
 import { Layout, LayoutProps } from 'react-admin';
-import AppBar from './AppBar';
 import Menu from './Menu';
+import MyAppBar from "./MyAppBar";
 
 export default (props: LayoutProps) => {
-    return <Layout {...props} appBar={AppBar} menu={Menu}/>;
+    return <Layout {...props} appBar={MyAppBar} menu={Menu}/>;
 };

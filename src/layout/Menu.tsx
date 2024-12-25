@@ -1,19 +1,9 @@
 import {useState} from 'react';
 import Box from '@mui/material/Box';
 // import IconMaps from './IconMaps';
-import BuildIcon from '@mui/icons-material/Build';
 
-import {
-    useTranslate,
-    DashboardMenuItem,
-    MenuItemLink,
-    useSidebarState,
-    useGetOne,
-    Loading,
-} from 'react-admin';
+import {useSidebarState,} from 'react-admin';
 
-import SubMenu from './SubMenu';
-import LoadingMenu from './LoadingMenu';
 import HoldOrderPage from '../common/HoldOrderPage';
 
 
@@ -21,26 +11,7 @@ import HoldOrderPage from '../common/HoldOrderPage';
 const Menu = () => {
     // 主目录（是否展开)
     const [state, setState] = useState({});
-    const [isSetState, setIsSetState] = useState(false);
-    const translate = useTranslate();
     const [open] = useSidebarState();
-
-    // TODO change to load hold order
-    // const {data, isLoading, error} = useGetOne('menu.v1.system.auth.user.access', {id: 0});
-    // if (isLoading) {
-    //     return <Loading/>;
-    // }
-    // if (error) {
-    //     return <LoadingMenu/>;
-    // } else {
-    //     // 防止重复设定state 导致重复渲染，造成死循环
-    //     if (!isSetState) {
-    //         setState(data.paths_allow)
-    //         setIsSetState(true)
-    //     }
-    // }
-    //
-    // const mtree = data.mtree
 
     // @ts-ignore
     const handleToggle = (menu: string) => {
@@ -50,7 +21,7 @@ const Menu = () => {
     return (
         <Box
             sx={{
-                width: open ? 360 : 60,
+                width: open ? 360 : 70,
                 marginTop: 0.2,
                 marginBottom: 0.2,
                 transition: theme =>

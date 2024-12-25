@@ -1,9 +1,9 @@
 import * as React from 'react';
-import {Admin, CustomRoutes, houseDarkTheme, houseLightTheme, radiantDarkTheme, radiantLightTheme} from 'react-admin';
+import {Admin, CustomRoutes, houseDarkTheme} from 'react-admin';
 import polyglotI18nProvider from 'ra-i18n-polyglot';
 import {Route} from 'react-router';
 
-import {Login, Layout} from './layout';
+import {Layout, Login} from './layout';
 import chineseMessages from './i18n/zh';
 
 // @ts-ignore
@@ -12,9 +12,7 @@ import MyDataProvider from './dataProvider/customeProvider';
 
 
 // 系统设置
-
 // 加载业务
-
 import MyAuthProvider from "./common/MyAuthProvider";
 import {MyHome} from "./pages/dashboard/MyHome";
 import {MyCartProvider} from "./dataProvider/MyCartProvider";
@@ -36,17 +34,11 @@ const i18nProvider = polyglotI18nProvider(locale => {
 const App = () => {
     // 加载部署的时候的配置
     // 部分企业或者用户需要定制化
-    // React.useEffect(() => {
-    //     const interval = setInterval(
-    //         SendHeartbeatRequest, 3000); // 每30秒发起一次心跳请求
-    //
-    //     return () => clearInterval(interval);
-    // }, []);
 
     return (<React.Fragment>
             <MyCartProvider>
                 <Admin
-                    title={"This is Templates "}
+                    title={"order by pos "}
                     dataProvider={MyDataProvider}
                     authProvider={MyAuthProvider}
                     dashboard={MyHome}
@@ -54,8 +46,6 @@ const App = () => {
                     layout={Layout}
                     i18nProvider={i18nProvider}
                     disableTelemetry
-                    // theme={radiantLightTheme}
-                    // lightTheme={houseLightTheme}
                     darkTheme={houseDarkTheme}
                     defaultTheme={"dark"}
                     requireAuth

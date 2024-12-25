@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Box, Paper, Typography, Button, Divider, ListItemButton, ListItemText } from '@mui/material';
-import {CartItem, CartItemHolder} from "../pages/home/Components/MyCart";
+import React from 'react';
+import {Box, Button, Divider, ListItemButton, ListItemText, Paper, Typography} from '@mui/material';
+import {CartItemHolder} from "../pages/home/Components/MyCart";
 import {useCartContext} from "../dataProvider/MyCartProvider";
 
 type HoldOrderPageProps = {
