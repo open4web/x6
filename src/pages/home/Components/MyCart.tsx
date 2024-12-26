@@ -30,6 +30,8 @@ import NumbersIcon from '@mui/icons-material/Numbers';
 import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
 import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
+import RemoveIcon from "@mui/icons-material/RemoveCircleOutline";
+import AddIcon from "@mui/icons-material/Add";
 
 export interface MyProductProps {
     id: string;
@@ -230,7 +232,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                     allChoose.trimEnd()
 
 
-                    return (<ListItem key={item.id} sx={{display: 'flex', alignItems: 'center'}}>
+                    return (<ListItem key={item.id} sx={{ display: 'flex', alignItems: 'center' }}>
                             <ListItemText
                                 primary={item.name}
                                 secondary={`${allChoose}`}
@@ -238,18 +240,32 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                             <ListItemText
                                 secondary={`¥${item.price.toFixed(2)}`}
                             />
-                            <TextField
-                                type="number"
-                                size="small"
-                                value={item.quantity}
-                                onChange={(e) =>
-                                    handleQuantityChange(item.id, Math.max(1, Number(e.target.value)))
-                                }
-                                sx={{width: 60, mx: 1}}
-                            />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <IconButton
+                                    onClick={() => handleQuantityChange(item.id, Math.max(1, item.quantity - 1))}
+                                    size="small"
+                                >
+                                    <RemoveIcon />
+                                </IconButton>
+                                <TextField
+                                    type="number"
+                                    size="small"
+                                    value={item.quantity}
+                                    onChange={(e) =>
+                                        handleQuantityChange(item.id, Math.max(1, Number(e.target.value)))
+                                    }
+                                    sx={{ width: 60, textAlign: 'center' }}
+                                />
+                                <IconButton
+                                    onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                    size="small"
+                                >
+                                    <AddIcon />
+                                </IconButton>
+                            </Box>
                             <ListItemSecondaryAction>
                                 <IconButton edge="end" onClick={() => handleRemoveItem(item.id)}>
-                                    <DeleteIcon/>
+                                    <DeleteIcon color={"error"}/>
                                 </IconButton>
                             </ListItemSecondaryAction>
                         </ListItem>
@@ -331,11 +347,23 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
 
             {/*选择订单结算方式*/}
             <Divider sx={{my: 2}}/>
-            <Box sx={{display: 'flex', justifyContent: 'space-between', gap: 2}}>
-                <Button variant="outlined" color="warning" fullWidth onClick={holdOrder}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                <Button
+                    variant="outlined"
+                    color="warning"
+                    fullWidth
+                    onClick={holdOrder}
+                    disabled={cartItems.length === 0}
+                >
                     挂单
                 </Button>
-                <Button variant="contained" color="success" fullWidth onClick={handlePayment}>
+                <Button
+                    variant="contained"
+                    color="success"
+                    fullWidth
+                    onClick={handlePayment}
+                    disabled={cartItems.length === 0}
+                >
                     结算
                 </Button>
             </Box>
