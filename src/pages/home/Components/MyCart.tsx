@@ -31,7 +31,7 @@ import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
 import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import RemoveIcon from "@mui/icons-material/RemoveCircleOutline";
-import AddIcon from "@mui/icons-material/Add";
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 export interface MyProductProps {
     id: string;
@@ -232,7 +232,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                     allChoose.trimEnd()
 
 
-                    return (<ListItem key={item.id} sx={{ display: 'flex', alignItems: 'center' }}>
+                    return (<ListItem key={item.id} sx={{display: 'flex', alignItems: 'center'}}>
                             <ListItemText
                                 primary={item.name}
                                 secondary={`${allChoose}`}
@@ -240,12 +240,12 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                             <ListItemText
                                 secondary={`¥${item.price.toFixed(2)}`}
                             />
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                                 <IconButton
                                     onClick={() => handleQuantityChange(item.id, Math.max(1, item.quantity - 1))}
                                     size="small"
                                 >
-                                    <RemoveIcon />
+                                    <RemoveIcon/>
                                 </IconButton>
                                 <TextField
                                     type="number"
@@ -254,13 +254,13 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                                     onChange={(e) =>
                                         handleQuantityChange(item.id, Math.max(1, Number(e.target.value)))
                                     }
-                                    sx={{ width: 60, textAlign: 'center' }}
+                                    sx={{width: 60, textAlign: 'center'}}
                                 />
                                 <IconButton
                                     onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
                                     size="small"
                                 >
-                                    <AddIcon />
+                                    <AddCircleOutlineIcon/>
                                 </IconButton>
                             </Box>
                             <ListItemSecondaryAction>
@@ -273,7 +273,12 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                 })}
             </List>
             <Divider sx={{my: 2}}/>
-            <Typography variant="h6" sx={{textAlign: 'right'}}>
+            <Typography variant="h6"
+                        sx={{
+                            fontWeight: 'bold',
+                            color: 'red',
+                            textAlign: "right"
+                        }}>
                 总计: ¥{totalPrice.toFixed(2)}
             </Typography>
             <Divider sx={{my: 2}}/>
@@ -333,21 +338,21 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                             : "未选择"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
-                <IconButton aria-label="bindPeople">
+                <IconButton aria-label="bindPeople"  disabled={true}>
                     <CardGiftcardIcon onClick={bindPeople}/>
                     <Typography variant="body1" sx={{ml: 1}} onClick={bindPeople}>
                         {localStorage.getItem('peopleNumber') || "未选择"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
-                <NumericKeyboardDialog setOpen={setOpenTicket} open={openTicket} onSave={handleSaveResult}/>
-                <NumericKeyboardDialog setOpen={setOpenPeople} open={openPeople} onSave={handleSavePeopleResult}/>
-                <NumericKeyboardDialog setOpen={setOpenPhone} open={openPhone} onSave={handleSavePhoneResult}/>
+                <NumericKeyboardDialog setOpen={setOpenTicket} open={openTicket} onSave={handleSaveResult} title={"桌台号"}/>
+                <NumericKeyboardDialog setOpen={setOpenPeople} open={openPeople} onSave={handleSavePeopleResult} title={"就餐人数"}/>
+                <NumericKeyboardDialog setOpen={setOpenPhone} open={openPhone} onSave={handleSavePhoneResult} title={"会员手机号"}/>
             </Box>
 
 
             {/*选择订单结算方式*/}
             <Divider sx={{my: 2}}/>
-            <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+            <Box sx={{display: "flex", justifyContent: "space-between", gap: 2}}>
                 <Button
                     variant="outlined"
                     color="warning"

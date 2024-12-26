@@ -13,11 +13,11 @@ interface Props {
     open: boolean; // 传入的 open 状态
     setOpen: React.Dispatch<React.SetStateAction<boolean>>; // 用于更新 open 状态的函数
     onSave: (value: string) => void; // 保存时触发的回调函数，接收一个字符串参数
+    title?: string; // 可选的标题参数
 }
 
-export default function  NumericKeyboardDialog  (props: Props) {
-
-    const { open, setOpen, onSave } = props;
+export default function NumericKeyboardDialog(props: Props) {
+    const { open, setOpen, onSave, title = "请输入数字" } = props; // 设置默认标题
     const [inputValue, setInputValue] = useState("");
 
     // 数字按钮点击事件
@@ -48,7 +48,7 @@ export default function  NumericKeyboardDialog  (props: Props) {
 
     return (
         <Dialog open={open} onClose={handleCancel}>
-            <DialogTitle>请输入数字</DialogTitle>
+            <DialogTitle>{title}</DialogTitle> {/* 使用传入的标题 */}
             <DialogContent>
                 <TextField
                     value={inputValue}
@@ -89,4 +89,4 @@ export default function  NumericKeyboardDialog  (props: Props) {
             </DialogActions>
         </Dialog>
     );
-};
+}
