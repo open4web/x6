@@ -2,7 +2,6 @@ import React, {useEffect, useState} from 'react';
 import {Box, Button, Card, CardContent, Container, Table, TableBody, TableRow, Typography} from '@mui/material';
 import {useFetchData} from "../../../common/FetchData";
 import TableCell from "@mui/material/TableCell";
-import {ordersData} from "./demo";
 import {Order} from "./types";
 import {FormatTimestampAsTime} from "../../../utils/time";
 import CardActions from "@mui/material/CardActions";
