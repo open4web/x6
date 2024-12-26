@@ -1,9 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {Box, Card, CardContent, Container, Table, TableBody, TableRow, Typography} from '@mui/material';
+import {Box, Button, Card, CardContent, Container, Table, TableBody, TableRow, Typography} from '@mui/material';
 import {useFetchData} from "../../../common/FetchData";
 import TableCell from "@mui/material/TableCell";
 import {ordersData} from "./demo";
 import {Order} from "./types";
+import {FormatTimestampAsTime} from "../../../utils/time";
+import CardActions from "@mui/material/CardActions";
 
 // 订单状态定义
 const statusColors = [
@@ -69,11 +71,22 @@ function MyOrder() {
                             }}
                         >
                             <CardContent>
-                                <Typography variant="body1" sx={{fontWeight: 'bold', color: '#3e2723'}}>
+                                {/* OrderNo 和 TableNo */}
+                                <Typography
+                                    variant="body1"
+                                    sx={{ fontWeight: 'bold', color: '#3e2723', display: 'flex', justifyContent: 'space-between' }}
+                                >
                                     {`#${order?.identity?.order_no}`}
-                                </Typography>
-                                <Typography variant="body2" sx={{color: '#6d4c41'}}>
-                                    {`@${order?.identity?.table_no}`}
+
+                                    {order?.identity?.table_no && (
+                                        <Typography
+                                            component="span"
+                                            variant="body1"
+                                            sx={{ fontWeight: 'normal', color: '#6d4c41', marginLeft: 1 }}
+                                        >
+                                            {`@${order?.identity?.table_no}`}
+                                        </Typography>
+                                    )}
                                 </Typography>
 
                                 {/* 商品详情部分 */}
@@ -112,6 +125,25 @@ function MyOrder() {
                                     </Table>
                                 </Box>
                             </CardContent>
+                            <CardActions>
+                                <Typography
+                                    component="span"
+                                    variant="body1"
+                                    sx={{ fontWeight: 'normal', color: '#3e2723', marginLeft: 1 }}
+                                >
+                                    {FormatTimestampAsTime(order.stp.created_at)}
+                                </Typography>
+                                {order?.status == 0 && (
+                                <Button size="large" color="info">
+                                    支付
+                                </Button>
+                                    )}
+                                {order?.status > 0 && (
+                                    <Button size="large" color="primary">
+                                        退款
+                                    </Button>
+                                )}
+                            </CardActions>
                         </Card>
                     </Box>
                 ))}

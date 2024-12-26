@@ -13,6 +13,9 @@ export type Bucket = {
 // 更新订单数据类型，增加 `buckets` 字段
 export type Order = {
     id: string;
+    stp: {
+        created_at: number;
+    },
     identity: {
         order_no: string;
         table_no: string;
