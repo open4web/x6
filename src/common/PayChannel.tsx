@@ -53,7 +53,7 @@ function a11yProps(index: number) {
     };
 }
 
-export default function PayChannel({setCart, price, setOpen, orderID}: any) {
+export default function PayChannel({setCart, price, setOpen, orderID, at}: any) {
     const [value, setValue] = React.useState(0);
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
@@ -80,7 +80,7 @@ export default function PayChannel({setCart, price, setOpen, orderID}: any) {
             order_id: orderID,
             desc: '一碗粉',
             amount: price,
-            at: localStorage.getItem("current_store_id") as string,
+            at: at,
             code: scannedCode,
         };
 
@@ -89,6 +89,8 @@ export default function PayChannel({setCart, price, setOpen, orderID}: any) {
             if (setCart) {
                 setCart([]); // 清空购物车
             }
+
+            // result_code: "FAIL"
             setOpen(false); // 关闭支付弹窗
             setOrderDrawerOpen(true); // 打开订单弹窗
             toast.success("支付成功", {position: "top-center", autoClose: 3000});

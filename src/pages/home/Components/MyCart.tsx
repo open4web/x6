@@ -362,7 +362,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             >
                 <DialogTitle align={"center"}>{"选择支付渠道"}</DialogTitle>
                 <DialogContent>
-                    <PayChannel setCart={setCartItems} price={price} setOpen={setOpenPayChannel} orderID={orderID}/>
+                    <PayChannel setCart={setCartItems} price={price} setOpen={setOpenPayChannel} orderID={orderID} at={localStorage.getItem("current_store_id")}/>
                 </DialogContent>
                 <DialogActions>
                     {/*<Button onClick={handleClose}>取消</Button>*/}
