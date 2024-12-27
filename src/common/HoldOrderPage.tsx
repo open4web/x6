@@ -1,7 +1,7 @@
 import React from 'react';
 import {Box, Button, Divider, ListItemButton, ListItemText, Paper, Typography} from '@mui/material';
-import {CartItemHolder} from "../pages/home/Components/MyCart";
 import {useCartContext} from "../dataProvider/MyCartProvider";
+import {CartItemHolder} from "./types";
 
 type HoldOrderPageProps = {
     open: boolean;

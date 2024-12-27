@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import {CartItem, CartItemHolder} from '../pages/home/Components/MyCart';
+import {CartItem, CartItemHolder} from "../common/types";
 
 type CartContextType = {
     cartItems: CartItem[];
