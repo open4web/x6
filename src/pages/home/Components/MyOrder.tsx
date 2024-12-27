@@ -5,6 +5,13 @@ import TableCell from "@mui/material/TableCell";
 import {Order} from "./types";
 import {FormatTimestampAsTime} from "../../../utils/time";
 import CardActions from "@mui/material/CardActions";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import PayChannel from "../../../common/PayChannel";
+import DialogActions from "@mui/material/DialogActions";
+import {TransitionProps} from "@mui/material/transitions";
+import Slide from "@mui/material/Slide";
 
 // 订单状态定义
 const statusColors = [
@@ -34,6 +41,7 @@ function getStatusColor(status: number) {
 function MyOrder() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [viewMode, setViewMode] = useState('list');
+    const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const fetchData = useFetchData();
 
     useEffect(() => {
@@ -49,9 +57,12 @@ function MyOrder() {
         });
     }, []); // Empty dependency array ensures the effect runs only once
 
-    // 切换展示模式
-    const handleViewModeChange = (mode: string) => {
-        setViewMode(mode);
+    const handleClose = () => {
+        setOpenPayChannel(false);
+    };
+
+    const handleContinuePay = () => {
+        setOpenPayChannel(true);
     };
 
     return (
@@ -133,7 +144,7 @@ function MyOrder() {
                                     {FormatTimestampAsTime(order.stp.created_at)}
                                 </Typography>
                                 {order?.status == 0 && (
-                                <Button size="large" color="info">
+                                <Button size="large" color="info" onClick={handleContinuePay}>
                                     支付
                                 </Button>
                                     )}
@@ -144,6 +155,26 @@ function MyOrder() {
                                 )}
                             </CardActions>
                         </Card>
+
+
+                        {/*    支付渠道弹窗*/}
+                        <Dialog
+                            open={openPayChannel}
+                            fullWidth={true}
+                            TransitionComponent={Transition}
+                            keepMounted
+                            onClose={handleClose}
+                            aria-describedby="alert-dialog-slide-description"
+                        >
+                            <DialogTitle align={"center"}>{"选择支付渠道"}</DialogTitle>
+                            <DialogContent>
+                                <PayChannel setCart={null} price={order?.price?.pay_price} setOpen={setOpenPayChannel} orderID={order?.identity?.order_no}/>
+                            </DialogContent>
+                            <DialogActions>
+                                {/*<Button onClick={handleClose}>取消</Button>*/}
+                                {/*<Button onClick={handleClose}>支付</Button>*/}
+                            </DialogActions>
+                        </Dialog>
                     </Box>
                 ))}
             </Box>
@@ -152,3 +183,13 @@ function MyOrder() {
 }
 
 export default MyOrder;
+
+
+const Transition = React.forwardRef(function Transition(
+    props: TransitionProps & {
+        children: React.ReactElement<any, any>;
+    },
+    ref: React.Ref<unknown>,
+) {
+    return <Slide direction="up" ref={ref} {...props} />;
+});

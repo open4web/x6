@@ -32,30 +32,7 @@ import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import RemoveIcon from "@mui/icons-material/RemoveCircleOutline";
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-
-export interface MyProductProps {
-    id: string;
-    name: string;
-}
-
-export interface CartItem {
-    id: string;
-    name: string;
-    price: number;
-    quantity: number;
-    propsOptions: MyProductProps[];
-}
-
-export interface MyCartProps {
-    cartItems: CartItem[];
-    setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
-}
-
-export interface CartItemHolder {
-    id: number;
-    createdAt: string;
-    cartItems: CartItem[];
-}
+import {CartItem, MyCartProps} from "../../../common/types";
 
 export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const {holdOrders, setHoldOrders} = useCartContext();
@@ -100,7 +77,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
     };
 
-    const handlePayment = async () => {
+    const handlePlaceOrder = async () => {
         const Cookie = localStorage.getItem('cookie') || '';
         console.log('place order now -->', price);
 
@@ -366,7 +343,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                     variant="contained"
                     color="success"
                     fullWidth
-                    onClick={handlePayment}
+                    onClick={handlePlaceOrder}
                     disabled={cartItems.length === 0}
                 >
                     结算

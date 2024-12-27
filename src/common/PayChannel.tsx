@@ -86,7 +86,9 @@ export default function PayChannel({setCart, price, setOpen, orderID}: any) {
 
         try {
             await fetchData('/v1/pay/scan/pay', () => {}, "POST", userData);
-            setCart([]); // 清空购物车
+            if (setCart) {
+                setCart([]); // 清空购物车
+            }
             setOpen(false); // 关闭支付弹窗
             setOrderDrawerOpen(true); // 打开订单弹窗
             toast.success("支付成功", {position: "top-center", autoClose: 3000});

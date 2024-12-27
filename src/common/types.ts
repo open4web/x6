@@ -1,3 +1,5 @@
+import * as React from "react";
+
 export interface LoginInput {
     phone?: string;
     password?: string;
@@ -25,4 +27,28 @@ export interface ScanPayRequest {
     amount: number;
     at?: string; // 可选属性需要添加 "?" 符号
     code: string;
+}
+
+export interface MyProductProps {
+    id: string;
+    name: string;
+}
+
+export interface CartItem {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    propsOptions: MyProductProps[];
+}
+
+export interface MyCartProps {
+    cartItems: CartItem[];
+    setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+}
+
+export interface CartItemHolder {
+    id: number;
+    createdAt: string;
+    cartItems: CartItem[];
 }

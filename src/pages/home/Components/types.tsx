@@ -21,6 +21,9 @@ export type Order = {
         table_no: string;
         pay_price: number;
     };
+    price: {
+        pay_price: number;
+    },
     status: number; // 订单状态数字
     date: string;
     buckets: Bucket[]; // 商品列表
