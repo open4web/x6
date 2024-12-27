@@ -3,11 +3,11 @@ import { Fab, Grid } from '@mui/material';
 import MyProducts from "../home/Components/MyProducts";
 import { toast } from "react-toastify";
 import MyCartDrawer from "../home/Components/MyCartDrawer";
-import { CartItem } from "../home/Components/MyCart";
 import { useCartContext } from "../../dataProvider/MyCartProvider";
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import GradingIcon from '@mui/icons-material/Grading';
 import MyOrderDrawer from "../home/Components/MyOrderDrawer";
+import {CartItem} from "../../common/types";
 
 export const MyHome = () => {
     const { cartItems, setCartItems, drawerOpen, setDrawerOpen, setOrderDrawerOpen } = useCartContext();
