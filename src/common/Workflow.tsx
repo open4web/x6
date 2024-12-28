@@ -35,9 +35,6 @@ const OrderWorkflow: React.FC<OrderWorkflowProps> = ({ workflow, loading = false
     if (workflow.length === 0) {
         return (
             <Box sx={{ width: "100%", padding: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                    订单流程
-                </Typography>
                 <Typography variant="body2" color="text.secondary">
                     暂无流程记录。
                 </Typography>
@@ -47,10 +44,7 @@ const OrderWorkflow: React.FC<OrderWorkflowProps> = ({ workflow, loading = false
 
     return (
         <Box sx={{ width: "100%", padding: 2 }}>
-            <Typography variant="h6" gutterBottom>
-                订单流程
-            </Typography>
-            <Stepper activeStep={workflow.length - 1} orientation="vertical">
+            <Stepper activeStep={workflow.length - 1} orientation="horizontal">
                 {workflow.map((step, index) => (
                     <Step key={index}>
                         <StepLabel>
@@ -60,7 +54,7 @@ const OrderWorkflow: React.FC<OrderWorkflowProps> = ({ workflow, loading = false
                         </StepLabel>
                         <Box sx={{ marginLeft: 2, marginTop: 1 }}>
                             <Typography variant="body2" sx={{ color: "#616161" }}>
-                                时间: {step.description ? FormatTimestampAsTime(step.description) : "未知"}
+                                时间: {step.description ? step.description : "未知"}
                             </Typography>
                             {step.operator && (
                                 <Typography variant="body2" sx={{ color: "#616161" }}>
