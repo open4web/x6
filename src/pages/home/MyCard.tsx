@@ -34,10 +34,12 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
 interface Props {
     item: ProductItem;
     handleClick: (item: any) => void;
+    kindName: string;
+    kindColor: string;
 }
 
 const MyCard = (props: Props) => {
-    const { item, handleClick } = props;
+    const { item, handleClick, kindName,kindColor  } = props;
     const [expanded, setExpanded] = React.useState(false);
     const [open, setOpen] = React.useState(false);
 
@@ -85,8 +87,8 @@ const MyCard = (props: Props) => {
         <Card sx={{ maxWidth: 445, margin: 1 }}>
             <CardHeader
                 avatar={
-                    <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
-                        X
+                    <Avatar sx={{ bgcolor: kindColor }} aria-label="recipe">
+                        {kindName}
                     </Avatar>
                 }
                 title={item?.name}
