@@ -1,17 +1,23 @@
 import * as React from 'react';
-import {useEffect} from 'react';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import {FilledInput, FormControl, IconButton, InputAdornment, InputLabel} from "@mui/material";
+import { useEffect } from 'react';
+import {
+    Tabs,
+    Tab,
+    Typography,
+    Box,
+    FormControl,
+    InputLabel,
+    FilledInput,
+    InputAdornment,
+    IconButton,
+} from "@mui/material";
 import VerifiedIcon from '@mui/icons-material/Verified';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import {ChannelType, ScanPayRequest} from "./types";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 import QRScanner from "./ScanCode";
-import {useFetchData} from "./FetchData";
-import {useCartContext} from "../dataProvider/MyCartProvider";
+import { useFetchData } from "./FetchData";
+import { useCartContext } from "../dataProvider/MyCartProvider";
+import { ChannelType, ScanPayRequest } from "./types";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -19,27 +25,17 @@ interface TabPanelProps {
     value: number;
 }
 
-interface PayResp {
-    time_end?: string;
-    out_trade_no: string;
-    transaction_id: string;
-    open_id: string;
-    total_fee: string;
-    result_code: string;
-}
-
-function CustomTabPanel({children, value, index, ...other}: TabPanelProps) {
+function CustomTabPanel({ children, value, index }: TabPanelProps) {
     return (
         <div
             role="tabpanel"
             hidden={value !== index}
-            id={`simple-tabpanel-${index}`}
-            aria-labelledby={`simple-tab-${index}`}
-            {...other}
+            id={`tabpanel-${index}`}
+            aria-labelledby={`tab-${index}`}
         >
             {value === index && (
-                <Box sx={{p: 5, borderRadius: "3px"}}>
-                    <Typography>{children}</Typography>
+                <Box sx={{ p: 3 }}>
+                    {children}
                 </Box>
             )}
         </div>
@@ -48,17 +44,17 @@ function CustomTabPanel({children, value, index, ...other}: TabPanelProps) {
 
 function a11yProps(index: number) {
     return {
-        id: `simple-tab-${index}`,
-        'aria-controls': `simple-tabpanel-${index}`,
+        id: `tab-${index}`,
+        'aria-controls': `tabpanel-${index}`,
     };
 }
 
-export default function PayChannel({setCart, price, setOpen, orderID, at}: any) {
+export default function PayChannel({ setCart, price, setOpen, orderID, at }: any) {
     const [value, setValue] = React.useState(0);
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
-    const {setDrawerOpen, setOrderDrawerOpen} = useCartContext();
-    const [isScanning, setIsScanning] = React.useState(true); // 控制是否启用扫描
+    const { setDrawerOpen, setOrderDrawerOpen } = useCartContext();
+    const [isScanning, setIsScanning] = React.useState(true);
     const fetchData = useFetchData();
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -68,17 +64,16 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
     const handleResetInput = () => setCode('');
 
     const handleCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const inputValue = event.target.value;
-        const trimmedValue = inputValue.slice(-18); // 保留最多18位字符
-        setCode(trimmedValue);
-        setVerified(trimmedValue.length === 18);
+        const inputValue = event.target.value.slice(-18); // Keep the last 18 characters
+        setCode(inputValue);
+        setVerified(inputValue.length === 18);
     };
 
     const submitPay = async (scannedCode: string) => {
         const userData: ScanPayRequest = {
             channel: ChannelType.WeChatPay,
             order_id: orderID,
-            desc: '一碗粉',
+            desc: '商品支付',
             amount: price,
             at: at,
             code: scannedCode,
@@ -87,15 +82,13 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
         try {
             await fetchData('/v1/pay/scan/pay', () => {}, "POST", userData);
             if (setCart) {
-                setCart([]); // 清空购物车
+                setCart([]);
             }
-
-            // result_code: "FAIL"
-            setOpen(false); // 关闭支付弹窗
-            setOrderDrawerOpen(true); // 打开订单弹窗
-            toast.success("支付成功", {position: "top-center", autoClose: 3000});
+            setOpen(false);
+            setOrderDrawerOpen(true);
+            toast.success("支付成功", { position: "top-center", autoClose: 3000 });
         } catch (error) {
-            toast.error("支付失败，请重试", {position: "top-center", autoClose: 3000});
+            toast.error("支付失败，请重试", { position: "top-center", autoClose: 3000 });
         }
     };
 
@@ -121,8 +114,8 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
         };
     }, [code]);
 
-    const payCodeInput = (
-        <FormControl sx={{m: 2, width: '45ch'}} variant="filled">
+    const PayCodeInput = (
+        <FormControl sx={{ m: 2, width: '100%' }} variant="filled">
             <InputLabel htmlFor="filled-adornment-code">支付授权码</InputLabel>
             <FilledInput
                 id="filled-adornment-code"
@@ -131,7 +124,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
                 endAdornment={
                     <InputAdornment position="end">
                         <IconButton onClick={handleResetInput} edge="end">
-                            {verified ? <VerifiedIcon color="success"/> : <RestartAltIcon/>}
+                            {verified ? <VerifiedIcon color="success" /> : <RestartAltIcon />}
                         </IconButton>
                     </InputAdornment>
                 }
@@ -140,8 +133,8 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
     );
 
     return (
-        <Box sx={{width: '100%', borderRadius: "6px"}}>
-            <Box sx={{borderBottom: 2, borderColor: 'divider'}}>
+        <Box sx={{ width: '100%', p: 2, borderRadius: 2, boxShadow: 3 }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                 <Tabs value={value} onChange={handleChange} aria-label="支付渠道选择">
                     <Tab label="自动" {...a11yProps(0)} />
                     <Tab label="微信" {...a11yProps(1)} />
@@ -152,19 +145,19 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
             </Box>
             {[0, 1, 2, 3].map(index => (
                 <CustomTabPanel key={index} value={value} index={index}>
-                    {payCodeInput}
+                    {PayCodeInput}
                 </CustomTabPanel>
             ))}
             <CustomTabPanel value={value} index={4}>
                 <QRScanner
                     onScanSuccess={(scannedCode: string) => {
                         if (isScanning) {
-                            setIsScanning(false); // 暂时停止扫描，避免重复触发
-                            submitPay(scannedCode).finally(() => setIsScanning(true)); // 支付完成后允许再次扫描
+                            setIsScanning(false);
+                            submitPay(scannedCode).finally(() => setIsScanning(true));
                         }
                     }}
                     onScanLimitReached={() => {
-                        toast.warning("扫描尝试次数已达到限制，请重新加载页面或检查设备。", {position: "top-center", autoClose: 5000});
+                        toast.warning("扫描尝试次数已达到限制，请检查设备或刷新页面。", { position: "top-center", autoClose: 5000 });
                     }}
                 />
             </CustomTabPanel>

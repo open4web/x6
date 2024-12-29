@@ -15,6 +15,7 @@ import {
     DialogTitle,
     Slide,
     CardActions,
+    IconButton,
 } from '@mui/material';
 import TableCell from '@mui/material/TableCell';
 import { TransitionProps } from '@mui/material/transitions';
@@ -23,6 +24,8 @@ import { FormatTimestampAsTime } from '../../../utils/time';
 import MyOrderDetail from '../../../common/MyOrderDetail';
 import PayChannel from '../../../common/PayChannel';
 import { Order } from './types';
+import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
+import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
 
 const statusColors = ['#ffe0b2', '#c5e1a5']; // OrderInit, OrderPaid
 
@@ -86,6 +89,7 @@ function MyOrder() {
                                 borderRadius: 1,
                             }}
                         >
+
                             <CardContent>
                                 <Typography
                                     variant="body1"
@@ -94,18 +98,25 @@ function MyOrder() {
                                         color: '#3e2723',
                                         display: 'flex',
                                         justifyContent: 'space-between',
+                                        alignItems: 'center',
                                     }}
                                 >
-                                    {`#${order?.identity?.order_no}`}
-                                    {order?.identity?.table_no && (
-                                        <Typography
-                                            component="span"
-                                            variant="body1"
-                                            sx={{ fontWeight: 'normal', color: '#6d4c41', marginLeft: 1 }}
-                                        >
-                                            {`@${order?.identity?.table_no}`}
-                                        </Typography>
-                                    )}
+                                    <Box>
+                                        {`#${order?.identity?.order_no}`}
+                                        {order?.identity?.table_no && (
+                                            <Typography
+                                                component="span"
+                                                variant="body1"
+                                                sx={{
+                                                    fontWeight: 'normal',
+                                                    color: '#6d4c41',
+                                                    marginLeft: 1,
+                                                }}
+                                            >
+                                                {`@${order?.identity?.table_no}`}
+                                            </Typography>
+                                        )}
+                                    </Box>
                                 </Typography>
                                 <Box sx={{ height: 100, overflowY: 'auto' }}>
                                     <Table size="small" aria-label="buckets table">
@@ -151,9 +162,12 @@ function MyOrder() {
                                         退款
                                     </Button>
                                 )}
-                                <Button size="large" color="success" onClick={() => handleOrderDetail(order)}>
-                                    详情
-                                </Button>
+                                <IconButton aria-label="delete" size="large" color={"error"}>
+                                    < PublishedWithChangesIcon />
+                                </IconButton>
+                                <IconButton aria-label="delete" size="large" color={"success"} onClick={() => handleOrderDetail(order)}>
+                                    < ExpandCircleDownIcon />
+                                </IconButton>
                             </CardActions>
                         </Card>
                     </Box>
@@ -175,14 +189,19 @@ function MyOrder() {
                     onClose={handleClosePayChannel}
                     aria-describedby="alert-dialog-slide-description"
                 >
-                    <DialogTitle align="center">选择支付渠道</DialogTitle>
+                    <DialogTitle>
+                        <Typography variant="h6" align="center">订单号: {selectedOrder.identity?.order_no}</Typography>
+                        <Typography variant="subtitle1" align="center" color="text.secondary">
+                            待支付金额: ¥{selectedOrder?.price?.pay_price.toFixed(2)}
+                        </Typography>
+                    </DialogTitle>
                     <DialogContent>
                         <PayChannel
                             setCart={null}
-                            price={selectedOrder.price.pay_price}
+                            price={selectedOrder?.price?.pay_price}
                             setOpen={setOpenPayChannel}
-                            orderID={selectedOrder.identity.order_no}
-                            at={selectedOrder.merchant.id}
+                            orderID={selectedOrder?.identity?.order_no}
+                            at={selectedOrder?.merchant?.id}
                         />
                     </DialogContent>
                     <DialogActions />
