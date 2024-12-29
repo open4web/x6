@@ -100,4 +100,5 @@ export interface SpiceOptions  {
 export interface ProductCategory {
     id: string;
     name: string;
+    product_id_list: string[]; // 可选字段，存储关联产品的 ID
 }
