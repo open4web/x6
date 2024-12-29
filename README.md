@@ -16,3 +16,7 @@ Features:
 	•	Expandable Functionality: Ready for integration with payment APIs or backend services.
 
 Feel free to expand this as needed based on additional features!
+
+## deploy
+
+- deploy again
