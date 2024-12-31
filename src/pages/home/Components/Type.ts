@@ -83,6 +83,7 @@ export interface ProductItem {
     desc: string;
     // Add more properties as needed
     spiceOptions: PropsOptions[];
+    menu: string[];
 }
 
 export interface PropsOptions  {

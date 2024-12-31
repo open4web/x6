@@ -1,13 +1,20 @@
 import React, {useEffect, useState, useMemo} from 'react';
-import {Grid, Chip, Box, TextField} from '@mui/material';
+import {Grid, Chip, Box} from '@mui/material';
 import MyCard from "../MyCard";
 import {DetailsProps, ProductCategory, ProductItem} from "./Type";
 import {useFetchData} from "../../../common/FetchData";
 
-function generateRandomColor(): string {
-    const hue = Math.floor(Math.random() * 360); // 随机色相
-    const saturation = 70; // 固定饱和度
-    const lightness = 50; // 固定亮度
+function generateColorFromId(id: string): string {
+    // 简单的哈希函数，将字符串转化为一个数值
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    // 将哈希值转化为颜色值
+    const hue = Math.abs(hash % 360); // 取模 360 得到 0-360 之间的值
+    const saturation = 70; // 固定的饱和度
+    const lightness = 50; // 固定的亮度
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
@@ -18,7 +25,6 @@ function MyProducts({handleClick}: DetailsProps) {
     const [query, setQuery] = useState("");
     const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
     const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>({});
-
 
     const fetchData = useFetchData();
 
@@ -32,22 +38,26 @@ function MyProducts({handleClick}: DetailsProps) {
             const cm = response?.categories || [];
             const pd = response?.products || [];
 
+            // 去重处理
+            const uniqueProducts = Array.from(new Map(pd.map((item: { id: any; }) => [item.id, item])).values());
+
             setCategories(cm);
-            setData(pd);
-            // 转换 categories 为 id -> name 的映射
+            // @ts-ignore
+            setData(uniqueProducts);
+
             const nameMap = cm.reduce((acc: Record<string, string>, category: ProductCategory) => {
                 acc[category.id] = category.name;
                 return acc;
             }, {});
 
             const colorMap = cm.reduce((acc: Record<string, string>, category: ProductCategory) => {
-                acc[category.id] = generateRandomColor(); // 为每个类别生成随机颜色
+                acc[category.id] = generateColorFromId(category.id);
                 return acc;
             }, {});
 
             setCategoryMap(nameMap);
+            console.log("===nameMap=>", nameMap)
             setCategoryColorMap(colorMap);
-
         }, "POST", userData);
     }, [activeTab]);
 
@@ -58,31 +68,31 @@ function MyProducts({handleClick}: DetailsProps) {
 
     const filteredData = useMemo(() => {
         return data.filter(item => {
-            const matchesCategory = activeTab === '' || categories.some(cat => cat.id === activeTab && cat.product_id_list.includes(item.id));
+            const matchesCategory =
+                activeTab === '' || (categories.find(cat => cat.id === activeTab)?.product_id_list || []).includes(item.id);
+
             const matchesQuery = query === '' || item.name.toLowerCase().includes(query.toLowerCase());
-            return matchesCategory && matchesQuery;
+
+            const matchesMenu = item.menu?.some(menuId =>
+                categories.some(cat => cat.id === menuId)
+            );
+
+            return matchesCategory && matchesQuery && matchesMenu;
         });
     }, [data, activeTab, query, categories]);
 
     return (
         <Box>
-            {/*<Box sx={{mb: 2}}>*/}
-            {/*    <TextField*/}
-            {/*        label="查找"*/}
-            {/*        variant="outlined"*/}
-            {/*        value={query}*/}
-            {/*        onChange={(e) => setQuery(e.target.value)}*/}
-            {/*    />*/}
-            {/*</Box>*/}
-            {/* Category Chips */}
             <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', mb: 2 }}>
                 <Chip
                     label="All"
                     clickable
                     style={{
-                        backgroundColor: activeTab === '' ? '#1976d2' : '#e0e0e0', // primary or default color
-                        color: activeTab === '' ? '#fff' : '#000', // text color based on active state
+                        backgroundColor: activeTab === '' ? '#1976d2' : '#e0e0e0',
+                        color: activeTab === '' ? '#fff' : '#000',
+                        border: activeTab === '' ? '2px solid #1976d2' : '1px solid #e0e0e0',
                     }}
+                    icon={activeTab === '' ? <span style={{ fontWeight: 'bold', color: '#fff' }}>✔</span> : undefined}
                     onClick={() => handleChipClick('')}
                 />
                 {categories.map(category => (
@@ -91,16 +101,16 @@ function MyProducts({handleClick}: DetailsProps) {
                         label={category.name}
                         clickable
                         style={{
-                            backgroundColor: categoryColorMap[category.id] || '#e0e0e0', // 根据类型 ID 设置颜色，默认灰色
-                            color: '#fff', // 设置文本颜色为白色，保证对比度
-                            border: activeTab === category.id ? '2px solid #1976d2' : 'none', // 添加边框以突出选中状态
+                            backgroundColor: categoryColorMap[category.id] || '#e0e0e0',
+                            color: '#fff',
+                            border: activeTab === category.id ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                            boxShadow: activeTab === category.id ? '0 0 10px rgba(25, 118, 210, 0.5)' : 'none',
                         }}
+                        icon={activeTab === category.id ? <span style={{ fontWeight: 'bold', color: '#fff' }}>✔</span> : undefined}
                         onClick={() => handleChipClick(category.id)}
                     />
                 ))}
             </Box>
-
-            {/* Search Bar */}
 
             {/* Product Grid */}
             <Grid container spacing={2}>
@@ -109,8 +119,8 @@ function MyProducts({handleClick}: DetailsProps) {
                         <MyCard
                             item={item}
                             handleClick={handleClick}
-                            kindName={categoryMap[item.kind] || "X"} // 如果未找到匹配的，返回 "x"
-                            kindColor={categoryColorMap[item.kind] || "#ccc"} // 如果未找到匹配的，返回默认颜色
+                            kindName={categoryMap[activeTab] || "X"}
+                            kindColor={categoryColorMap[activeTab] || "#ccc"}
                         />
                     </Grid>
                 ))}

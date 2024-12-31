@@ -14,7 +14,7 @@ const MyAppBar = (props: any) => {
     return (
         <AppBar
             {...props}
-            color="success"
+            color="primary"
         >
             <MerchantSelect/>
             {/* 避免右上角的按键挤到左上角*/}
