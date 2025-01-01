@@ -58,7 +58,7 @@ const OrderWorkflow: React.FC<OrderWorkflowProps> = ({ workflow, loading = false
                             </Typography>
                             {step.operator && (
                                 <Typography variant="body2" sx={{ color: "#616161" }}>
-                                    操作人: {step.operator} (ID: {step.operator_id})
+                                    操作人: {step.operator}
                                 </Typography>
                             )}
                         </Box>
