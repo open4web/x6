@@ -70,10 +70,28 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open,  orderData, onClose
                             {orderData.buckets.map((bucket) => (
                                 <React.Fragment key={bucket.id}>
                                     <ListItem>
-                                        <ListItemText
-                                            primary={`${bucket.name} x${bucket.number}`}
-                                            secondary={`¥${bucket.price}`}
-                                        />
+                                        <Box
+                                            display="flex"
+                                            justifyContent="space-between"
+                                            alignItems="center"
+                                            width="100%"
+                                        >
+                                            <Typography variant="body1">
+                                                {bucket.name} x{bucket.number}
+                                            </Typography>
+                                            <Box textAlign="right">
+                                                <Typography variant="body2" color="textSecondary">
+                                                    单价: ¥{bucket.price.toFixed(2)}
+                                                </Typography>
+                                                <Typography
+                                                    variant="body1"
+                                                    color="error"
+                                                    sx={{ fontWeight: 'bold' }}
+                                                >
+                                                    小计: ¥{(bucket.price * bucket.number).toFixed(2)}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
                                     </ListItem>
                                     <Divider />
                                 </React.Fragment>
