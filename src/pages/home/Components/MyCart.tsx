@@ -24,6 +24,8 @@ import {useFetchData} from "../../../common/FetchData";
 import {CartItem, MyCartProps} from "../../../common/types";
 import RemoveIcon from "@mui/icons-material/RemoveCircleOutline";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import {FormatDate} from "../../../common/MyDatetime";
+import {toast} from "react-toastify";
 
 export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const {holdOrders, setHoldOrders} = useCartContext();
@@ -43,6 +45,38 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             setOrderID(response?.identity?.order_no);
             setOpenPayChannel(true);
         }, "POST", userData);
+    };
+
+
+    const holdOrder = () => {
+        console.log("Holding order...");
+
+        // 从 localStorage 获取当前已存储的 holdOrders 列表
+        const holdOrders = JSON.parse(localStorage.getItem("holdOrders") || "[]");
+
+        // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
+        let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
+
+        // 构建新的 holdOrder 对象
+        const newHoldOrder = {
+            id: uniqueId, // 使用全局唯一 ID
+            cartItems: cartItems, // 保存当前购物车的内容
+            createdAt: FormatDate(new Date()), // 保存创建时间
+        };
+
+        // 将新订单添加到 holdOrders 数组中
+        holdOrders.push(newHoldOrder);
+
+        // 更新 holdOrders 到 localStorage
+        localStorage.setItem("holdOrders", JSON.stringify(holdOrders));
+        setHoldOrders(holdOrders)
+
+        // 更新 uniqueId 到 localStorage，确保每次调用都递增
+        localStorage.setItem("uniqueId", (uniqueId + 1).toString());
+
+        // 清空购物车
+        setCartItems([]);
+        console.log("Hold order stored:", newHoldOrder);
     };
 
     const totalPrice = cartItems.reduce(
@@ -131,6 +165,15 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                     disabled={cartItems.length === 0}
                 >
                     清空
+                </Button>
+                <Button
+                    variant="contained"
+                    color="error"
+                    fullWidth
+                    onClick={holdOrder}
+                    disabled={cartItems.length === 0}
+                >
+                    挂单
                 </Button>
                 <Button
                     variant="contained"
