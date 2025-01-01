@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useEffect} from 'react';
 import {styled} from '@mui/material/styles';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
@@ -9,14 +10,12 @@ import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
 import IconButton, {IconButtonProps} from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import {red} from '@mui/material/colors';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import PropsChoose from "./Components/PropsChoose";
 import Box from "@mui/material/Box";
 import {ProductItem} from "./Components/Type";
 import {Badge} from '@mui/material';
-import {useEffect} from "react";
 
 interface ExpandMoreProps extends IconButtonProps {
     expand: boolean;
@@ -123,20 +122,19 @@ const MyCard = (props: Props) => {
                 </CardContent>
             )}
             <CardActions disableSpacing>
-                {/* 购物车按钮带角标 */}
-                <Badge
-                    badgeContent={cartCount}
-                    color="error"
-                    sx={{
-                        '.MuiBadge-badge': {
-                            fontSize: '0.8rem',
-                            height: 20,
-                            minWidth: 20,
-                        },
-                    }}
-                >
-                    {/* Hide "Add to Cart" when expanded */}
-                    {!expanded && (
+                {/* Hide "Add to Cart" when expanded */}
+                {!expanded && (
+                    <Badge
+                        badgeContent={cartCount}
+                        color="error"
+                        sx={{
+                            '.MuiBadge-badge': {
+                                fontSize: '0.8rem',
+                                height: 20,
+                                minWidth: 20,
+                            },
+                        }}
+                    >
                         <IconButton
                             aria-label="add to cart"
                             onClick={handleAddToCart}
@@ -153,8 +151,8 @@ const MyCard = (props: Props) => {
                                 }}
                             />
                         </IconButton>
-                    )}
-                </Badge>
+                    </Badge>
+                )}
                 <ExpandMore
                     expand={expanded}
                     onClick={handleExpandClick}
@@ -169,23 +167,34 @@ const MyCard = (props: Props) => {
                     <PropsChoose uniqueId={uniqueId + 1} productID={item.id} items={item.spiceOptions}/>
                     {/* Add "Add to Cart" button to the bottom when expanded */}
                     <Box sx={{display: 'flex', justifyContent: 'center', marginTop: 2}}>
-
-                        <IconButton
-                            aria-label="add to cart"
-                            onClick={handleAddToCart}
+                        <Badge
+                            badgeContent={cartCount}
+                            color="error"
                             sx={{
-                                color: 'primary', // 显著的颜色，可以替换为其他颜色
-                                '&:hover': {
-                                    color: 'darkorange', // 悬停时的颜色
+                                '.MuiBadge-badge': {
+                                    fontSize: '0.8rem',
+                                    height: 20,
+                                    minWidth: 20,
                                 },
                             }}
                         >
-                            <AddShoppingCartIcon
+                            <IconButton
+                                aria-label="add to cart"
+                                onClick={handleAddToCart}
                                 sx={{
-                                    fontSize: 40, // 增大图标尺寸，默认是 24
+                                    color: 'primary', // 显著的颜色，可以替换为其他颜色
+                                    '&:hover': {
+                                        color: 'darkorange', // 悬停时的颜色
+                                    },
                                 }}
-                            />
-                        </IconButton>
+                            >
+                                <AddShoppingCartIcon
+                                    sx={{
+                                        fontSize: 40, // 增大图标尺寸，默认是 24
+                                    }}
+                                />
+                            </IconButton>
+                        </Badge>
                     </Box>
                 </CardContent>
             </Collapse>
