@@ -65,6 +65,7 @@ export interface IdentityInfo {
 
 export interface DetailsProps {
     handleClick: (item: any) => void;
+    clearCartSignal: boolean; // 用于清空购物车时重置状态
 }
 
 export interface Resp {

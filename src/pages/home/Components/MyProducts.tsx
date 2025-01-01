@@ -18,7 +18,7 @@ function generateColorFromId(id: string): string {
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
-function MyProducts({handleClick}: DetailsProps) {
+function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     const [data, setData] = useState<ProductItem[]>([]);
     const [categories, setCategories] = useState<ProductCategory[]>([]);
     const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
@@ -83,7 +83,7 @@ function MyProducts({handleClick}: DetailsProps) {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', mb: 2 }}>
+            <Box sx={{display: 'flex', gap: 1, overflowX: 'auto', mb: 2}}>
                 <Chip
                     label="All"
                     clickable
@@ -92,7 +92,7 @@ function MyProducts({handleClick}: DetailsProps) {
                         color: activeTab === '' ? '#fff' : '#000',
                         border: activeTab === '' ? '2px solid #1976d2' : '1px solid #e0e0e0',
                     }}
-                    icon={activeTab === '' ? <span style={{ fontWeight: 'bold', color: '#fff' }}>✔</span> : undefined}
+                    icon={activeTab === '' ? <span style={{fontWeight: 'bold', color: '#fff'}}>✔</span> : undefined}
                     onClick={() => handleChipClick('')}
                 />
                 {categories.map(category => (
@@ -106,7 +106,8 @@ function MyProducts({handleClick}: DetailsProps) {
                             border: activeTab === category.id ? '2px solid #1976d2' : '1px solid #e0e0e0',
                             boxShadow: activeTab === category.id ? '0 0 10px rgba(25, 118, 210, 0.5)' : 'none',
                         }}
-                        icon={activeTab === category.id ? <span style={{ fontWeight: 'bold', color: '#fff' }}>✔</span> : undefined}
+                        icon={activeTab === category.id ?
+                            <span style={{fontWeight: 'bold', color: '#fff'}}>✔</span> : undefined}
                         onClick={() => handleChipClick(category.id)}
                     />
                 ))}
@@ -121,6 +122,7 @@ function MyProducts({handleClick}: DetailsProps) {
                             handleClick={handleClick}
                             kindName={categoryMap[activeTab] || "X"}
                             kindColor={categoryColorMap[activeTab] || "#ccc"}
+                            clearCartSignal={clearCartSignal}
                         />
                     </Grid>
                 ))}

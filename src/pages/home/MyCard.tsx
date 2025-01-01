@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { styled } from '@mui/material/styles';
+import {styled} from '@mui/material/styles';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardMedia from '@mui/material/CardMedia';
@@ -7,23 +7,25 @@ import CardContent from '@mui/material/CardContent';
 import CardActions from '@mui/material/CardActions';
 import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
-import IconButton, { IconButtonProps } from '@mui/material/IconButton';
+import IconButton, {IconButtonProps} from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import { red } from '@mui/material/colors';
+import {red} from '@mui/material/colors';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import PropsChoose from "./Components/PropsChoose";
 import Box from "@mui/material/Box";
 import {ProductItem} from "./Components/Type";
+import {Badge} from '@mui/material';
+import {useEffect} from "react";
 
 interface ExpandMoreProps extends IconButtonProps {
     expand: boolean;
 }
 
 const ExpandMore = styled((props: ExpandMoreProps) => {
-    const { expand, ...other } = props;
+    const {expand, ...other} = props;
     return <IconButton {...other} />;
-})(({ theme, expand }) => ({
+})(({theme, expand}) => ({
     transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
     marginLeft: 'auto',
     transition: theme.transitions.create('transform', {
@@ -36,12 +38,14 @@ interface Props {
     handleClick: (item: any) => void;
     kindName: string;
     kindColor: string;
+    clearCartSignal: boolean; // 用于清空购物车时重置状态
 }
 
 const MyCard = (props: Props) => {
-    const { item, handleClick, kindName,kindColor  } = props;
+    const {item, handleClick, kindName, kindColor, clearCartSignal} = props;
     const [expanded, setExpanded] = React.useState(false);
     const [open, setOpen] = React.useState(false);
+    const [cartCount, setCartCount] = React.useState(0); // 管理当前商品在购物车的数量
 
     // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
     let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
@@ -51,6 +55,8 @@ const MyCard = (props: Props) => {
     };
 
     const handleAddToCart = () => {
+        setCartCount(cartCount + 1); // 每次点击增加数量
+
         // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
         let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
 
@@ -83,11 +89,19 @@ const MyCard = (props: Props) => {
         setExpanded(false);
     };
 
+    // 当清空购物车信号变化时重置角标数量
+    useEffect(() => {
+        if (clearCartSignal) {
+            setCartCount(0);
+        }
+    }, [clearCartSignal]);
+
+    // @ts-ignore
     return (
-        <Card sx={{ maxWidth: 445, margin: 1 }}>
+        <Card sx={{maxWidth: 445, margin: 1}}>
             <CardHeader
                 avatar={
-                    <Avatar sx={{ bgcolor: kindColor }} aria-label="recipe">
+                    <Avatar sx={{bgcolor: kindColor}} aria-label="recipe">
                         {kindName}
                     </Avatar>
                 }
@@ -109,39 +123,52 @@ const MyCard = (props: Props) => {
                 </CardContent>
             )}
             <CardActions disableSpacing>
-                {/* Hide "Add to Cart" when expanded */}
-                {!expanded && (
-                    <IconButton
-                        aria-label="add to cart"
-                        onClick={handleAddToCart}
-                        sx={{
-                            color: 'success', // 显著的颜色，可以替换为其他颜色
-                            '&:hover': {
-                                color: 'darkorange', // 悬停时的颜色
-                            },
-                        }}
-                    >
-                        <AddShoppingCartIcon
+                {/* 购物车按钮带角标 */}
+                <Badge
+                    badgeContent={cartCount}
+                    color="error"
+                    sx={{
+                        '.MuiBadge-badge': {
+                            fontSize: '0.8rem',
+                            height: 20,
+                            minWidth: 20,
+                        },
+                    }}
+                >
+                    {/* Hide "Add to Cart" when expanded */}
+                    {!expanded && (
+                        <IconButton
+                            aria-label="add to cart"
+                            onClick={handleAddToCart}
                             sx={{
-                                fontSize: 40, // 增大图标尺寸，默认是 24
+                                color: 'success', // 显著的颜色，可以替换为其他颜色
+                                '&:hover': {
+                                    color: 'darkorange', // 悬停时的颜色
+                                },
                             }}
-                        />
-                    </IconButton>
-                )}
+                        >
+                            <AddShoppingCartIcon
+                                sx={{
+                                    fontSize: 40, // 增大图标尺寸，默认是 24
+                                }}
+                            />
+                        </IconButton>
+                    )}
+                </Badge>
                 <ExpandMore
                     expand={expanded}
                     onClick={handleExpandClick}
                     aria-expanded={expanded}
                     aria-label="show more"
                 >
-                    <ExpandMoreIcon />
+                    <ExpandMoreIcon/>
                 </ExpandMore>
             </CardActions>
             <Collapse in={expanded} timeout="auto" unmountOnExit>
                 <CardContent>
-                    <PropsChoose uniqueId={uniqueId + 1} productID={item.id} items={item.spiceOptions} />
+                    <PropsChoose uniqueId={uniqueId + 1} productID={item.id} items={item.spiceOptions}/>
                     {/* Add "Add to Cart" button to the bottom when expanded */}
-                    <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
+                    <Box sx={{display: 'flex', justifyContent: 'center', marginTop: 2}}>
 
                         <IconButton
                             aria-label="add to cart"
