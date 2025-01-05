@@ -26,12 +26,22 @@ import RemoveIcon from "@mui/icons-material/RemoveCircleOutline";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import {FormatDate} from "../../../common/MyDatetime";
 import {toast} from "react-toastify";
+import NumbersIcon from "@mui/icons-material/Numbers";
+import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
+import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
+import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
+import Looks6Icon from '@mui/icons-material/Looks6';
+import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 
 export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const {holdOrders, setHoldOrders} = useCartContext();
     const [price, setPrice] = React.useState(0);
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const [orderID, setOrderID] = React.useState("");
+    const [openTicket, setOpenTicket] = React.useState(false);
+    const [openPeople, setOpenPeople] = React.useState(false);
+    const [openPhone, setOpenPhone] = React.useState(false);
+    const [takeout, setTakeout] = React.useState(0);
     const fetchData = useFetchData();
 
     const handlePlaceOrder = async () => {
@@ -83,6 +93,35 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         (total, item) => total + item.price * item.quantity,
         0
     );
+
+    const bindPeople = () => {
+        setOpenPeople(true)
+    }
+
+    const bindPhone = () => {
+        setOpenPhone(true)
+        // TODO 查询手机号是否有vip，有则累计积分
+        console.log("查询手机号是否有vip，有则累计积分")
+    }
+
+    const bindTicket = () => {
+        setOpenTicket(true)
+    }
+
+    const handleSaveResult = (value: string) => {
+        console.log("保存的数字是:", value);
+        localStorage.setItem("ticketNumber", value);
+    };
+
+    // handleSavePhoneResult
+    const handleSavePhoneResult = (value: string) => {
+        console.log("保存的数字是:", value);
+        localStorage.setItem("phoneNumber", value);
+    };
+    const handleSavePeopleResult = (value: string) => {
+        console.log("保存的数字是:", value);
+        localStorage.setItem("peopleNumber", value);
+    };
 
     return (
         <Box sx={{width: 380, padding: 1}}>
@@ -155,6 +194,49 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             <Typography variant="h6" sx={{fontWeight: 'bold', color: 'red', textAlign: "right"}}>
                 总计: ¥{totalPrice.toFixed(2)}
             </Typography>
+
+            {/*选择就餐人数*/}
+            <Divider sx={{my: 2}}/>
+            <Box    sx={{
+                m: 1, // 外边距
+                display: 'flex', // 启用 flex 布局
+                justifyContent: 'flex-start', // 水平方向从左到右排列
+                alignItems: 'center', // 垂直居中
+                gap: 2, // 子元素间距
+                flexWrap: 'nowrap', // 禁止换行
+                overflowX: 'auto', // 横向滚动
+            }}>
+                <IconButton aria-label="bindTicket">
+                    <NumbersIcon onClick={bindTicket} />
+                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindTicket}>
+                        {localStorage.getItem('ticketNumber') || "未选择"} {/* 默认显示"未选择" */}
+                    </Typography>
+                </IconButton>
+                <IconButton aria-label="bindPeople">
+                    <EmojiPeopleIcon onClick={bindPeople} />
+                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindPeople}>
+                        {localStorage.getItem('peopleNumber') || "未选择"} {/* 默认显示"未选择" */}
+                    </Typography>
+                </IconButton>
+                <IconButton aria-label="bindPhone">
+                    <PhoneIphoneIcon onClick={bindPhone} />
+                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindPhone}>
+                        {localStorage.getItem('phoneNumber')
+                            ? localStorage.getItem('phoneNumber')?.slice(-4) // 仅展示后 4 位
+                            : "未选择"} {/* 默认显示"未选择" */}
+                    </Typography>
+                </IconButton>
+                <IconButton aria-label="bindPeople" disabled={true}>
+                    <CardGiftcardIcon onClick={bindPeople} />
+                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindPeople}>
+                        {localStorage.getItem('peopleNumber') || "未选择"} {/* 默认显示"未选择" */}
+                    </Typography>
+                </IconButton>
+                <NumericKeyboardDialog setOpen={setOpenTicket} open={openTicket} onSave={handleSaveResult} title={"请输入台号"} min={1} max={99}/>
+                <NumericKeyboardDialog setOpen={setOpenPeople} open={openPeople} onSave={handleSavePeopleResult} title={"就餐人数"} min={1} max={20}/>
+                <NumericKeyboardDialog setOpen={setOpenPhone} open={openPhone} onSave={handleSavePhoneResult} title={"会员手机号"} min={10000000000} max={19999999999}/>
+            </Box>
+
             <Divider sx={{my: 2}}/>
             <Box sx={{display: "flex", justifyContent: "space-between", gap: 2}}>
                 <Button
