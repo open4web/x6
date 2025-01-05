@@ -278,7 +278,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                 <DialogTitle>
                     <Typography variant="h6" align="center">订单号: {orderID}</Typography>
                     <Typography variant="subtitle1" align="center" color="text.secondary">
-                        待支付金额: ¥{price.toFixed(2)}
+                        待支付金额: <span style={{ color: "#d32f2f", fontWeight: "bold" }}>¥{price.toFixed(2)}</span>
                     </Typography>
                 </DialogTitle>
                 <DialogContent>

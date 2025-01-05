@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Box,
     Button,
@@ -18,12 +18,12 @@ import {
     IconButton,
 } from '@mui/material';
 import TableCell from '@mui/material/TableCell';
-import { TransitionProps } from '@mui/material/transitions';
-import { useFetchData } from '../../../common/FetchData';
-import { FormatTimestampAsTime } from '../../../utils/time';
+import {TransitionProps} from '@mui/material/transitions';
+import {useFetchData} from '../../../common/FetchData';
+import {FormatTimestampAsTime} from '../../../utils/time';
 import MyOrderDetail from '../../../common/MyOrderDetail';
 import PayChannel from '../../../common/PayChannel';
-import { Order } from './types';
+import {Order} from './types';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
 import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
 
@@ -77,9 +77,9 @@ function MyOrder() {
 
     return (
         <Container>
-            <Box sx={{ overflowX: 'auto', display: 'flex', flexWrap: 'nowrap', gap: 1 }}>
+            <Box sx={{overflowX: 'auto', display: 'flex', flexWrap: 'nowrap', gap: 1}}>
                 {orders?.map((order) => (
-                    <Box key={order.id} sx={{ flexShrink: 0, width: 300 }}>
+                    <Box key={order.id} sx={{flexShrink: 0, width: 300}}>
                         <Card
                             variant="outlined"
                             sx={{
@@ -118,23 +118,23 @@ function MyOrder() {
                                         )}
                                     </Box>
                                 </Typography>
-                                <Box sx={{ height: 100, overflowY: 'auto' }}>
+                                <Box sx={{height: 100, overflowY: 'auto'}}>
                                     <Table size="small" aria-label="buckets table">
                                         <TableBody>
                                             {order.buckets?.map((bucket) => (
                                                 <TableRow key={bucket.id}>
-                                                    <TableCell align="left" sx={{ color: '#333333', padding: '2px 4px' }}>
+                                                    <TableCell align="left" sx={{color: '#333333', padding: '2px 4px'}}>
                                                         {bucket.name}
                                                     </TableCell>
-                                                    <TableCell align="left" sx={{ color: '#333333', padding: '2px 4px' }}>
+                                                    <TableCell align="left" sx={{color: '#333333', padding: '2px 4px'}}>
                                                         {`${bucket.number} ${bucket.unit}`}
                                                     </TableCell>
-                                                    <TableCell align="left" sx={{ color: '#333333', padding: '2px 4px' }}>
+                                                    <TableCell align="left" sx={{color: '#333333', padding: '2px 4px'}}>
                                                         {`¥${bucket.price}`}
                                                     </TableCell>
                                                     <TableCell
                                                         align="left"
-                                                        sx={{ color: '#333333', padding: '2px 4px', fontSize: 8 }}
+                                                        sx={{color: '#333333', padding: '2px 4px', fontSize: 8}}
                                                     >
                                                         {bucket.props_text}
                                                     </TableCell>
@@ -148,7 +148,7 @@ function MyOrder() {
                                 <Typography
                                     component="span"
                                     variant="body1"
-                                    sx={{ fontWeight: 'normal', color: '#3e2723', marginLeft: 1 }}
+                                    sx={{fontWeight: 'normal', color: '#3e2723', marginLeft: 1}}
                                 >
                                     {FormatTimestampAsTime(order.stp.created_at)}
                                 </Typography>
@@ -163,10 +163,11 @@ function MyOrder() {
                                     </Button>
                                 )}
                                 <IconButton aria-label="delete" size="large" color={"error"}>
-                                    < PublishedWithChangesIcon />
+                                    < PublishedWithChangesIcon/>
                                 </IconButton>
-                                <IconButton aria-label="delete" size="large" color={"success"} onClick={() => handleOrderDetail(order)}>
-                                    < ExpandCircleDownIcon />
+                                <IconButton aria-label="delete" size="large" color={"success"}
+                                            onClick={() => handleOrderDetail(order)}>
+                                    < ExpandCircleDownIcon/>
                                 </IconButton>
                             </CardActions>
                         </Card>
@@ -176,7 +177,7 @@ function MyOrder() {
 
             {/* 订单详情对话框 */}
             {detailOrder && (
-                <MyOrderDetail open={openOrderDetail} orderData={detailOrder} onClose={handleOrderDetailClose} />
+                <MyOrderDetail open={openOrderDetail} orderData={detailOrder} onClose={handleOrderDetailClose}/>
             )}
 
             {/* 支付渠道对话框 */}
@@ -192,7 +193,7 @@ function MyOrder() {
                     <DialogTitle>
                         <Typography variant="h6" align="center">订单号: {selectedOrder.identity?.order_no}</Typography>
                         <Typography variant="subtitle1" align="center" color="text.secondary">
-                            待支付金额: ¥{selectedOrder?.price?.pay_price.toFixed(2)}
+                            待支付金额: <span style={{ color: "#d32f2f", fontWeight: "bold" }}>¥{selectedOrder?.price?.pay_price.toFixed(2)}</span>
                         </Typography>
                     </DialogTitle>
                     <DialogContent>
@@ -204,7 +205,7 @@ function MyOrder() {
                             at={selectedOrder?.merchant?.id}
                         />
                     </DialogContent>
-                    <DialogActions />
+                    <DialogActions/>
                 </Dialog>
             )}
         </Container>
