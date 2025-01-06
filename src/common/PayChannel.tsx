@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect } from 'react';
+import {useEffect, useState} from 'react';
 import {
     Tabs,
     Tab,
@@ -55,10 +55,12 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
     const [verified, setVerified] = React.useState(false);
     const { setDrawerOpen, setOrderDrawerOpen } = useCartContext();
     const [isScanning, setIsScanning] = React.useState(true);
+    const [isWeChatTab, setIsWeChatTab] = useState(true); // 是否启用扫码枪逻辑
     const fetchData = useFetchData();
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
+        setIsWeChatTab(newValue === 0); // 判断是否是 "微信" Tab
     };
 
     const handleResetInput = () => setCode('');
@@ -93,26 +95,44 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
     };
 
     useEffect(() => {
-        let interval: NodeJS.Timeout | null = null;
+        if (isWeChatTab) {
+            const handleScannerInput = (event: KeyboardEvent) => {
+                console.log("code ===>", code)
+                // 不同的支付渠道支付码长度不一样
+                if (code.length === 18) {
+                    submitPay(code);
+                    setCode(''); // 清空扫码结果
+                } else {
+                    setCode((prev) => prev + event.key); // 累计扫码输入
+                }
+            };
 
-        if (code.length === 18) {
-            submitPay(code).then(() => {
+            window.addEventListener("keydown", handleScannerInput);
+            return () => {
+                window.removeEventListener("keydown", handleScannerInput);
+            };
+        }else{
+            let interval: NodeJS.Timeout | null = null;
+
+            if (code.length === 18) {
+                submitPay(code).then(() => {
+                    setCode('');
+                    setVerified(false);
+                });
+            }
+
+            interval = setInterval(() => {
                 setCode('');
                 setVerified(false);
-            });
+            }, 15000);
+
+            return () => {
+                if (interval) {
+                    clearInterval(interval);
+                }
+            };
         }
-
-        interval = setInterval(() => {
-            setCode('');
-            setVerified(false);
-        }, 15000);
-
-        return () => {
-            if (interval) {
-                clearInterval(interval);
-            }
-        };
-    }, [code]);
+    }, [isWeChatTab, code]);
 
     const PayCodeInput = (
         <FormControl sx={{ m: 2, width: '100%' }} variant="filled">
@@ -137,17 +157,12 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                 <Tabs value={value} onChange={handleChange} aria-label="支付渠道选择">
                     <Tab label="自动" {...a11yProps(0)} />
-                    <Tab label="微信" {...a11yProps(1)} />
-                    <Tab label="卡拉卡" {...a11yProps(2)} />
-                    <Tab label="支付宝" {...a11yProps(3)} />
                     <Tab label="扫码" {...a11yProps(4)} />
                 </Tabs>
             </Box>
-            {[0, 1, 2, 3].map(index => (
-                <CustomTabPanel key={index} value={value} index={index}>
+                <CustomTabPanel key={0} value={value} index={0}>
                     {PayCodeInput}
                 </CustomTabPanel>
-            ))}
             <CustomTabPanel value={value} index={4}>
                 <QRScanner
                     onScanSuccess={(scannedCode: string) => {
