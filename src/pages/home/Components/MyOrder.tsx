@@ -40,7 +40,7 @@ function MyOrder() {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null); // 保存选中的订单
     const [openOrderDetail, setOpenOrderDetail] = useState(false); // 是否展示详情对话框
     const [detailOrder, setDetailOrder] = useState<Order | null>(null); // 当前详情订单
-    const fetchData = useFetchData();
+    const { fetchData, alertComponent } = useFetchData();
 
     useEffect(() => {
         fetchData(
@@ -78,6 +78,7 @@ function MyOrder() {
     return (
         <Container>
             <Box sx={{overflowX: 'auto', display: 'flex', flexWrap: 'nowrap', gap: 1}}>
+                {alertComponent}
                 {orders?.map((order) => (
                     <Box key={order.id} sx={{flexShrink: 0, width: 300}}>
                         <Card

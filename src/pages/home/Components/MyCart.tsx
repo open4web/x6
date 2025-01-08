@@ -42,7 +42,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const [openPeople, setOpenPeople] = React.useState(false);
     const [openPhone, setOpenPhone] = React.useState(false);
     const [takeout, setTakeout] = React.useState(0);
-    const fetchData = useFetchData();
+    const { fetchData, alertComponent } = useFetchData();
 
     const handlePlaceOrder = async () => {
         const userData = {
@@ -125,6 +125,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
 
     return (
         <Box sx={{width: 380, padding: 1}}>
+            {alertComponent}
             <Typography variant="h5" sx={{textAlign: 'center', mb: 2}}>
                 购物车
             </Typography>

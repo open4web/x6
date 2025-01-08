@@ -18,6 +18,7 @@ import QRScanner from "./ScanCode";
 import { useFetchData } from "./FetchData";
 import { useCartContext } from "../dataProvider/MyCartProvider";
 import { ChannelType, ScanPayRequest } from "./types";
+import NumericKeyboardDialog from "./NumericKeyboardDialog";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -53,15 +54,17 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
     const [value, setValue] = React.useState(0);
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
+    const [cash, setCash] = React.useState(false);
     const { setDrawerOpen, setOrderDrawerOpen } = useCartContext();
     const [isScanning, setIsScanning] = React.useState(true);
     const [isWeChatTab, setIsWeChatTab] = useState(true); // 是否启用扫码枪逻辑
-    const fetchData = useFetchData();
+    const { fetchData, alertComponent } = useFetchData();
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
         setIsWeChatTab(newValue === 0); // 判断是否是 "微信" Tab
         setIsScanning(newValue===1);
+        setCash(newValue===2);
     };
 
     const handleResetInput = () => setCode('');
@@ -135,6 +138,10 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
         }
     }, [isWeChatTab, code]);
 
+    const handlePayByCash = (value: string) => {
+        console.log("提交现金支付:", value);
+    };
+
     const PayCodeInput = (
         <FormControl sx={{ m: 2, width: '100%' }} variant="filled">
             <InputLabel htmlFor="filled-adornment-code">支付授权码</InputLabel>
@@ -155,16 +162,18 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
 
     return (
         <Box sx={{ width: '100%', p: 2, borderRadius: 2, boxShadow: 3 }}>
+            {alertComponent}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                 <Tabs value={value} onChange={handleChange} aria-label="支付渠道选择">
                     <Tab label="自动" {...a11yProps(0)} />
                     <Tab label="扫码" {...a11yProps(1)} />
+                    <Tab label="现金" {...a11yProps(2)} />
                 </Tabs>
             </Box>
                 <CustomTabPanel key={0} value={value} index={0}>
                     {PayCodeInput}
                 </CustomTabPanel>
-            <CustomTabPanel key={4} value={value} index={1}>
+            <CustomTabPanel key={1} value={value} index={1}>
                 <QRScanner
                     onScanSuccess={(scannedCode: string) => {
                         if (isScanning) {
@@ -176,6 +185,9 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
                         toast.warning("扫描尝试次数已达到限制，请检查设备或刷新页面。", { position: "top-center", autoClose: 5000 });
                     }}
                 />
+            </CustomTabPanel>
+            <CustomTabPanel key={2} value={value} index={2}>
+                <NumericKeyboardDialog  open={cash} setOpen={setCash} onSave={handlePayByCash} title={"请输入现金数额"} min={1} max={9999}/>
             </CustomTabPanel>
         </Box>
     );

@@ -23,7 +23,7 @@ export default function MerchantSelect({ refreshAfterSelect = true }: SelectStor
             window.location.replace(window.location.href);
         }
     };
-    const fetchData = useFetchData()
+    const { fetchData, alertComponent } = useFetchData();
 
     React.useEffect(() => {
         fetchData('/v1/store/list', (response) => setStores(response));
@@ -31,6 +31,7 @@ export default function MerchantSelect({ refreshAfterSelect = true }: SelectStor
 
     return (
         <Box sx={{ minWidth: 240 }}>
+            {alertComponent}
             <FormControl fullWidth>
                 <InputLabel id="store-select-label" sx={{ color: "#ee8" }}>当前门店</InputLabel>
                 <Select

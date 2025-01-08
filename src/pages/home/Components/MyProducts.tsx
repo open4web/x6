@@ -26,7 +26,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
     const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>({});
 
-    const fetchData = useFetchData();
+    const { fetchData, alertComponent } = useFetchData();
 
     useEffect(() => {
         const userData = {
@@ -83,6 +83,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
 
     return (
         <Box>
+            {alertComponent}
             <Box sx={{display: 'flex', gap: 1, overflowX: 'auto', mb: 2}}>
                 <Chip
                     label="All"
