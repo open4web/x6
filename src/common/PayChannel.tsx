@@ -61,6 +61,7 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
         setIsWeChatTab(newValue === 0); // 判断是否是 "微信" Tab
+        setIsScanning(newValue===1);
     };
 
     const handleResetInput = () => setCode('');
@@ -157,13 +158,13 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                 <Tabs value={value} onChange={handleChange} aria-label="支付渠道选择">
                     <Tab label="自动" {...a11yProps(0)} />
-                    <Tab label="扫码" {...a11yProps(4)} />
+                    <Tab label="扫码" {...a11yProps(1)} />
                 </Tabs>
             </Box>
                 <CustomTabPanel key={0} value={value} index={0}>
                     {PayCodeInput}
                 </CustomTabPanel>
-            <CustomTabPanel value={value} index={4}>
+            <CustomTabPanel key={4} value={value} index={1}>
                 <QRScanner
                     onScanSuccess={(scannedCode: string) => {
                         if (isScanning) {
