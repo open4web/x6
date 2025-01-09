@@ -20,6 +20,7 @@ function generateColorFromId(id: string): string {
 }
 
 function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
+    const {  setShowProductImage, showProductImage } = useCartContext();
     const [data, setData] = useState<ProductItem[]>([]);
     const [categories, setCategories] = useState<ProductCategory[]>([]);
     const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
@@ -116,9 +117,21 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             </Box>
 
             {/* Product Grid */}
-            <Grid container spacing={2}>
+            <Grid
+                container
+                spacing={showProductImage ? 2 : 0.2} // 动态调整间距
+                direction="row" // 一行显示
+                wrap={showProductImage ? 'wrap' : 'nowrap'} // 控制换行
+            >
                 {filteredData.map((item) => (
-                    <Grid item xs={2.4} key={item.id}>
+                    <Grid
+                        item
+                        xs={showProductImage ? 2.4 : 0.5} // 动态调整宽度，单行 6 个项目
+                        key={item.id}
+                        sx={{
+                            minWidth: showProductImage ? 'auto' : '16.66%', // 强制 6 等分宽度
+                        }}
+                    >
                         <MyCard
                             item={item}
                             handleClick={handleClick}
