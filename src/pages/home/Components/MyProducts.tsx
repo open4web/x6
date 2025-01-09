@@ -119,18 +119,13 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             {/* Product Grid */}
             <Grid
                 container
-                spacing={showProductImage ? 2 : 0.2} // 动态调整间距
-                direction="row" // 一行显示
-                wrap={showProductImage ? 'wrap' : 'nowrap'} // 控制换行
+                spacing={showProductImage ? 2 : 1} // 动态调整间距
             >
                 {filteredData.map((item) => (
                     <Grid
                         item
-                        xs={showProductImage ? 2.4 : 0.5} // 动态调整宽度，单行 6 个项目
+                        xs={showProductImage ? 2.4 : 1.714} // 动态调整宽度，7 个项目一行
                         key={item.id}
-                        sx={{
-                            minWidth: showProductImage ? 'auto' : '16.66%', // 强制 6 等分宽度
-                        }}
                     >
                         <MyCard
                             item={item}

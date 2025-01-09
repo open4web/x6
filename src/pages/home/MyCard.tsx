@@ -99,7 +99,15 @@ const MyCard = (props: Props) => {
 
     // @ts-ignore
     return (
-        <Card sx={{maxWidth: 445, margin: 1}}>
+        <Card
+            sx={{
+                maxWidth: 445,
+                margin: 1,
+                position: 'relative', // 设置 Card 为相对定位
+                cursor: showProductImage ? 'default' : 'pointer', // 设置鼠标样式
+            }}
+            onClick={!showProductImage ? () => handleAddToCart() : undefined} // 整个卡片可点击
+        >
             <CardHeader
                 avatar={
                     <Avatar sx={{bgcolor: kindColor}} aria-label="recipe">
@@ -109,6 +117,23 @@ const MyCard = (props: Props) => {
                 title={item?.name}
                 subheader={item?.price}
             />
+            {!showProductImage && (
+                <Badge
+                    badgeContent={cartCount}
+                    color="error"
+                    sx={{
+                        position: 'absolute', // 绝对定位
+                        top: 13, // 距离顶部
+                        right: 13, // 距离右侧
+                        '.MuiBadge-badge': {
+                            fontSize: '0.8rem',
+                            height: 20,
+                            minWidth: 20,
+                        },
+                    }}
+                />
+            )}
+
             {showProductImage && (
                 <CardMedia
                     component="img"
@@ -125,47 +150,48 @@ const MyCard = (props: Props) => {
                     </Typography>
                 </CardContent>
             )}
-            <CardActions disableSpacing>
-                {/* Hide "Add to Cart" when expanded */}
-                {!expanded && (
-                    <Badge
-                        badgeContent={cartCount}
-                        color="error"
-                        sx={{
-                            '.MuiBadge-badge': {
-                                fontSize: '0.8rem',
-                                height: 20,
-                                minWidth: 20,
-                            },
-                        }}
-                    >
-                        <IconButton
-                            aria-label="add to cart"
-                            onClick={handleAddToCart}
+            {showProductImage && ( // 仅当 showProductImage 为 true 时显示 AddShoppingCartIcon
+                <CardActions disableSpacing>
+                    {!expanded && (
+                        <Badge
+                            badgeContent={cartCount}
+                            color="error"
                             sx={{
-                                color: 'success', // 显著的颜色，可以替换为其他颜色
-                                '&:hover': {
-                                    color: 'darkorange', // 悬停时的颜色
+                                '.MuiBadge-badge': {
+                                    fontSize: '0.8rem',
+                                    height: 20,
+                                    minWidth: 20,
                                 },
                             }}
                         >
-                            <AddShoppingCartIcon
+                            <IconButton
+                                aria-label="add to cart"
+                                onClick={handleAddToCart}
                                 sx={{
-                                    fontSize: 40, // 增大图标尺寸，默认是 24
+                                    color: 'success',
+                                    '&:hover': {
+                                        color: 'darkorange',
+                                    },
                                 }}
-                            />
-                        </IconButton>
-                    </Badge>
-                )}
-                <ExpandMore
-                    expand={expanded}
-                    onClick={handleExpandClick}
-                    aria-expanded={expanded}
-                    aria-label="show more"
-                >
-                    <ExpandMoreIcon/>
-                </ExpandMore>
-            </CardActions>
+                            >
+                                <AddShoppingCartIcon
+                                    sx={{
+                                        fontSize: 40,
+                                    }}
+                                />
+                            </IconButton>
+                        </Badge>
+                    )}
+                    <ExpandMore
+                        expand={expanded}
+                        onClick={handleExpandClick}
+                        aria-expanded={expanded}
+                        aria-label="show more"
+                    >
+                        <ExpandMoreIcon />
+                    </ExpandMore>
+                </CardActions>
+            )}
             <Collapse in={expanded} timeout="auto" unmountOnExit>
                 <CardContent>
                     <PropsChoose uniqueId={uniqueId + 1} productID={item.id} items={item.spiceOptions}/>
