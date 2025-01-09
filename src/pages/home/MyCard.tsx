@@ -16,6 +16,7 @@ import PropsChoose from "./Components/PropsChoose";
 import Box from "@mui/material/Box";
 import {ProductItem} from "./Components/Type";
 import {Badge} from '@mui/material';
+import {useCartContext} from "../../dataProvider/MyCartProvider";
 
 interface ExpandMoreProps extends IconButtonProps {
     expand: boolean;
@@ -41,6 +42,7 @@ interface Props {
 }
 
 const MyCard = (props: Props) => {
+    const {  setShowProductImage, showProductImage } = useCartContext();
     const {item, handleClick, kindName, kindColor, clearCartSignal} = props;
     const [expanded, setExpanded] = React.useState(false);
     const [open, setOpen] = React.useState(false);
@@ -107,12 +109,14 @@ const MyCard = (props: Props) => {
                 title={item?.name}
                 subheader={item?.price}
             />
-            <CardMedia
-                component="img"
-                height="194"
-                image={item?.img}
-                alt="暂无图片"
-            />
+            {showProductImage && (
+                <CardMedia
+                    component="img"
+                    height="194"
+                    image={item?.img}
+                    alt="暂无图片"
+                />
+            )}
             {/* Conditional rendering for CardContent */}
             {!expanded && (
                 <CardContent>

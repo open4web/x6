@@ -3,6 +3,7 @@ import {Grid, Chip, Box} from '@mui/material';
 import MyCard from "../MyCard";
 import {DetailsProps, ProductCategory, ProductItem} from "./Type";
 import {useFetchData} from "../../../common/FetchData";
+import {useCartContext} from "../../../dataProvider/MyCartProvider";
 
 function generateColorFromId(id: string): string {
     // 简单的哈希函数，将字符串转化为一个数值
@@ -25,7 +26,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     const [query, setQuery] = useState("");
     const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
     const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>({});
-
+    const {  merchantId } = useCartContext();
     const { fetchData, alertComponent } = useFetchData();
 
     useEffect(() => {
@@ -59,7 +60,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             console.log("===nameMap=>", nameMap)
             setCategoryColorMap(colorMap);
         }, "POST", userData);
-    }, [activeTab]);
+    }, [activeTab, merchantId]);
 
     const handleChipClick = (categoryId: string) => {
         setActiveTab(categoryId);
