@@ -109,13 +109,37 @@ const MyCard = (props: Props) => {
             onClick={!showProductImage ? () => handleAddToCart() : undefined} // 整个卡片可点击
         >
             <CardHeader
-                avatar={
-                    <Avatar sx={{bgcolor: kindColor}} aria-label="recipe">
-                        {kindName}
-                    </Avatar>
+                avatar=
+                    {
+                        showProductImage ? (
+                        <Avatar sx={{bgcolor: kindColor}} aria-label="recipe">
+                            {kindName}
+                        </Avatar> )
+                            :
+                            (<Avatar sx={{bgcolor: kindColor}} aria-label="recipe" src={item.img}/>
+                        )
+                    }
+                title={
+                    <Typography
+                        sx={{
+                            fontSize: showProductImage ? '1rem' : '1.2rem', // 动态调整字体大小
+                            fontWeight: showProductImage ? 'normal' : 'bold', // 可选：在放大时增加字体粗细
+                        }}
+                    >
+                        {item?.name}
+                    </Typography>
                 }
-                title={item?.name}
-                subheader={item?.price}
+                subheader={
+                    <Typography
+                        sx={{
+                            fontSize: '1.2rem', // 调整价格字体大小
+                            fontWeight: 'bold', // 加粗字体
+                            color: 'darkorange', // 突出显示的颜色
+                        }}
+                    >
+                        ¥ {item?.price} {/* 添加人民币符号 */}
+                    </Typography>
+                }
             />
             {!showProductImage && (
                 <Badge
@@ -145,9 +169,11 @@ const MyCard = (props: Props) => {
             {/* Conditional rendering for CardContent */}
             {!expanded && (
                 <CardContent>
-                    <Typography variant="body2" color="text.secondary">
-                        {item?.desc}
-                    </Typography>
+                    {showProductImage && (
+                        <Typography variant="body2" color="text.secondary">
+                            {item?.desc}
+                        </Typography>
+                    )}
                 </CardContent>
             )}
             {showProductImage && ( // 仅当 showProductImage 为 true 时显示 AddShoppingCartIcon

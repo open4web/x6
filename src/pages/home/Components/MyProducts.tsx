@@ -119,7 +119,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             {/* Product Grid */}
             <Grid
                 container
-                spacing={showProductImage ? 2 : 1} // 动态调整间距
+                spacing={showProductImage ? 2 : 0.1} // 动态调整间距
             >
                 {filteredData.map((item) => (
                     <Grid
