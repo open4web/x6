@@ -33,7 +33,7 @@ export default function MyPrinter() {
         fetchData('/v1/device/pos/printer', (response) => {
             setPrinters(response || []);
         }, "POST", {"merchant_id": merchantId});
-    }, [fetchData]);
+    }, [fetchData, merchantId]);
 
     return (
         <>
