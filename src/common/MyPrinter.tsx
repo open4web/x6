@@ -7,14 +7,24 @@ import ListItem from '@mui/material/ListItem';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import CircleIcon from '@mui/icons-material/Circle';
+import SignalWifiStatusbar4BarIcon from '@mui/icons-material/SignalWifiStatusbar4Bar';
+import Paper from '@mui/material/Paper';
 import { useFetchData } from './FetchData';
-import {useCartContext} from "../dataProvider/MyCartProvider";
+import { useCartContext } from "../dataProvider/MyCartProvider";
+import {Chip} from "@mui/material";
+
+export const PrinterTypes = [
+    { id: '0', name: '前台' },
+    { id: '1', name: '后厨' },
+    { id: '2', name: '前厅' },
+    { id: '3', name: '其他' },
+];
 
 export default function MyPrinter() {
-    const {  merchantId } = useCartContext();
+    const { merchantId } = useCartContext();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [printers, setPrinters] = React.useState<
-        { name: string; status: boolean; online_status: string, type: string }[]
+        { name: string; status: boolean; online_status: string; type: string }[]
     >([]);
     const { fetchData, alertComponent } = useFetchData();
 
@@ -33,7 +43,7 @@ export default function MyPrinter() {
         const localMerchantId = localStorage.getItem('current_store_id');
         fetchData('/v1/device/pos/printer', (response) => {
             setPrinters(response || []);
-        }, "POST", {"merchant_id": localMerchantId});
+        }, "POST", { "merchant_id": localMerchantId });
     }, [fetchData, merchantId]);
 
     return (
@@ -65,40 +75,66 @@ export default function MyPrinter() {
                     horizontal: 'center',
                 }}
             >
-                <List>
-                    {printers.map((printer, index) => {
-                        // 根据 type 获取类型名称
-                        const typeName = PrinterTypes.find(type => type.id === printer.type)?.name || '未知类型';
+                <Paper sx={{ width: '320px', padding: 2 }}>
+                    <List>
+                        {printers.map((printer, index) => {
+                            // 根据 type 获取类型名称
+                            const typeName = PrinterTypes.find(type => type.id === printer.type)?.name || '未知类型';
 
-                        return (
-                            <ListItem key={index} sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Typography variant="body1" sx={{ flexGrow: 1 }}>
-                                    {typeName} {printer.name} {/* 类型名称与打印机名称之间有空格 */}
-                                </Typography>
-                                <Box sx={{ ml: 1, display: 'flex', alignItems: 'center' }}>
+                            return (
+                                <ListItem
+                                    key={index}
+                                    sx={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        gap: 1, // 增加间距
+                                    }}
+                                >
+                                    {/* 类型使用 Chip 标签显示 */}
+                                    <Chip
+                                        label={typeName}
+                                        sx={{
+                                            backgroundColor: '#f0f0f0',
+                                            color: '#333',
+                                            fontSize: '0.8rem',
+                                            height: 24,
+                                        }}
+                                    />
+                                    <Typography
+                                        variant="body1"
+                                        sx={{
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            flexGrow: 1, // 使名称占据剩余空间
+                                        }}
+                                    >
+                                        {printer.name}
+                                    </Typography>
+                                    <SignalWifiStatusbar4BarIcon
+                                        sx={{
+                                            fontSize: 12,
+                                            color: printer.online_status === 'Offline'
+                                                    ? 'red'
+                                                    : 'green',
+                                        }}
+
+                                    />
                                     <CircleIcon
                                         sx={{
                                             fontSize: 12,
                                             color: printer.status
-                                                ? 'green' // 在线为绿色
-                                                : printer.online_status === 'Offline'
-                                                    ? 'red' // 离线为红色
-                                                    : 'orange', // 其他状态为橙色
+                                                ? 'green' : 'orange',
                                         }}
+
                                     />
-                                </Box>
-                            </ListItem>
-                        );
-                    })}
-                </List>
+                                </ListItem>
+                            );
+                        })}
+                    </List>
+                </Paper>
             </Popover>
         </>
     );
 }
-
-export const PrinterTypes = [
-    { id: '0', name: '前台' },
-    { id: '1', name: '后厨' },
-    { id: '2', name: '前厅' },
-    { id: '3', name: '其他' },
-]
