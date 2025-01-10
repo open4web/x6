@@ -58,7 +58,7 @@ export default function MyPrinter() {
             >
                 {alertComponent}
                 <Badge badgeContent={printers.length} color="success" variant="dot">
-                    <PrintIcon color="action" />
+                    <PrintIcon color="inherit" />
                 </Badge>
             </Box>
             <Popover
