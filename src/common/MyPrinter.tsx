@@ -8,8 +8,10 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import CircleIcon from '@mui/icons-material/Circle';
 import { useFetchData } from './FetchData';
+import {useCartContext} from "../dataProvider/MyCartProvider";
 
 export default function MyPrinter() {
+    const {  merchantId } = useCartContext();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [printers, setPrinters] = React.useState<
         { name: string; status: boolean; online_status: string, type: string }[]
@@ -30,7 +32,7 @@ export default function MyPrinter() {
     React.useEffect(() => {
         fetchData('/v1/device/pos/printer', (response) => {
             setPrinters(response || []);
-        }, "POST", {"merchant_id": "65701eb053d1861bf24b1b1b"});
+        }, "POST", {"merchant_id": merchantId});
     }, [fetchData]);
 
     return (
