@@ -8,6 +8,7 @@ import {
 import MerchantSelect from "../common/MerchantSelect";
 import {useCartContext} from "../dataProvider/MyCartProvider";
 import Switch from "@mui/material/Switch";
+import MyPrinter from "../common/MyPrinter";
 
 const MyAppBar = (props: any) => {
     const {  setShowProductImage, showProductImage } = useCartContext();
@@ -28,6 +29,7 @@ const MyAppBar = (props: any) => {
             <Switch {...label} defaultChecked color={"error"} onClick={handleSwitchClick}/>
             {/* 避免右上角的按键挤到左上角*/}
             {isLargeEnough && <Box component="span" sx={{flex: 1}}/>}
+            <MyPrinter/>
         </AppBar>
     );
 };
