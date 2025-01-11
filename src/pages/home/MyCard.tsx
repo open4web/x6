@@ -15,7 +15,7 @@ import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import PropsChoose from "./Components/PropsChoose";
 import Box from "@mui/material/Box";
 import {ProductItem} from "./Components/Type";
-import {Badge} from '@mui/material';
+import {Badge, Fade, Modal} from '@mui/material';
 import {useCartContext} from "../../dataProvider/MyCartProvider";
 
 interface ExpandMoreProps extends IconButtonProps {
@@ -45,8 +45,10 @@ const MyCard = (props: Props) => {
     const {  setShowProductImage, showProductImage } = useCartContext();
     const {item, handleClick, kindName, kindColor, clearCartSignal} = props;
     const [expanded, setExpanded] = React.useState(false);
+    const [expanded2, setExpanded2] = React.useState(false);
     const [open, setOpen] = React.useState(false);
     const [cartCount, setCartCount] = React.useState(0); // 管理当前商品在购物车的数量
+    const [selectedProps, setSelectedProps] = React.useState<Record<string, string>>({}); // 用户选择的配置
 
     // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
     let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
@@ -54,10 +56,23 @@ const MyCard = (props: Props) => {
     const handleExpandClick = () => {
         setExpanded(!expanded);
     };
+    const handleExpandClick2 = () => {
+        setExpanded2(!expanded2);
+    };
+
+    const handleClose = () => setExpanded2(false);
+    const handlePropsChange = (options: Record<string, string>) => {
+        setSelectedProps(options); // 更新配置
+    };
 
     const handleAddToCart = () => {
         setCartCount(cartCount + 1); // 每次点击增加数量
+        const cartItem = {
+            ...item,
+            selectedProps, // 将用户选择的配置加入购物车
+        };
 
+        handleClick(cartItem); // 将商品和配置加入购物车
         // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
         let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
 
@@ -99,6 +114,7 @@ const MyCard = (props: Props) => {
 
     // @ts-ignore
     return (
+        <>
         <Card
             sx={{
                 maxWidth: 445,
@@ -106,7 +122,6 @@ const MyCard = (props: Props) => {
                 position: 'relative', // 设置 Card 为相对定位
                 cursor: showProductImage ? 'default' : 'pointer', // 设置鼠标样式
             }}
-            onClick={!showProductImage ? () => handleAddToCart() : undefined} // 整个卡片可点击
         >
             <CardHeader
                 avatar=
@@ -122,8 +137,15 @@ const MyCard = (props: Props) => {
                 title={
                     <Typography
                         sx={{
-                            fontSize: showProductImage ? '1rem' : '1.2rem', // 动态调整字体大小
-                            fontWeight: showProductImage ? 'normal' : 'bold', // 可选：在放大时增加字体粗细
+                            fontSize: showProductImage ? '1rem' : '1.2rem',
+                            fontWeight: showProductImage ? 'normal' : 'bold',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            lineHeight: '1.5rem',
+                            height: '3rem', // 确保布局一致
                         }}
                     >
                         {item?.name}
@@ -140,6 +162,9 @@ const MyCard = (props: Props) => {
                         ¥ {item?.price} {/* 添加人民币符号 */}
                     </Typography>
                 }
+
+                onClick={!showProductImage ? () => handleAddToCart() : undefined} // 整个卡片可点击
+
             />
             {!showProductImage && (
                 <Badge
@@ -218,9 +243,31 @@ const MyCard = (props: Props) => {
                     </ExpandMore>
                 </CardActions>
             )}
+
+            <CardActions
+                disableSpacing
+                sx={{
+                    height: item.spiceOptions?.length > 0 ? 'auto' : 53, // 固定高度，确保没有内容时占位
+                }}
+            >
+                {item.spiceOptions?.length > 0 && (
+                    <ExpandMore
+                        expand={expanded2}
+                        onClick={handleExpandClick2}
+                        aria-expanded={expanded2}
+                        aria-label="show more"
+                    >
+                        <ExpandMoreIcon />
+                    </ExpandMore>
+                )}
+            </CardActions>
             <Collapse in={expanded} timeout="auto" unmountOnExit>
                 <CardContent>
-                    <PropsChoose uniqueId={uniqueId + 1} productID={item.id} items={item.spiceOptions}/>
+                    <PropsChoose uniqueId={uniqueId + 1}
+                                 productID={item.id}
+                                 items={item.spiceOptions}
+                                 onSelectionChange={handlePropsChange} // 配置变更回调
+                    />
                     {/* Add "Add to Cart" button to the bottom when expanded */}
                     <Box sx={{display: 'flex', justifyContent: 'center', marginTop: 2}}>
                         <Badge
@@ -255,6 +302,36 @@ const MyCard = (props: Props) => {
                 </CardContent>
             </Collapse>
         </Card>
+
+    <Modal
+        open={expanded2}
+        onClose={handleClose}
+        closeAfterTransition
+    >
+        <Fade in={expanded2}>
+            <Box
+                sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 400, // 设置宽度
+                    bgcolor: 'background.paper',
+                    boxShadow: 24,
+                    p: 4,
+                    borderRadius: 2,
+                }}
+            >
+                <PropsChoose
+                    uniqueId={uniqueId + 1}
+                    productID={item.id}
+                    items={item.spiceOptions}
+                    onSelectionChange={handlePropsChange}
+                />
+            </Box>
+        </Fade>
+    </Modal>
+    </>
     );
 };
 

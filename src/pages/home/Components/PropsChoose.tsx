@@ -8,7 +8,7 @@ interface Props {
     uniqueId: number;
     productID: string;
     items: PropsOptions[];
-
+    onSelectionChange: (selectedOptions: Record<string, string>) => void; // 用户选择后的回调
 }
 
 export default function PropsChoose(props : Props) {
