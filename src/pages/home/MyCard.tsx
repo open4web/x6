@@ -315,10 +315,10 @@ const MyCard = (props: Props) => {
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    width: 400, // 设置宽度
+                    width: 600, // 设置宽度
                     bgcolor: 'background.paper',
-                    boxShadow: 24,
-                    p: 4,
+                    boxShadow: 18,
+                    p: 2,
                     borderRadius: 2,
                 }}
             >

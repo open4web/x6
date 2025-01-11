@@ -1,80 +1,83 @@
 import * as React from 'react';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import { styled } from '@mui/material/styles';
-import {SpiceOptions} from "./Type";
-
-
-
-const StyledToggleButton = styled(ToggleButton)(({ theme }) => ({
-    borderRadius: '16px',
-    border: `1px solid ${theme.palette.divider}`,
-    padding: '4px 12px',
-    textTransform: 'none',
-    fontSize: '0.875rem',
-    whiteSpace: 'nowrap', // Prevent button text from wrapping
-    '&.Mui-selected': {
-        backgroundColor: theme.palette.warning.main,
-        color: theme.palette.common.white,
-        '&:hover': {
-            backgroundColor: theme.palette.warning.dark,
-        },
-    },
-    '&:not(.Mui-selected)': {
-        color: theme.palette.text.primary,
-    },
-}));
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { SpiceOptions } from "./Type";
 
 interface Props {
     uniqueId: number;
     propId: string;
     productId: string;
     items: SpiceOptions[];
+    reset: boolean; // 新增重置信号
 }
 
-export default function PropToggleButton( props: Props) {
-    const {uniqueId, propId, productId, items} = props;
-
+export default function PropToggleButton(props: Props) {
+    const { uniqueId, propId, productId, items, reset } = props;
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
-    const handleChange = (
-        event: React.MouseEvent<HTMLElement>,
-        newId: string | null
-    ) => {
-        if (newId !== null) {
-            // 找到选中的选项的完整对象
-            const selectedOption = items.find((item) => item.id === newId);
-            const newName = selectedOption?.name || '';
-
-            // 将 id 和 name 一起存储
-            const fullPropsKey = 'selectedSpiceLevel:' + uniqueId + ':'+ productId + ':' + propId;
-            const storedValue = JSON.stringify({ id: newId, name: newName });
-            localStorage.setItem(fullPropsKey, storedValue);
-            // 标识当前选择项
-            setSelectedId(newId);
-        }
+    const handleChange = (id: string) => {
+        const selectedOption = items.find((item) => item.id === id);
+        const newName = selectedOption?.name || '';
+        const fullPropsKey = `selectedSpiceLevel:${uniqueId}:${productId}:${propId}`;
+        const storedValue = JSON.stringify({ id, name: newName });
+        localStorage.setItem(fullPropsKey, storedValue);
+        setSelectedId(id);
     };
 
+    // 监听重置信号，重置选中状态
+    React.useEffect(() => {
+        setSelectedId(null); // 清空选中状态
+    }, [reset]);
+
+
     return (
-        <ToggleButtonGroup
-            color="warning"
-            value={selectedId}
-            exclusive
-            onChange={handleChange}
-            aria-label="Spice Level"
+        <Box
             sx={{
                 display: 'flex',
-                flexWrap: 'nowrap', // Ensure all buttons stay on one line
-                overflowX: 'auto',  // Enable horizontal scrolling if necessary
-                gap: 1,             // Add spacing between buttons
-                padding: '4px',     // Add padding to the group
+                flexWrap: 'wrap', // 自动换行
+                gap: 1, // 每个方块的间距
+                justifyContent: 'space-evenly', // 左对齐
+                width: '100%',
             }}
         >
             {items?.map((option) => (
-                <StyledToggleButton key={option.id} value={option.id}>
-                    {option.name}
-                </StyledToggleButton>
+                <Box
+                    key={option.id}
+                    onClick={() => handleChange(option.id)}
+                    sx={{
+                        width: '100px', // 固定宽度
+                        height: '80px', // 固定高度
+                        border: `2px solid ${
+                            selectedId === option.id ? 'orange' : '#E0E0E0'
+                        }`,
+                        borderRadius: '5px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        backgroundColor: selectedId === option.id ? '#FFF2E6' : '#F5F5F5',
+                        boxShadow: selectedId === option.id ? '0 4px 8px rgba(0,0,0,0.1)' : 'none',
+                        transition: 'all 0.3s ease',
+                        ':hover': {
+                            backgroundColor: selectedId === option.id ? '#FFE6D6' : '#F0F0F0',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        },
+                    }}
+                >
+                    {/* 属性名称 */}
+                    <Typography
+                        sx={{
+                            fontSize: '0.875rem',
+                            fontWeight: selectedId === option.id ? 'bold' : 'normal',
+                            textAlign: 'center',
+                            whiteSpace: 'nowrap', // 防止文字换行
+                        }}
+                    >
+                        {option.name}
+                    </Typography>
+                </Box>
             ))}
-        </ToggleButtonGroup>
+        </Box>
     );
 }
