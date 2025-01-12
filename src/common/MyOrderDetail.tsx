@@ -17,6 +17,7 @@ import {
 import PrintIcon from '@mui/icons-material/Print';
 import { Order } from "../pages/home/Components/types";
 import OrderWorkflow from './Workflow';
+import ListItemText from "@mui/material/ListItemText";
 
 interface MyOrderDetailProps {
     open: boolean;
@@ -142,12 +143,16 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose 
                                             alignItems="center"
                                             width="100%"
                                         >
-                                            <Typography variant="body1">
-                                                {bucket.name} x{bucket.number}
-                                            </Typography>
+                                            <ListItemText
+                                                primary={bucket.name}
+                                                secondary={bucket.props_text}
+                                            />
                                             <Box textAlign="right">
                                                 <Typography variant="body2" color="textSecondary">
-                                                    单价: ¥{bucket.price.toFixed(2)}
+                                                    x {bucket.number}
+                                                </Typography>
+                                                <Typography variant="body2" color="textSecondary">
+                                                    ¥{bucket.price.toFixed(2)}
                                                 </Typography>
                                                 <Typography
                                                     variant="body1"
