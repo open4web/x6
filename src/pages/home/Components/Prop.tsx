@@ -9,19 +9,27 @@ interface Props {
     productId: string;
     items: SpiceOptions[];
     reset: boolean; // 新增重置信号
+    // options: string[]; // 按钮选项列表
+    onSelectionChange: (selected: string) => void; // 回调函数，返回选中的值列表
 }
 
 export default function PropToggleButton(props: Props) {
-    const { uniqueId, propId, productId, items, reset } = props;
+    const { uniqueId, propId, productId, items, reset , onSelectionChange} = props;
     const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
     const handleChange = (id: string) => {
         const selectedOption = items.find((item) => item.id === id);
         const newName = selectedOption?.name || '';
-        const fullPropsKey = `selectedSpiceLevel:${uniqueId}:${productId}:${propId}`;
-        const storedValue = JSON.stringify({ id, name: newName });
-        localStorage.setItem(fullPropsKey, storedValue);
+        const storedValue = JSON.stringify({
+            productId: productId,
+            propId: propId,
+            id: id,
+            name: newName
+        });
+        // localStorage.setItem(fullPropsKey, storedValue);
         setSelectedId(id);
+
+        onSelectionChange(storedValue);
     };
 
     // 监听重置信号，重置选中状态

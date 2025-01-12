@@ -40,6 +40,7 @@ export interface CartItem {
     price: number;
     quantity: number;
     propsOptions: MyProductProps[];
+    desc: string;
 }
 
 export interface MyCartProps {

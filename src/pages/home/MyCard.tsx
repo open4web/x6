@@ -46,10 +46,7 @@ const MyCard = (props: Props) => {
     const {item, handleClick, kindName, kindColor, clearCartSignal} = props;
     const [expanded, setExpanded] = React.useState(false);
     const [expanded2, setExpanded2] = React.useState(false);
-    const [open, setOpen] = React.useState(false);
     const [cartCount, setCartCount] = React.useState(0); // 管理当前商品在购物车的数量
-    const [selectedProps, setSelectedProps] = React.useState<Record<string, string>>({}); // 用户选择的配置
-
     // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
     let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
 
@@ -61,8 +58,46 @@ const MyCard = (props: Props) => {
     };
 
     const handleClose = () => setExpanded2(false);
-    const handlePropsChange = (options: Record<string, string>) => {
-        setSelectedProps(options); // 更新配置
+    const [selectedProps, setSelectedProps] = React.useState<string>(''); // 保存当前选中的 JSON 数据
+    const [propMap, setPropMap] = React.useState<Record<string, string>>(() => {
+        // 初始化映射为本地存储中的值，或空对象
+        const storedMap = localStorage.getItem('propMap');
+        return storedMap ? JSON.parse(storedMap) : {};
+    });
+
+    const [selectedNames, setSelectedNames] = React.useState<string>(() => {
+        // 初始化拼接字符串为本地存储中的值，或空字符串
+        return localStorage.getItem('selectedNames') || '';
+    });
+
+    const handlePropsChange = (options: string) => {
+        console.log('Received options:', options);
+        setSelectedProps(options); // 更新选中的配置项（原始 JSON）
+
+        try {
+            // 解析传递进来的 JSON 数据
+            const { propId, name } = JSON.parse(options);
+
+            // 更新映射和拼接字符串
+            setPropMap((prevMap) => {
+                const updatedMap = { ...prevMap, [propId]: name }; // 更新 propId -> name 映射
+                const names = Object.values(updatedMap).join(', '); // 拼接所有 name
+
+                // 将最新结果存储到本地
+                localStorage.setItem('propMap', JSON.stringify(updatedMap));
+                localStorage.setItem('selectedNames', names);
+
+                setSelectedNames(names); // 更新拼接后的字符串
+                return updatedMap;
+            });
+        } catch (error) {
+            console.error('Failed to parse options:', error);
+        }
+        // 延迟读取本地存储
+        setTimeout(() => {
+            const allChoose = localStorage.getItem('selectedNames');
+            console.log('all you have chosen (delayed):', allChoose);
+        }, 0); // 延迟 0 毫秒，确保同步完成
     };
 
     const handleAddToCart = () => {
@@ -71,34 +106,7 @@ const MyCard = (props: Props) => {
             ...item,
             selectedProps, // 将用户选择的配置加入购物车
         };
-
-        handleClick(cartItem); // 将商品和配置加入购物车
-        // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
-        let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
-
-        // 检查当前订单是否有勾选配置，如果有则将配置嵌入item中
-        //
-        // item?.spiceOptions?.map((j) => {
-        //     const fullPropsKey = `selectedSpiceLevel:${uniqueId+1}:${item.id}:${j}`;
-        //     const storedValue = localStorage.getItem(fullPropsKey);
-        //     // 解析存储的数据
-        //     let cachedData: { id: string; name: string } | null = null;
-        //     if (storedValue) {
-        //         try {
-        //             // 解析存储的数据
-        //             const cachedData: MyProductProps = JSON.parse(storedValue);
-        //
-        //             // 确保数据未重复添加后再插入
-        //             if (!item.spiceOptions.some((o) => o.id === cachedData.id)) {
-        //                 item.spiceOptions.push(cachedData);
-        //             }
-        //         } catch (error) {
-        //             console.error('Error parsing cached data:', error);
-        //         }
-        //     }
-        // })
-
-
+        item.desc = selectedNames;
         // Perform the "Add to Cart" action
         handleClick(item);
         // Close the Collapse and restore CardContent
@@ -267,6 +275,7 @@ const MyCard = (props: Props) => {
                                  productID={item.id}
                                  items={item.spiceOptions}
                                  onSelectionChange={handlePropsChange} // 配置变更回调
+                        onAddToCart={handleAddToCart}
                     />
                     {/* Add "Add to Cart" button to the bottom when expanded */}
                     <Box sx={{display: 'flex', justifyContent: 'center', marginTop: 2}}>
@@ -327,6 +336,7 @@ const MyCard = (props: Props) => {
                     productID={item.id}
                     items={item.spiceOptions}
                     onSelectionChange={handlePropsChange}
+                    onAddToCart={handleAddToCart}
                 />
             </Box>
         </Fade>

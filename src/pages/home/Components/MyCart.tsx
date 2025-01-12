@@ -10,12 +10,9 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
 import DeleteIcon from '@mui/icons-material/Delete';
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
 import Slide from "@mui/material/Slide";
 import {TransitionProps} from "@mui/material/transitions";
 import PayChannel from "../../../common/PayChannel";
@@ -25,12 +22,10 @@ import {CartItem, MyCartProps} from "../../../common/types";
 import RemoveIcon from "@mui/icons-material/RemoveCircleOutline";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import {FormatDate} from "../../../common/MyDatetime";
-import {toast} from "react-toastify";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
-import Looks6Icon from '@mui/icons-material/Looks6';
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import {Alert} from "@mui/material";
 
@@ -91,6 +86,8 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             cartItems: cartItems, // 保存当前购物车的内容
             createdAt: FormatDate(new Date()), // 保存创建时间
         };
+
+        console.log("cartItems ===>", cartItems)
 
         // 将新订单添加到 holdOrders 数组中
         holdOrders.push(newHoldOrder);
@@ -162,7 +159,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                     <ListItem key={item.id} sx={{display: 'flex', alignItems: 'center'}}>
                         <ListItemText
                             primary={item.name}
-                            secondary={`¥${item.price.toFixed(2)}`}
+                            secondary={`${item.desc}`}
                         />
                         <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                             <IconButton
@@ -208,6 +205,9 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                             >
                                 <AddCircleIcon/>
                             </IconButton>
+                            <Typography variant="h6" sx={{fontWeight: 'bold', color: 'yellow', textAlign: "right"}}>
+                                ¥{item.price.toFixed(2)}
+                            </Typography>
                         </Box>
                         <ListItemSecondaryAction>
                             <IconButton edge="end" onClick={() =>

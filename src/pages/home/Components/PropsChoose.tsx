@@ -10,13 +10,13 @@ interface Props {
     uniqueId: number;
     productID: string;
     items: PropsOptions[];
-    onSelectionChange: (selectedOptions: Record<string, string>) => void; // 用户选择后的回调
+    onSelectionChange: (selected: string) => void; // 回调函数，返回选中的值列表
+    onAddToCart: () => void; // 添加到购物车的回调
 }
 
 export default function PropsChoose(props: Props) {
-    const { uniqueId, productID, items, onSelectionChange } = props;
+    const { uniqueId, productID, items, onSelectionChange, onAddToCart } = props;
     const [resetTrigger, setResetTrigger] = React.useState(false);
-
     const resetSelections = () => {
         // 清除本地存储中当前商品相关的属性选择
         items.forEach(option => {
@@ -26,13 +26,15 @@ export default function PropsChoose(props: Props) {
 
         // 通知子组件和父组件重置
         setResetTrigger(prev => !prev); // 切换状态触发重置
-        onSelectionChange({});
+        onSelectionChange('');
     };
 
     const handleAddToCart = () => {
-        console.log('Adding to cart with selected properties...');
-        // 根据需求实现购物车功能
+        if (onAddToCart) {
+            onAddToCart(); // 调用父组件传递的回调
+        }
     };
+
 
     return (
         <Box
@@ -86,6 +88,7 @@ export default function PropsChoose(props: Props) {
                                 productId={productID}
                                 items={option.spiceOptions}
                                 reset={resetTrigger}
+                                onSelectionChange={onSelectionChange}
                             />
                         </Box>
                     </Box>

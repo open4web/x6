@@ -21,6 +21,8 @@ export const MyHome = () => {
         const existingItem = cartItems.find((cartItem: CartItem) => cartItem.id === item.id);
 
         if (existingItem) {
+
+            // TODO 如果同一款产品属性不一样则按照新item加入购物车
             // 商品已存在，增加数量
             setCartItems((prevCart) =>
                 prevCart.map((cartItem: CartItem) =>
