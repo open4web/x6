@@ -20,3 +20,4 @@ Feel free to expand this as needed based on additional features!
 ## deploy
 
 - deploy again
+- add mini
