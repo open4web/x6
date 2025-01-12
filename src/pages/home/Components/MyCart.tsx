@@ -334,5 +334,6 @@ function convertToOrderRequest(cartItems: CartItem[]) {
         Number: item.quantity,
         Price: item.price,
         Name: item.name,
+        Remark: item.desc,
     }));
 }
