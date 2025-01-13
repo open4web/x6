@@ -26,6 +26,7 @@ import PayChannel from '../../../common/PayChannel';
 import {Order} from './types';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
 import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
+import {isOrderExpired} from "../../../utils/expireStore";
 
 const statusColors = ['#ffe0b2', '#c5e1a5']; // OrderInit, OrderPaid
 
@@ -40,6 +41,7 @@ function MyOrder() {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null); // 保存选中的订单
     const [openOrderDetail, setOpenOrderDetail] = useState(false); // 是否展示详情对话框
     const [detailOrder, setDetailOrder] = useState<Order | null>(null); // 当前详情订单
+    const [highlightOrderId, setHighlightOrderId] = useState(''); // 高亮订单 ID
     const { fetchData, alertComponent } = useFetchData();
 
     useEffect(() => {
@@ -47,6 +49,14 @@ function MyOrder() {
             '/v1/order/pos',
             (response) => {
                 setOrders(response);
+                // 高亮最新订单
+                if (response?.length > 0) {
+                    const newestOrder = response[0];
+                    if (!isOrderExpired(newestOrder.identity.order_no, 10000)) {
+                        setHighlightOrderId(newestOrder.identity.order_no);
+                        setTimeout(() => setHighlightOrderId(''), 2000); // 2 秒后清除高亮
+                    }
+                }
             },
             'GET',
             {}
@@ -88,6 +98,8 @@ function MyOrder() {
                                 boxShadow: 3,
                                 padding: 0,
                                 borderRadius: 1,
+                                border: highlightOrderId === order?.identity?.order_no ? '3px solid #FF5722' : '1px solid transparent', // 高亮边框
+                                animation: highlightOrderId === order?.identity?.order_no ? 'flash 0.5s ease-in-out 4' : 'none', // 闪烁动画
                             }}
                         >
 
@@ -221,3 +233,16 @@ const Transition = React.forwardRef(function Transition(
 ) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
+
+// 添加 CSS 样式
+const styles = `
+@keyframes flash {
+    0% { border-color: #FF5722; }
+    50% { border-color: transparent; }
+    100% { border-color: #FF5722; }
+}
+`;
+
+const styleTag = document.createElement('style');
+styleTag.innerHTML = styles;
+document.head.appendChild(styleTag);

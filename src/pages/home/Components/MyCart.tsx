@@ -28,6 +28,7 @@ import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import {Alert} from "@mui/material";
+import {storeOrderTimestamp} from "../../../utils/expireStore";
 
 export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const {holdOrders, setHoldOrders} = useCartContext();
@@ -62,6 +63,8 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             setPrice(response.price);
             setOrderID(response?.identity?.order_no);
             setOpenPayChannel(true);
+            // 设置当前订单作为最新订单，这样拉取订单列表时可以标识闪烁凸显
+            storeOrderTimestamp(response?.identity?.order_no)
         }, "POST", userData);
 
         // 结算后清空当前选项
