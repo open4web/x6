@@ -18,15 +18,15 @@ export const MyHome = () => {
         setDrawerOpen(true);
 
         // 检查购物车中是否已存在该商品
-        const existingItem = cartItems.find((cartItem: CartItem) => cartItem.id === item.id);
+        const existingItem = cartItems.find((cartItem: CartItem) => cartItem.id === item.id && cartItem.desc === item.desc);
 
-        if (existingItem) {
+        if (existingItem ) {
 
             // TODO 如果同一款产品属性不一样则按照新item加入购物车
             // 商品已存在，增加数量
             setCartItems((prevCart) =>
                 prevCart.map((cartItem: CartItem) =>
-                    cartItem.id === item.id
+                    cartItem.id === item.id && cartItem.desc === item.desc
                         ? { ...cartItem, quantity: (cartItem.quantity || 1) + 1 }
                         : cartItem
                 )

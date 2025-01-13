@@ -47,6 +47,7 @@ const MyCard = (props: Props) => {
     const [expanded, setExpanded] = React.useState(false);
     const [expanded2, setExpanded2] = React.useState(false);
     const [cartCount, setCartCount] = React.useState(0); // 管理当前商品在购物车的数量
+    const [resetTrigger, setResetTrigger] = React.useState(false);
     // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
     let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
 
@@ -98,6 +99,9 @@ const MyCard = (props: Props) => {
             const allChoose = localStorage.getItem('selectedNames');
             console.log('all you have chosen (delayed):', allChoose);
         }, 0); // 延迟 0 毫秒，确保同步完成
+
+        // 当属性被提交后重置属性
+        setResetTrigger(true)
     };
 
     const handleAddToCart = () => {
@@ -276,6 +280,8 @@ const MyCard = (props: Props) => {
                                  items={item.spiceOptions}
                                  onSelectionChange={handlePropsChange} // 配置变更回调
                         onAddToCart={handleAddToCart}
+                                 resetTrigger={resetTrigger}
+                                 setResetTrigger={setResetTrigger}
                     />
                     {/* Add "Add to Cart" button to the bottom when expanded */}
                     <Box sx={{display: 'flex', justifyContent: 'center', marginTop: 2}}>
@@ -337,6 +343,8 @@ const MyCard = (props: Props) => {
                     items={item.spiceOptions}
                     onSelectionChange={handlePropsChange}
                     onAddToCart={handleAddToCart}
+                    resetTrigger={resetTrigger}
+                    setResetTrigger={setResetTrigger}
                 />
             </Box>
         </Fade>

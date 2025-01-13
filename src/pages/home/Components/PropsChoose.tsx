@@ -12,11 +12,12 @@ interface Props {
     items: PropsOptions[];
     onSelectionChange: (selected: string) => void; // 回调函数，返回选中的值列表
     onAddToCart: () => void; // 添加到购物车的回调
+    resetTrigger: boolean; // 外部传入的重置触发状态
+    setResetTrigger: React.Dispatch<React.SetStateAction<boolean>>; // 外部传入的重置状态更新函数
 }
 
 export default function PropsChoose(props: Props) {
-    const { uniqueId, productID, items, onSelectionChange, onAddToCart } = props;
-    const [resetTrigger, setResetTrigger] = React.useState(false);
+    const { uniqueId, productID, items, onSelectionChange, onAddToCart, resetTrigger, setResetTrigger } = props;
     const resetSelections = () => {
         // 清除本地存储中当前商品相关的属性选择
         items.forEach(option => {
