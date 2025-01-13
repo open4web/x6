@@ -183,7 +183,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                                 onChange={(e) =>
                                     setCartItems((prevItems) =>
                                         prevItems.map((it) =>
-                                            it.id === item.id
+                                            it.id === item.id && it.desc === item.desc
                                                 ? {...it, quantity: Math.max(1, Number(e.target.value))}
                                                 : it
                                         )
@@ -195,7 +195,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                                 onClick={() =>
                                     setCartItems((prevItems) =>
                                         prevItems.map((it) =>
-                                            it.id === item.id
+                                            it.id === item.id && it.desc === item.desc
                                                 ? {...it, quantity: it.quantity + 1}
                                                 : it
                                         )

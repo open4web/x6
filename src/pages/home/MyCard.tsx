@@ -282,6 +282,7 @@ const MyCard = (props: Props) => {
                         onAddToCart={handleAddToCart}
                                  resetTrigger={resetTrigger}
                                  setResetTrigger={setResetTrigger}
+                                 setExpanded={setExpanded2}
                     />
                     {/* Add "Add to Cart" button to the bottom when expanded */}
                     <Box sx={{display: 'flex', justifyContent: 'center', marginTop: 2}}>
@@ -345,6 +346,7 @@ const MyCard = (props: Props) => {
                     onAddToCart={handleAddToCart}
                     resetTrigger={resetTrigger}
                     setResetTrigger={setResetTrigger}
+                    setExpanded={setExpanded2}
                 />
             </Box>
         </Fade>
