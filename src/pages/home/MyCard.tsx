@@ -106,15 +106,19 @@ const MyCard = (props: Props) => {
 
     const handleAddToCart = () => {
         setCartCount(cartCount + 1); // 每次点击增加数量
-        const cartItem = {
-            ...item,
-            selectedProps, // 将用户选择的配置加入购物车
-        };
-        item.desc = selectedNames;
+        // const cartItem = {
+        //     ...item,
+        //     selectedProps, // 将用户选择的配置加入购物车
+        // };
+        if (resetTrigger) {
+            item.desc = selectedNames;
+        }else{
+            item.desc = "";
+        }
         // Perform the "Add to Cart" action
         handleClick(item);
         // Close the Collapse and restore CardContent
-        setExpanded(false);
+        // setExpanded(false);
     };
 
     // 当清空购物车信号变化时重置角标数量
