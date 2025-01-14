@@ -53,9 +53,12 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             setHasNotTicket(false);
         }
 
-        const userData = {
+        const newOrderRequest = {
             at: localStorage.getItem("current_store_id") as string,
             buckets: convertToOrderRequest(cartItems),
+            seat:  localStorage.getItem('ticketNumber'),
+            phone:  localStorage.getItem('phoneNumber'),
+            people:  localStorage.getItem('peopleNumber'),
         };
 
 
@@ -65,7 +68,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             setOpenPayChannel(true);
             // 设置当前订单作为最新订单，这样拉取订单列表时可以标识闪烁凸显
             storeOrderTimestamp(response?.identity?.order_no)
-        }, "POST", userData);
+        }, "POST", newOrderRequest);
 
         // 结算后清空当前选项
         localStorage.removeItem('ticketNumber')
