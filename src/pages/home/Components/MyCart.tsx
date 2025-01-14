@@ -53,6 +53,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             setHasNotTicket(false);
         }
 
+        // 增加seat 和phone
         const newOrderRequest = {
             at: localStorage.getItem("current_store_id") as string,
             buckets: convertToOrderRequest(cartItems),
