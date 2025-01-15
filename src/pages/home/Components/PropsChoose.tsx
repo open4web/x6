@@ -70,10 +70,12 @@ export default function PropsChoose(props: Props) {
                     >
                         <Typography
                             sx={{
-                                fontWeight: 'bold',
-                                fontSize: '1rem',
-                                marginBottom: 1, // 属性名称与按钮组的间距
-                                color: "white"
+                                fontWeight: 'bold', // 加粗字体
+                                fontSize: '1.5rem', // 字体更大
+                                marginBottom: 1.5, // 属性名称与按钮组的间距更大
+                                color: '#FFFFFF', // 保持白色文字
+                                textAlign: 'left', // 居中对齐
+                                letterSpacing: '0.5px', // 增加字母间距，提升视觉效果
                             }}
                         >
                             {option.name} {/* 属性名称，例如：糖分 */}
@@ -113,13 +115,13 @@ export default function PropsChoose(props: Props) {
                         display: 'flex',
                         gap: 2,
                         width: '100%',
-                        maxWidth: '400px',
+                        maxWidth: '600px',
                         justifyContent: 'center', // 内部按钮继续居中
                     }}
                 >
                     <Button
                         variant="outlined"
-                        color="warning"
+                        color="error"
                         onClick={resetSelections}
                         sx={{
                             flex: 1,

@@ -55,35 +55,67 @@ export default function PropToggleButton(props: Props) {
                     sx={{
                         width: '100px', // 固定宽度
                         height: '80px', // 固定高度
-                        border: `2px solid ${
-                            selectedId === option.id ? 'orange' : '#E0E0E0'
+                        border: `3px solid ${
+                            selectedId === option.id ? '#4CAF50' : '#E0E0E0' // 使用绿色边框表示选中状态
                         }`,
-                        borderRadius: '5px',
+                        borderRadius: '12px', // 圆角更柔和
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
-                        backgroundColor: selectedId === option.id ? '#FFF2E6' : '#F5F5F5',
-                        boxShadow: selectedId === option.id ? '0 4px 8px rgba(0,0,0,0.1)' : 'none',
+                        background: selectedId === option.id
+                            ? 'linear-gradient(145deg, #A5D6A7, #C8E6C9)' // 柔和的绿色渐变背景
+                            : '#F9F9F9', // 默认背景
+                        boxShadow: selectedId === option.id
+                            ? '0 6px 12px rgba(76, 175, 80, 0.4)' // 柔和绿色阴影
+                            : 'none',
+                        transform: selectedId === option.id ? 'scale(1.08)' : 'none', // 选中时放大更显著
                         transition: 'all 0.3s ease',
                         ':hover': {
-                            backgroundColor: selectedId === option.id ? '#FFE6D6' : '#F0F0F0',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            backgroundColor: selectedId === option.id ? '#C8E6C9' : '#F0F0F0',
+                            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)', // 悬停时轻微阴影
+                            transform: 'scale(1.05)', // 悬停时轻微放大
                         },
                     }}
                 >
                     {/* 属性名称 */}
-                    <Typography
+                    <Box
                         sx={{
-                            fontSize: '0.875rem',
-                            fontWeight: selectedId === option.id ? 'bold' : 'normal',
-                            textAlign: 'center',
-                            whiteSpace: 'nowrap', // 防止文字换行
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                         }}
                     >
-                        {option.name}
-                    </Typography>
+                        {/* 属性名称 */}
+                        <Typography
+                            sx={{
+                                fontSize: '1.1rem', // 字体略大
+                                fontWeight: selectedId === option.id ? 'bold' : 'normal',
+                                textAlign: 'center',
+                                color: selectedId === option.id ? '#1B5E20' : '#333', // 更深绿色的选中文字颜色
+                                whiteSpace: 'nowrap', // 防止文字换行
+                            }}
+                        >
+                            {option.name}
+                        </Typography>
+
+                        {/* 属性价格 */}
+                        {option.price > 0 && (
+                            <Typography
+                                sx={{
+                                    fontSize: '0.9rem', // 较小字体
+                                    fontWeight: 'bold', // 加粗
+                                    color: '#D32F2F', // 红色文字
+                                    textAlign: 'center',
+                                    marginTop: '4px', // 与名称的间距
+                                }}
+                            >
+                                ¥{option.price}
+                            </Typography>
+                        )}
+                    </Box>
                 </Box>
             ))}
         </Box>
