@@ -111,10 +111,34 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         console.log("Hold order stored:", newHoldOrder);
     };
 
-    const totalPrice = cartItems.reduce(
-        (total, item) => total + item.price * item.quantity,
-        0
-    );
+    // 统计各个属性的单价
+    const totalPrice = cartItems.reduce((total, item) => {
+        // 从 desc 分隔出属性名称
+        const descNames = item.desc.split(",").map(name => name.trim());
+
+        // 从 propsOptions 中找到匹配的属性，并累加价格
+        const propsTotalPrice = descNames.reduce((propsTotal, name) => {
+            let matchedPrice = 0;
+
+            // 遍历 propsOptions 并查找 spiceOptions
+            item.spiceOptions.forEach((prop) => {
+                const matchedSpice = prop.spiceOptions.find(spice => spice.name === name);
+                if (matchedSpice) {
+                    matchedPrice += matchedSpice.price;
+                }
+            });
+
+            return propsTotal + matchedPrice;
+        }, 0);
+
+        // 当前商品的总价（含属性价格）
+        const itemTotalPrice = (item.price + propsTotalPrice) * item.quantity;
+
+        // 累加到总价
+        return total + itemTotalPrice;
+    }, 0);
+
+    console.log("Total Price:", totalPrice);
 
     const bindPeople = () => {
         setOpenPeople(true)
@@ -218,7 +242,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                         </Box>
                         <ListItemSecondaryAction>
                             <IconButton edge="end" onClick={() =>
-                                setCartItems((prevItems) => prevItems.filter((it) => it.id !== item.id))
+                                setCartItems((prevItems) => prevItems.filter((it) => it.id !== item.id && it.desc === item.desc))
                             }>
                                 <DeleteIcon color={"error"}/>
                             </IconButton>

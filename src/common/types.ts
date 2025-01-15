@@ -1,4 +1,5 @@
 import * as React from "react";
+import {PropsOptions} from "../pages/home/Components/Type";
 
 export interface LoginInput {
     phone?: string;
@@ -32,6 +33,7 @@ export interface ScanPayRequest {
 export interface MyProductProps {
     id: string;
     name: string;
+    price: number;
 }
 
 export interface CartItem {
@@ -40,6 +42,7 @@ export interface CartItem {
     price: number;
     quantity: number;
     propsOptions: MyProductProps[];
+    spiceOptions: PropsOptions[];
     desc: string;
 }
 
