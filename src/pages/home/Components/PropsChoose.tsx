@@ -10,7 +10,7 @@ interface Props {
     uniqueId: number;
     productID: string;
     items: PropsOptions[];
-    onSelectionChange: (selected: string) => void; // 回调函数，返回选中的值列表
+    onSelectionChange: (selected: string | string[], supportMultiProps: boolean) => void; // 回调函数，返回选中的值列表
     onAddToCart: () => void; // 添加到购物车的回调
     resetTrigger: boolean; // 外部传入的重置触发状态
     setResetTrigger: React.Dispatch<React.SetStateAction<boolean>>; // 外部传入的重置状态更新函数
@@ -28,7 +28,7 @@ export default function PropsChoose(props: Props) {
 
         // 通知子组件和父组件重置
         setResetTrigger(prev => !prev); // 切换状态触发重置
-        onSelectionChange('');
+        onSelectionChange('', true);
     };
 
     const handleAddToCart = () => {
@@ -94,6 +94,7 @@ export default function PropsChoose(props: Props) {
                                 productId={productID}
                                 items={option.spiceOptions}
                                 reset={resetTrigger}
+                                supportMultiProps={false}
                                 onSelectionChange={onSelectionChange}
                             />
                         </Box>

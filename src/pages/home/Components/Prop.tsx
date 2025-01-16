@@ -8,43 +8,61 @@ interface Props {
     propId: string;
     productId: string;
     items: SpiceOptions[];
-    reset: boolean; // 新增重置信号
-    // options: string[]; // 按钮选项列表
-    onSelectionChange: (selected: string) => void; // 回调函数，返回选中的值列表
+    reset: boolean; // 重置信号
+    supportMultiProps: boolean; // 是否支持多选，默认单选
+    onSelectionChange: (selected: string | string[], supportMultiProps: boolean) => void; // 回调函数
 }
 
 export default function PropToggleButton(props: Props) {
-    const { uniqueId, propId, productId, items, reset , onSelectionChange} = props;
-    const [selectedId, setSelectedId] = React.useState<string | null>(null);
+    const { uniqueId, propId, productId, items, reset, supportMultiProps, onSelectionChange } = props;
+    const [selectedIds, setSelectedIds] = React.useState<string[]>([]); // 支持多选时的状态
 
     const handleChange = (id: string) => {
-        const selectedOption = items.find((item) => item.id === id);
-        const newName = selectedOption?.name || '';
-        const storedValue = JSON.stringify({
-            productId: productId,
-            propId: propId,
-            id: id,
-            name: newName
-        });
-        // localStorage.setItem(fullPropsKey, storedValue);
-        setSelectedId(id);
+        let newSelectedIds: string[];
 
-        onSelectionChange(storedValue);
+        if (supportMultiProps) {
+            // 多选逻辑
+            if (selectedIds.includes(id)) {
+                // 如果已选中，则取消选中
+                newSelectedIds = selectedIds.filter((selectedId) => selectedId !== id);
+            } else {
+                // 如果未选中，则添加选中
+                newSelectedIds = [...selectedIds, id];
+            }
+        } else {
+            // 单选逻辑
+            newSelectedIds = [id];
+        }
+
+        setSelectedIds(newSelectedIds);
+
+        // 构造选中项的详细信息
+        const selectedOptions = newSelectedIds.map((selectedId) => {
+            const selectedOption = items.find((item) => item.id === selectedId);
+            return {
+                productId,
+                propId,
+                id: selectedId,
+                name: selectedOption?.name || "",
+            };
+        });
+
+        // 回调选中项（单选返回字符串，多选返回数组）
+        onSelectionChange(supportMultiProps ? JSON.stringify(selectedOptions) : JSON.stringify(selectedOptions[0]), false);
     };
 
     // 监听重置信号，重置选中状态
     React.useEffect(() => {
-        setSelectedId(null); // 清空选中状态
+        setSelectedIds([]); // 清空选中状态
     }, [reset]);
-
 
     return (
         <Box
             sx={{
                 display: 'flex',
-                flexWrap: 'wrap', // 自动换行
-                gap: 1, // 每个方块的间距
-                justifyContent: 'space-evenly', // 左对齐
+                flexWrap: 'wrap',
+                gap: 1,
+                justifyContent: 'space-evenly',
                 width: '100%',
             }}
         >
@@ -53,29 +71,29 @@ export default function PropToggleButton(props: Props) {
                     key={option.id}
                     onClick={() => handleChange(option.id)}
                     sx={{
-                        width: '100px', // 固定宽度
-                        height: '80px', // 固定高度
+                        width: '100px',
+                        height: '80px',
                         border: `3px solid ${
-                            selectedId === option.id ? '#4CAF50' : '#E0E0E0' // 使用绿色边框表示选中状态
+                            selectedIds.includes(option.id) ? '#4CAF50' : '#E0E0E0'
                         }`,
-                        borderRadius: '12px', // 圆角更柔和
+                        borderRadius: '12px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
-                        background: selectedId === option.id
-                            ? 'linear-gradient(145deg, #A5D6A7, #C8E6C9)' // 柔和的绿色渐变背景
-                            : '#F9F9F9', // 默认背景
-                        boxShadow: selectedId === option.id
-                            ? '0 6px 12px rgba(76, 175, 80, 0.4)' // 柔和绿色阴影
+                        background: selectedIds.includes(option.id)
+                            ? 'linear-gradient(145deg, #A5D6A7, #C8E6C9)'
+                            : '#F9F9F9',
+                        boxShadow: selectedIds.includes(option.id)
+                            ? '0 6px 12px rgba(76, 175, 80, 0.4)'
                             : 'none',
-                        transform: selectedId === option.id ? 'scale(1.08)' : 'none', // 选中时放大更显著
+                        transform: selectedIds.includes(option.id) ? 'scale(1.08)' : 'none',
                         transition: 'all 0.3s ease',
                         ':hover': {
-                            backgroundColor: selectedId === option.id ? '#C8E6C9' : '#F0F0F0',
-                            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)', // 悬停时轻微阴影
-                            transform: 'scale(1.05)', // 悬停时轻微放大
+                            backgroundColor: selectedIds.includes(option.id) ? '#C8E6C9' : '#F0F0F0',
+                            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)',
+                            transform: 'scale(1.05)',
                         },
                     }}
                 >
@@ -88,14 +106,13 @@ export default function PropToggleButton(props: Props) {
                             justifyContent: 'center',
                         }}
                     >
-                        {/* 属性名称 */}
                         <Typography
                             sx={{
-                                fontSize: '1.1rem', // 字体略大
-                                fontWeight: selectedId === option.id ? 'bold' : 'normal',
+                                fontSize: '1.1rem',
+                                fontWeight: selectedIds.includes(option.id) ? 'bold' : 'normal',
                                 textAlign: 'center',
-                                color: selectedId === option.id ? '#1B5E20' : '#333', // 更深绿色的选中文字颜色
-                                whiteSpace: 'nowrap', // 防止文字换行
+                                color: selectedIds.includes(option.id) ? '#1B5E20' : '#333',
+                                whiteSpace: 'nowrap',
                             }}
                         >
                             {option.name}
@@ -105,11 +122,11 @@ export default function PropToggleButton(props: Props) {
                         {option.price > 0 && (
                             <Typography
                                 sx={{
-                                    fontSize: '0.9rem', // 较小字体
-                                    fontWeight: 'bold', // 加粗
-                                    color: '#D32F2F', // 红色文字
+                                    fontSize: '0.9rem',
+                                    fontWeight: 'bold',
+                                    color: '#D32F2F',
                                     textAlign: 'center',
-                                    marginTop: '4px', // 与名称的间距
+                                    marginTop: '4px',
                                 }}
                             >
                                 ¥{option.price}

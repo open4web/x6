@@ -71,17 +71,51 @@ const MyCard = (props: Props) => {
         return localStorage.getItem('selectedNames') || '';
     });
 
-    const handlePropsChange = (options: string) => {
+    const handlePropsChange = (options: string | string[], supportMultiProps: boolean) => {
         console.log('Received options:', options);
-        setSelectedProps(options); // 更新选中的配置项（原始 JSON）
+        // 将选项处理为字符串（若为数组，则拼接为逗号分隔字符串）
+        const optionsString = Array.isArray(options)
+            ? options.map((opt) => {
+                try {
+                    const parsedOption = JSON.parse(opt);
+                    return parsedOption.name || opt; // 如果解析成功取 name，失败时使用原值
+                } catch {
+                    return opt; // 无法解析时使用原值
+                }
+            }).join(', ')
+            : options;
+
+        console.log('Processed options string:', optionsString);
+        setSelectedProps(optionsString); // 更新选中的配置项（原始 JSON 或拼接字符串）
 
         try {
-            // 解析传递进来的 JSON 数据
-            const { propId, name } = JSON.parse(options);
-
+            // 解析单个 JSON 数据
+            const parsedOption = JSON.parse(optionsString);
+            const { propId, name } = parsedOption;
+            supportMultiProps = true
             // 更新映射和拼接字符串
             setPropMap((prevMap) => {
-                const updatedMap = { ...prevMap, [propId]: name }; // 更新 propId -> name 映射
+                const updatedMap = { ...prevMap };
+
+                if (supportMultiProps) {
+                    // 如果支持多选模式，检查是否已经存在同一 propId
+                    if (updatedMap[propId]) {
+                        console.log("updatedMap=>", updatedMap)
+                        // 避免重复追加相同的 name
+                        const existingNames = updatedMap[propId].split(', ');
+                        if (!existingNames.includes(name)) {
+                            updatedMap[propId] = `${updatedMap[propId]}, ${name}`;
+                        }
+                    } else {
+                        updatedMap[propId] = name;
+                    }
+                } else {
+                    // 如果不支持多选模式，直接覆盖值
+                    updatedMap[propId] = name;
+                }
+
+                console.log("updatedMap===>", updatedMap)
+
                 const names = Object.values(updatedMap).join(', '); // 拼接所有 name
 
                 // 将最新结果存储到本地
@@ -92,16 +126,17 @@ const MyCard = (props: Props) => {
                 return updatedMap;
             });
         } catch (error) {
-            console.error('Failed to parse options:', error);
+            console.error('Failed to parse option:', error);
         }
+
         // 延迟读取本地存储
         setTimeout(() => {
             const allChoose = localStorage.getItem('selectedNames');
-            console.log('all you have chosen (delayed):', allChoose);
+            console.log('All you have chosen (delayed):', allChoose);
         }, 0); // 延迟 0 毫秒，确保同步完成
 
         // 当属性被提交后重置属性
-        setResetTrigger(true)
+        setResetTrigger(true);
     };
 
     const handleAddToCart = () => {
