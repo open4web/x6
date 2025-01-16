@@ -19,20 +19,6 @@ export type Customer = {
     avatar: string;
 }
 
-// export type Bucket = {
-//     id: string;
-//     name: string;
-//     number: number;
-//     price: number;
-//     origin_amount: string;
-//     unit: string;
-//     property: any;
-//     props: any;
-//     props_text: string;
-//     image: string;
-//     props_item: any;
-// }
-
 export type Price = {
     original_price: string;
     sale_price: string;

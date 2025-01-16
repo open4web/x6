@@ -44,7 +44,7 @@ interface Props {
 const MyCard = (props: Props) => {
     const {  setShowProductImage, showProductImage } = useCartContext();
     const {item, handleClick, kindName, kindColor, clearCartSignal} = props;
-    const [expanded, setExpanded] = React.useState(false);
+    // const [expanded, setExpanded] = React.useState(false);
     const [expanded2, setExpanded2] = React.useState(false);
     const [cartCount, setCartCount] = React.useState(0); // 管理当前商品在购物车的数量
     const [resetTrigger, setResetTrigger] = React.useState(false);
@@ -52,13 +52,20 @@ const MyCard = (props: Props) => {
     let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
 
     const handleExpandClick = () => {
-        setExpanded(!expanded);
+        // setExpanded(!expanded);
     };
     const handleExpandClick2 = () => {
         setExpanded2(!expanded2);
     };
 
-    const handleClose = () => setExpanded2(false);
+    const handleClose = () => {
+        console.log("Collapse 关闭！");
+        setExpanded2(false);
+        localStorage.removeItem('propMap')
+        localStorage.removeItem('selectedNames');
+        setPropMap({})
+    };
+
     const [selectedProps, setSelectedProps] = React.useState<string>(''); // 保存当前选中的 JSON 数据
     const [propMap, setPropMap] = React.useState<Record<string, string>>(() => {
         // 初始化映射为本地存储中的值，或空对象
@@ -71,60 +78,30 @@ const MyCard = (props: Props) => {
         return localStorage.getItem('selectedNames') || '';
     });
 
-    const handlePropsChange = (options: string | string[], supportMultiProps: boolean) => {
-        console.log('Received options:', options);
-        // 将选项处理为字符串（若为数组，则拼接为逗号分隔字符串）
-        const optionsString = Array.isArray(options)
-            ? options.map((opt) => {
-                try {
-                    const parsedOption = JSON.parse(opt);
-                    return parsedOption.name || opt; // 如果解析成功取 name，失败时使用原值
-                } catch {
-                    return opt; // 无法解析时使用原值
-                }
-            }).join(', ')
-            : options;
-
-        console.log('Processed options string:', optionsString);
-        setSelectedProps(optionsString); // 更新选中的配置项（原始 JSON 或拼接字符串）
-
+    const handlePropsChange = (options: string, supportMultiProps: boolean) => {
+        console.log('XXX  Received options:', options);
+        const optionsString = aggregateData(options);
         try {
             // 解析单个 JSON 数据
-            const parsedOption = JSON.parse(optionsString);
-            const { propId, name } = parsedOption;
-            // supportMultiProps = true
-            // 更新映射和拼接字符串
-            setPropMap((prevMap) => {
-                const updatedMap = { ...prevMap };
-
-                if (supportMultiProps) {
-                    // 如果支持多选模式，检查是否已经存在同一 propId
-                    if (updatedMap[propId]) {
-                        console.log("updatedMap=>", updatedMap)
-                        // 避免重复追加相同的 name
-                        const existingNames = updatedMap[propId].split(', ');
-                        if (!existingNames.includes(name)) {
-                            updatedMap[propId] = `${updatedMap[propId]}, ${name}`;
-                        }
-                    } else {
+                const parsedOption = JSON.parse(optionsString);
+                const {propId, name} = parsedOption;
+                // 更新映射和拼接字符串
+                setPropMap((prevMap) => {
+                    const updatedMap = {...prevMap};
+                        // 如果不支持多选模式，直接覆盖值
                         updatedMap[propId] = name;
-                    }
-                } else {
-                    // 如果不支持多选模式，直接覆盖值
-                    updatedMap[propId] = name;
-                }
 
-                console.log("updatedMap===>", updatedMap)
+                    console.log("=======updatedMap===>", updatedMap)
 
-                const names = Object.values(updatedMap).join(', '); // 拼接所有 name
+                    const names = Object.values(updatedMap).join(','); // 拼接所有 name
 
-                // 将最新结果存储到本地
-                localStorage.setItem('propMap', JSON.stringify(updatedMap));
-                localStorage.setItem('selectedNames', names);
+                    // 将最新结果存储到本地
+                    localStorage.setItem('propMap', JSON.stringify(updatedMap));
+                    localStorage.setItem('selectedNames', names);
 
-                setSelectedNames(names); // 更新拼接后的字符串
-                return updatedMap;
-            });
+                    setSelectedNames(names); // 更新拼接后的字符串
+                    return updatedMap;
+                });
         } catch (error) {
             console.error('Failed to parse option:', error);
         }
@@ -133,15 +110,16 @@ const MyCard = (props: Props) => {
         setTimeout(() => {
             const allChoose = localStorage.getItem('selectedNames');
             console.log('All you have chosen (delayed):', allChoose);
+            // setResetTrigger(true)
         }, 0); // 延迟 0 毫秒，确保同步完成
-
-        // 当属性被提交后重置属性
-        // setResetTrigger(true);
     };
 
     const handleAddToCart = (withoutProp: boolean) => {
         setCartCount(cartCount + 1); // 每次点击增加数量
-
+        // 当属性被提交后重置属性
+        localStorage.removeItem('propMap')
+        localStorage.removeItem('selectedNames');
+        setPropMap({})
         // 如果是直接快速添加则不会勾选属性
         if (withoutProp) {
             // 强制置为空
@@ -154,7 +132,6 @@ const MyCard = (props: Props) => {
         }else{
             item.desc = selectedNames;
             // 当前的item属性被使用后就删除本地缓存
-            localStorage.removeItem('selectedNames')
         }
         // Perform the "Add to Cart" action
         handleClick(item);
@@ -248,58 +225,6 @@ const MyCard = (props: Props) => {
                     alt="暂无图片"
                 />
             )}
-            {/* Conditional rendering for CardContent */}
-            {!expanded && (
-                <CardContent>
-                    {showProductImage && (
-                        <Typography variant="body2" color="text.secondary">
-                            {item?.desc}
-                        </Typography>
-                    )}
-                </CardContent>
-            )}
-            {showProductImage && ( // 仅当 showProductImage 为 true 时显示 AddShoppingCartIcon
-                <CardActions disableSpacing>
-                    {!expanded && (
-                        <Badge
-                            badgeContent={cartCount}
-                            color="error"
-                            sx={{
-                                '.MuiBadge-badge': {
-                                    fontSize: '0.8rem',
-                                    height: 20,
-                                    minWidth: 20,
-                                },
-                            }}
-                        >
-                            <IconButton
-                                aria-label="add to cart"
-                                onClick={() => handleAddToCart(false)} // 正确：点击时调用函数并传递参数
-                                sx={{
-                                    color: 'success',
-                                    '&:hover': {
-                                        color: 'darkorange',
-                                    },
-                                }}
-                            >
-                                <AddShoppingCartIcon
-                                    sx={{
-                                        fontSize: 40,
-                                    }}
-                                />
-                            </IconButton>
-                        </Badge>
-                    )}
-                    <ExpandMore
-                        expand={expanded}
-                        onClick={handleExpandClick}
-                        aria-expanded={expanded}
-                        aria-label="show more"
-                    >
-                        <ExpandMoreIcon />
-                    </ExpandMore>
-                </CardActions>
-            )}
 
             <CardActions
                 disableSpacing
@@ -318,50 +243,6 @@ const MyCard = (props: Props) => {
                     </ExpandMore>
                 )}
             </CardActions>
-            <Collapse in={expanded} timeout="auto" unmountOnExit>
-                <CardContent>
-                    <PropsChoose uniqueId={uniqueId + 1}
-                                 productID={item.id}
-                                 items={item.spiceOptions}
-                                 onSelectionChange={handlePropsChange} // 配置变更回调
-                                 onAddToCart={() => handleAddToCart(false)} // 正确：点击时调用函数并传递参数
-                                 resetTrigger={resetTrigger}
-                                 setResetTrigger={setResetTrigger}
-                                 setExpanded={setExpanded2}
-                    />
-                    {/* Add "Add to Cart" button to the bottom when expanded */}
-                    <Box sx={{display: 'flex', justifyContent: 'center', marginTop: 2}}>
-                        <Badge
-                            badgeContent={cartCount}
-                            color="error"
-                            sx={{
-                                '.MuiBadge-badge': {
-                                    fontSize: '0.8rem',
-                                    height: 20,
-                                    minWidth: 20,
-                                },
-                            }}
-                        >
-                            <IconButton
-                                aria-label="add to cart"
-                                onClick={() => handleAddToCart(false)} // 正确：点击时调用函数并传递参数
-                                sx={{
-                                    color: 'primary', // 显著的颜色，可以替换为其他颜色
-                                    '&:hover': {
-                                        color: 'darkorange', // 悬停时的颜色
-                                    },
-                                }}
-                            >
-                                <AddShoppingCartIcon
-                                    sx={{
-                                        fontSize: 40, // 增大图标尺寸，默认是 24
-                                    }}
-                                />
-                            </IconButton>
-                        </Badge>
-                    </Box>
-                </CardContent>
-            </Collapse>
         </Card>
 
     <Modal
@@ -401,3 +282,46 @@ const MyCard = (props: Props) => {
 };
 
 export default MyCard;
+
+
+// 聚合函数
+function aggregateData(jsonString: string): string {
+    try {
+        // 将 JSON 字符串解析为对象数组
+        const data: DataItem[] = JSON.parse(jsonString);
+
+        if (!Array.isArray(data)) {
+            // 如果不是数组不需要聚合，直接返回
+            return jsonString
+        }
+
+        // 使用 Map 聚合数据
+        const aggregatedMap = new Map<string, DataItem>();
+
+        for (const item of data) {
+            if (aggregatedMap.has(item.propId)) {
+                const existingItem = aggregatedMap.get(item.propId)!;
+                existingItem.name = `${existingItem.name},${item.name}`; // 合并名称
+            } else {
+                aggregatedMap.set(item.propId, { ...item }); // 深拷贝以避免修改原数据
+            }
+        }
+
+        // 提取聚合后的第一条记录并转为字符串
+        const aggregatedArray = Array.from(aggregatedMap.values());
+        const result = aggregatedArray[0]; // 假设只返回一条数据
+        return JSON.stringify(result);
+    } catch (error) {
+        console.error("Error aggregating data:", error);
+        return "{}";
+    }
+}
+
+
+// 定义数据类型
+interface DataItem {
+    productId: string;
+    propId: string;
+    id: string;
+    name: string;
+}

@@ -91,6 +91,7 @@ export interface PropsOptions  {
     name: string;
     id: string;
     spiceOptions: SpiceOptions[];
+    multipleSelection: boolean;
 }
 
 export interface SpiceOptions  {

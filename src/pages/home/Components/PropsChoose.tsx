@@ -10,7 +10,7 @@ interface Props {
     uniqueId: number;
     productID: string;
     items: PropsOptions[];
-    onSelectionChange: (selected: string | string[], supportMultiProps: boolean) => void; // 回调函数，返回选中的值列表
+    onSelectionChange: (selected: string, supportMultiProps: boolean) => void; // 回调函数，返回选中的值列表
     onAddToCart: () => void; // 添加到购物车的回调
     resetTrigger: boolean; // 外部传入的重置触发状态
     setResetTrigger: React.Dispatch<React.SetStateAction<boolean>>; // 外部传入的重置状态更新函数
@@ -21,10 +21,10 @@ export default function PropsChoose(props: Props) {
     const { uniqueId, productID, items, onSelectionChange, onAddToCart, resetTrigger, setResetTrigger, setExpanded } = props;
     const resetSelections = () => {
         // 清除本地存储中当前商品相关的属性选择
-        items.forEach(option => {
-            const fullPropsKey = `selectedSpiceLevel:${uniqueId}:${productID}:${option.id}`;
-            localStorage.removeItem(fullPropsKey);
-        });
+        // items.forEach(option => {
+        //     const fullPropsKey = `selectedSpiceLevel:${uniqueId}:${productID}:${option.id}`;
+        //     localStorage.removeItem(fullPropsKey);
+        // });
 
         // 通知子组件和父组件重置
         setResetTrigger(prev => !prev); // 切换状态触发重置
@@ -79,6 +79,20 @@ export default function PropsChoose(props: Props) {
                             }}
                         >
                             {option.name} {/* 属性名称，例如：糖分 */}
+                            {option.multipleSelection && (
+                                <Typography
+                                    component="span"
+                                    sx={{
+                                        fontWeight: 'normal', // 正常字体
+                                        fontSize: '1rem', // 较小的字体
+                                        color: '#FFCC00', // 使用不同颜色（例如金黄色）
+                                        marginLeft: 0, // 与主标题之间留出一些间距
+                                        fontStyle: 'italic', // 斜体字
+                                    }}
+                                >
+                                    （多选）
+                                </Typography>
+                            )}
                         </Typography>
                         <Box
                             sx={{
@@ -94,7 +108,7 @@ export default function PropsChoose(props: Props) {
                                 productId={productID}
                                 items={option.spiceOptions}
                                 reset={resetTrigger}
-                                supportMultiProps={false}
+                                supportMultiProps={option.multipleSelection}
                                 onSelectionChange={onSelectionChange}
                             />
                         </Box>

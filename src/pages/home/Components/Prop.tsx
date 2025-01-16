@@ -10,7 +10,7 @@ interface Props {
     items: SpiceOptions[];
     reset: boolean; // 重置信号
     supportMultiProps: boolean; // 是否支持多选，默认单选
-    onSelectionChange: (selected: string | string[], supportMultiProps: boolean) => void; // 回调函数
+    onSelectionChange: (selected: string, supportMultiProps: boolean) => void; // 回调函数
 }
 
 export default function PropToggleButton(props: Props) {
@@ -52,12 +52,13 @@ export default function PropToggleButton(props: Props) {
     };
 
     // 监听重置信号，重置选中状态
-    React.useEffect(() => {
-        setSelectedIds([]); // 清空选中状态
-    }, [reset]);
+    // React.useEffect(() => {
+    //     setSelectedIds([]); // 清空选中状态
+    // }, [reset]);
 
     return (
         <Box
+            key={`${uniqueId}-${reset}`} // 使用 reset 触发 key 的变化
             sx={{
                 display: 'flex',
                 flexWrap: 'wrap',
