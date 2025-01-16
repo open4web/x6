@@ -198,51 +198,64 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                                     setCartItems((prevItems) =>
                                         prevItems.map((it) =>
                                             it.id === item.id && it.desc === item.desc
-                                                ? {...it, quantity: Math.max(1, it.quantity - 1)}
+                                                ? { ...it, quantity: Math.max(1, it.quantity - 1) }
                                                 : it
                                         )
                                     )
                                 }
                                 size="small"
                             >
-                                <RemoveIcon/>
+                                <RemoveIcon />
                             </IconButton>
                             <TextField
-                                type="number"
+                                type="text"
                                 size="small"
+                                disabled={true}
                                 value={item.quantity}
                                 onChange={(e) =>
                                     setCartItems((prevItems) =>
                                         prevItems.map((it) =>
                                             it.id === item.id && it.desc === item.desc
-                                                ? {...it, quantity: Math.max(1, Number(e.target.value))}
+                                                ? { ...it, quantity: Math.max(1, Math.min(10, Number(e.target.value))) } // 限制范围 1-10
                                                 : it
                                         )
                                     )
                                 }
-                                sx={{width: 60, textAlign: 'center'}}
+                                inputProps={{
+                                    style: { textAlign: 'center' }, // 让输入的文本居中
+                                }}
+                                sx={{
+                                    width: 60, // 增加宽度，适合展示两位数字
+                                    '& input': {
+                                        textAlign: 'center', // 确保文本在输入框中居中
+                                    },
+                                }}
                             />
                             <IconButton
                                 onClick={() =>
                                     setCartItems((prevItems) =>
                                         prevItems.map((it) =>
                                             it.id === item.id && it.desc === item.desc
-                                                ? {...it, quantity: it.quantity + 1}
+                                                ? { ...it, quantity: it.quantity + 1 }
                                                 : it
                                         )
                                     )
                                 }
                                 size="small"
                             >
-                                <AddCircleIcon/>
+                                <AddCircleIcon />
                             </IconButton>
                             <Typography variant="h6" sx={{fontWeight: 'bold', color: 'yellow', textAlign: "right"}}>
                                 ¥{item.price.toFixed(2)}
                             </Typography>
                         </Box>
                         <ListItemSecondaryAction>
-                            <IconButton edge="end" onClick={() =>
-                                setCartItems((prevItems) => prevItems.filter((it) => it.id !== item.id && it.desc === item.desc))
+                            <IconButton edge="end"     onClick={() =>
+                                setCartItems((prevItems) =>
+                                    prevItems.filter(
+                                        (it) => !(it.id === item.id && it.desc === item.desc)
+                                    )
+                                )
                             }>
                                 <DeleteIcon color={"error"}/>
                             </IconButton>

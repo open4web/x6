@@ -92,7 +92,7 @@ const MyCard = (props: Props) => {
             // 解析单个 JSON 数据
             const parsedOption = JSON.parse(optionsString);
             const { propId, name } = parsedOption;
-            supportMultiProps = true
+            // supportMultiProps = true
             // 更新映射和拼接字符串
             setPropMap((prevMap) => {
                 const updatedMap = { ...prevMap };
@@ -136,19 +136,25 @@ const MyCard = (props: Props) => {
         }, 0); // 延迟 0 毫秒，确保同步完成
 
         // 当属性被提交后重置属性
-        setResetTrigger(true);
+        // setResetTrigger(true);
     };
 
-    const handleAddToCart = () => {
+    const handleAddToCart = (withoutProp: boolean) => {
         setCartCount(cartCount + 1); // 每次点击增加数量
-        // const cartItem = {
-        //     ...item,
-        //     selectedProps, // 将用户选择的配置加入购物车
-        // };
+
+        // 如果是直接快速添加则不会勾选属性
+        if (withoutProp) {
+            // 强制置为空
+            item.desc = ""
+            handleClick(item)
+            return
+        }
         if (resetTrigger) {
-            item.desc = selectedNames;
-        }else{
             item.desc = "";
+        }else{
+            item.desc = selectedNames;
+            // 当前的item属性被使用后就删除本地缓存
+            localStorage.removeItem('selectedNames')
         }
         // Perform the "Add to Cart" action
         handleClick(item);
@@ -214,7 +220,7 @@ const MyCard = (props: Props) => {
                     </Typography>
                 }
 
-                onClick={!showProductImage ? () => handleAddToCart() : undefined} // 整个卡片可点击
+                onClick={!showProductImage ? () => handleAddToCart(true) : undefined} // 整个卡片可点击
 
             />
             {!showProductImage && (
@@ -268,7 +274,7 @@ const MyCard = (props: Props) => {
                         >
                             <IconButton
                                 aria-label="add to cart"
-                                onClick={handleAddToCart}
+                                onClick={() => handleAddToCart(false)} // 正确：点击时调用函数并传递参数
                                 sx={{
                                     color: 'success',
                                     '&:hover': {
@@ -318,7 +324,7 @@ const MyCard = (props: Props) => {
                                  productID={item.id}
                                  items={item.spiceOptions}
                                  onSelectionChange={handlePropsChange} // 配置变更回调
-                        onAddToCart={handleAddToCart}
+                                 onAddToCart={() => handleAddToCart(false)} // 正确：点击时调用函数并传递参数
                                  resetTrigger={resetTrigger}
                                  setResetTrigger={setResetTrigger}
                                  setExpanded={setExpanded2}
@@ -338,7 +344,7 @@ const MyCard = (props: Props) => {
                         >
                             <IconButton
                                 aria-label="add to cart"
-                                onClick={handleAddToCart}
+                                onClick={() => handleAddToCart(false)} // 正确：点击时调用函数并传递参数
                                 sx={{
                                     color: 'primary', // 显著的颜色，可以替换为其他颜色
                                     '&:hover': {
@@ -382,7 +388,7 @@ const MyCard = (props: Props) => {
                     productID={item.id}
                     items={item.spiceOptions}
                     onSelectionChange={handlePropsChange}
-                    onAddToCart={handleAddToCart}
+                    onAddToCart={() => handleAddToCart(false)} // 正确：点击时调用函数并传递参数
                     resetTrigger={resetTrigger}
                     setResetTrigger={setResetTrigger}
                     setExpanded={setExpanded2}
