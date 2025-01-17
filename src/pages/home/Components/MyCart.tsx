@@ -28,7 +28,8 @@ import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import {Alert} from "@mui/material";
-import {storeOrderTimestamp} from "../../../utils/expireStore";
+import {isOrderExpired, storeOrderTimestamp} from "../../../utils/expireStore";
+import {useEffect} from "react";
 
 export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const {holdOrders, setHoldOrders} = useCartContext();
@@ -48,6 +49,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         if (!ticketNumber) {
             // 检查是否为 null 或空字符串
             setHasNotTicket(true);
+            setOpenTicket(true);
             return
         } else {
             setHasNotTicket(false);
@@ -112,6 +114,11 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         // 清空购物车
         setCartItems([]);
         console.log("Hold order stored:", newHoldOrder);
+
+        // 结算后清空当前选项
+        localStorage.removeItem('ticketNumber')
+        localStorage.removeItem('phoneNumber')
+        localStorage.removeItem('peopleNumber')
     };
 
     // 统计各个属性的单价
@@ -155,12 +162,13 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
 
     const bindTicket = () => {
         setOpenTicket(true)
-        setHasNotTicket(false)
+        // setHasNotTicket(false)
     }
 
     const handleSaveResult = (value: string) => {
         console.log("保存的数字是:", value);
         localStorage.setItem("ticketNumber", value);
+        setHasNotTicket(false)
     };
 
     // handleSavePhoneResult
@@ -172,6 +180,9 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         console.log("保存的数字是:", value);
         localStorage.setItem("peopleNumber", value);
     };
+
+    // useEffect(() => {
+    // }, [hasNotTicket]);
 
     return (
         <Box sx={{width: 380, padding: 1}}>
