@@ -3,7 +3,7 @@ import Drawer from "@mui/material/Drawer";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import IconButton from "@mui/material/IconButton";
-import SearchIcon from "@mui/icons-material/Search";
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import MenuItem from "@mui/material/MenuItem";
 import { useCartContext } from "../../../dataProvider/MyCartProvider";
 import MyOrder from "./MyOrder";
@@ -26,7 +26,7 @@ export default function MyOrderDrawer() {
         const day = String(date.getDate()).padStart(2, "0");
         const hours = String(date.getHours()).padStart(2, "0");
         const minutes = String(date.getMinutes()).padStart(2, "0");
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
+        return `${year}-${month}-${day} ${hours}:${minutes}:00`;
     };
 
     const now = getShanghaiTime();
@@ -36,15 +36,17 @@ export default function MyOrderDrawer() {
     const [status, setStatus] = React.useState<number>(1);
     const [startDate, setStartDate] = React.useState<string>(today);
     const [endDate, setEndDate] = React.useState<string>(formattedNow);
-
+    const [orderNo, setOrderNo] = React.useState<string>('');
     const toggleDrawer = (newOpen: boolean) => () => {
         setOrderDrawerOpen(newOpen);
     };
 
-    const handleSearch = (type: "order" | "member") => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleSearch = (type: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
         const searchTerm = event.target.value;
-        console.log(`搜索${type === "order" ? "订单" : "会员"}:`, searchTerm);
+        const searchTermWithUpper = searchTerm.toUpperCase();
+        console.log(`搜索${type === "order" ? "订单" : "会员"}:`, searchTermWithUpper);
         // 在此添加搜索逻辑
+        setOrderNo(searchTermWithUpper)
     };
 
     const handleStatusChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,15 +58,21 @@ export default function MyOrderDrawer() {
     };
 
     const handleDateChange = (type: "start" | "end") => (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
+        const inputDate = event.target.value; // 用户输入的值 (格式: YYYY-MM-DDTHH:mm)
+        const formattedDate = inputDate.replace("T", " "); // 替换 "T" 为 " " 符号
+
         if (type === "start") {
-            setStartDate(value);
-            console.log("开始日期:", value);
+            setStartDate(formattedDate + ":00"); // 将秒数设置为 00
+            console.log("格式化后的开始日期:", formattedDate + ":00");
         } else {
-            setEndDate(value);
-            console.log("结束日期:", value);
+            setEndDate(formattedDate + ":59"); // 将秒数设置为 59
+            console.log("格式化后的结束日期:", formattedDate + ":59");
         }
-        // 在此添加时间范围过滤逻辑
+    };
+
+    const handleClearOrderNo = () => {
+        setOrderNo(""); // 重置订单号为空
+        console.log("订单号已清空");
     };
 
     return (
@@ -75,7 +83,7 @@ export default function MyOrderDrawer() {
                     sx={{
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "space-between",
+                        justifyContent: "right",
                         padding: "6px 5px",
                         borderBottom: "1px solid",
                         flexWrap: "nowrap", // 确保所有元素在同一行
@@ -89,6 +97,7 @@ export default function MyOrderDrawer() {
                             variant="outlined"
                             size="small"
                             placeholder="搜索订单..."
+                            value={orderNo}
                             onChange={handleSearch("order")}
                             sx={{
                                 flexGrow: 1,
@@ -97,11 +106,11 @@ export default function MyOrderDrawer() {
                             }}
                         />
                         <IconButton
-                            size="medium"
-                            color="primary"
-                            onClick={() => console.log("订单搜索按钮点击")}
+                            size="small"
+                            color="error"
+                            onClick={handleClearOrderNo} // 清空订单号
                         >
-                            <SearchIcon />
+                            <RestartAltIcon/>
                         </IconButton>
                     </Box>
 
@@ -161,7 +170,7 @@ export default function MyOrderDrawer() {
                 orderNo, phoneNumber, status, startDate, endDate
                 */}
                 <Box sx={{ padding: 2 }}>
-                    <MyOrder orderNo={""} phoneNumber={""} status={status} startDate={startDate} endDate={endDate}/>
+                    <MyOrder orderNo={orderNo} phoneNumber={""} status={status} startDate={startDate} endDate={endDate}/>
                 </Box>
             </Drawer>
         </div>

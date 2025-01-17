@@ -42,6 +42,26 @@ interface MyOrderProps {
     endDate?: string;
 }
 
+function generateQueryParams({ orderNo, status, startDate, endDate }: MyOrderProps) {
+    const queryParams: Record<string, string | number> = {};
+
+    if (orderNo) {
+        queryParams.order_no = orderNo; // 如果有 orderNo，仅返回 orderNo
+    } else {
+        if (status !== undefined && status !== null) {
+            queryParams.status = status; // 添加状态过滤
+        }
+        if (startDate) {
+            queryParams.start_gte = startDate; // 添加开始时间
+        }
+        if (endDate) {
+            queryParams.end_lte = endDate; // 添加结束时间
+        }
+    }
+
+    return queryParams;
+}
+
 function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderProps) {
     const [orders, setOrders] = useState<Order[]>([]);
     const [viewMode, setViewMode] = useState('list');
@@ -53,6 +73,13 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
     const { fetchData, alertComponent } = useFetchData();
 
     useEffect(() => {
+        // 如果 orderNo 存在并且长度小于 13，则不触发请求
+        if (orderNo && orderNo.length < 17) {
+            // P20250113230928ME
+            console.log("订单号长度不足，未触发请求");
+            return;
+        }
+        const queryParams = generateQueryParams({ orderNo, phoneNumber, status, startDate, endDate });
         fetchData(
             '/v1/order/pos',
             (response) => {
@@ -67,11 +94,11 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
                 }
             },
             'GET',
-            {"status": status}
+            queryParams,
         ).catch(() => {
             console.log('Failed to fetch data.');
         });
-    }, [status]);
+    }, [status, startDate, endDate, orderNo]);
 
     const handleClosePayChannel = () => {
         setOpenPayChannel(false);
