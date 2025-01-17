@@ -51,9 +51,6 @@ const MyCard = (props: Props) => {
     // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
     let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
 
-    const handleExpandClick = () => {
-        // setExpanded(!expanded);
-    };
     const handleExpandClick2 = () => {
         setExpanded2(!expanded2);
     };
@@ -66,7 +63,6 @@ const MyCard = (props: Props) => {
         setPropMap({})
     };
 
-    const [selectedProps, setSelectedProps] = React.useState<string>(''); // 保存当前选中的 JSON 数据
     const [propMap, setPropMap] = React.useState<Record<string, string>>(() => {
         // 初始化映射为本地存储中的值，或空对象
         const storedMap = localStorage.getItem('propMap');
@@ -79,7 +75,6 @@ const MyCard = (props: Props) => {
     });
 
     const handlePropsChange = (options: string, supportMultiProps: boolean) => {
-        console.log('XXX  Received options:', options);
         const optionsString = aggregateData(options);
         try {
             // 解析单个 JSON 数据
@@ -90,9 +85,6 @@ const MyCard = (props: Props) => {
                     const updatedMap = {...prevMap};
                         // 如果不支持多选模式，直接覆盖值
                         updatedMap[propId] = name;
-
-                    console.log("=======updatedMap===>", updatedMap)
-
                     const names = Object.values(updatedMap).join(','); // 拼接所有 name
 
                     // 将最新结果存储到本地
@@ -107,11 +99,11 @@ const MyCard = (props: Props) => {
         }
 
         // 延迟读取本地存储
-        setTimeout(() => {
-            const allChoose = localStorage.getItem('selectedNames');
-            console.log('All you have chosen (delayed):', allChoose);
-            // setResetTrigger(true)
-        }, 0); // 延迟 0 毫秒，确保同步完成
+        // setTimeout(() => {
+        //     const allChoose = localStorage.getItem('selectedNames');
+        //     console.log('All you have chosen (delayed):', allChoose);
+        //     // setResetTrigger(true)
+        // }, 0); // 延迟 0 毫秒，确保同步完成
     };
 
     const handleAddToCart = (withoutProp: boolean) => {
@@ -156,7 +148,42 @@ const MyCard = (props: Props) => {
                 position: 'relative', // 设置 Card 为相对定位
                 cursor: showProductImage ? 'default' : 'pointer', // 设置鼠标样式
             }}
-        >
+        > {/* 销售状态标签 */}
+            {item.stock === 0 ? (
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        bottom: 10,
+                        left: 10,
+                        backgroundColor: '#d32f2f', // 已售罄颜色
+                        color: 'white',
+                        padding: '2px 8px',
+                        borderRadius: 1,
+                        fontSize: '0.8rem',
+                        fontWeight: 'bold',
+                        zIndex: 1,
+                    }}
+                >
+                    已售罄
+                </Box>
+            ) : (
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        bottom: 10,
+                        left: 10,
+                        backgroundColor: '#fbc02d', // 剩余数量颜色
+                        color: 'black',
+                        padding: '2px 8px',
+                        borderRadius: 1,
+                        fontSize: '0.8rem',
+                        fontWeight: 'bold',
+                        zIndex: 1,
+                    }}
+                >
+                    剩余 {item.stock}
+                </Box>
+            )}
             <CardHeader
                 avatar=
                     {
@@ -214,15 +241,6 @@ const MyCard = (props: Props) => {
                             minWidth: 20,
                         },
                     }}
-                />
-            )}
-
-            {showProductImage && (
-                <CardMedia
-                    component="img"
-                    height="194"
-                    image={item?.img}
-                    alt="暂无图片"
                 />
             )}
 

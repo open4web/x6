@@ -75,6 +75,9 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         localStorage.removeItem('ticketNumber')
         localStorage.removeItem('phoneNumber')
         localStorage.removeItem('peopleNumber')
+
+        // 清空购物车
+        setCartItems([]);
     };
 
 

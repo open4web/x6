@@ -20,7 +20,7 @@ function generateColorFromId(id: string): string {
 }
 
 function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
-    const {  setShowProductImage, showProductImage } = useCartContext();
+    const {  setShowProductImage, showProductImage, cartItems } = useCartContext();
     const [data, setData] = useState<ProductItem[]>([]);
     const [categories, setCategories] = useState<ProductCategory[]>([]);
     const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
@@ -61,7 +61,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             console.log("===nameMap=>", nameMap)
             setCategoryColorMap(colorMap);
         }, "POST", userData);
-    }, [activeTab, merchantId]);
+    }, [activeTab, merchantId, cartItems]);
 
     const handleChipClick = (categoryId: string) => {
         setActiveTab(categoryId);
