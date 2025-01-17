@@ -31,7 +31,7 @@ export const useFetchData = () => {
             try {
                 const config = {
                     method,
-                    url: path,
+                    url: path + (method === 'GET' ? '?filter=' +  JSON.stringify(data) : ''),
                     headers: {
                         'Content-Type': 'application/json',
                         Cookies: cookie,

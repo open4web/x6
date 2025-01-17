@@ -34,7 +34,15 @@ function getStatusColor(status: number) {
     return statusColors[status] || '#ffffff';
 }
 
-function MyOrder() {
+interface MyOrderProps {
+    orderNo?: string;
+    phoneNumber?: string;
+    status?: number;
+    startDate?: string;
+    endDate?: string;
+}
+
+function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderProps) {
     const [orders, setOrders] = useState<Order[]>([]);
     const [viewMode, setViewMode] = useState('list');
     const [openPayChannel, setOpenPayChannel] = useState(false);
@@ -59,11 +67,11 @@ function MyOrder() {
                 }
             },
             'GET',
-            {}
+            {"status": status}
         ).catch(() => {
             console.log('Failed to fetch data.');
         });
-    }, []);
+    }, [status]);
 
     const handleClosePayChannel = () => {
         setOpenPayChannel(false);
