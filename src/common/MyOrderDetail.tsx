@@ -21,15 +21,44 @@ import ListItemText from "@mui/material/ListItemText";
 import {getOrderStatus} from "./orderStatus";
 import {isOrderExpired} from "../utils/expireStore";
 import {useFetchData} from "./FetchData";
+import {getPlatformInfo} from "./payMethod";
 
 interface MyOrderDetailProps {
     open: boolean;
     orderData: Order;
     onClose: () => void;
-    openOrderDetailWithReason: string;
+    openOrderDetailWithReason: OpenReason;
 }
 
+export enum OpenReason {
+    Default = "default",
+    FastCancel = "fastCancel",
+    Cancel = "cancel",
+    Close = "close",
+}
+
+export const OpenReasonMap: Record<OpenReason, { title: string; action: string }> = {
+    [OpenReason.Default]: {
+        title: "订单详情",
+        action: "",
+    },
+    [OpenReason.FastCancel]: {
+        title: "快速取消订单",
+        action: "立即取消",
+    },
+    [OpenReason.Cancel]: {
+        title: "取消订单",
+        action: "取消",
+    },
+    [OpenReason.Close]: {
+        title: "关闭订单详情",
+        action: "关闭订单",
+    },
+};
+
 const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, openOrderDetailWithReason}) => {
+    // 根据理由从映射中读取 title 和 action
+    const reasonDetails = OpenReasonMap[openOrderDetailWithReason];
 
     const {name: statusName, color: statusColor} = getOrderStatus(orderData.status);
     const {fetchData, alertComponent} = useFetchData();
@@ -57,7 +86,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
             printWindow.document.write(`
                 <html>
                 <head>
-                    <title>{openOrderDetailWithReason}</title>
+                    <title>{reasonDetails.title}</title>
                     <style>
                         body {
                             font-family: Arial, sans-serif;
@@ -104,7 +133,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>
-                {openOrderDetailWithReason} - {orderData.identity.order_no}
+                {reasonDetails.title} - {orderData.identity.order_no}
                 <IconButton onClick={handlePrint} sx={{float: 'right'}}>
                     <PrintIcon/>
                 </IconButton>
@@ -203,9 +232,26 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 <Typography variant="h6">支付信息</Typography>
                 <Card variant="outlined" sx={{marginBottom: 2}}>
                     <CardContent>
-                        <Box display="flex" flexDirection="column" gap={1}>
-                            <Typography>支付金额: ¥{orderData.price.pay_price}</Typography>
-                            <Typography>支付状态: {orderData.pay.status === 0 ? '未支付' : '已支付'}</Typography>
+                        <Box display="flex" flexDirection="row" gap={4} justifyContent="space-between">
+                            <Box display="flex" flexDirection="column" gap={1} flex="1">
+                                <Typography>支付金额: ¥{orderData.price.pay_price}</Typography>
+                                <Typography>支付状态: {orderData.pay.status === 0 ? '未支付' : '已支付'}</Typography>
+                            </Box>
+                            <Box display="flex" flexDirection="column" gap={1} flex="1">
+                                {(() => {
+                                    const { name, color } = getPlatformInfo(orderData.pay.method);
+                                    return (
+                                        <Box
+                                        >
+                                            <Typography>
+                                                支付方式: <Chip label={name} sx={{backgroundColor: color, color: '#fff',}}
+                                                            size={"small"}/>
+                                            </Typography>
+                                        </Box>
+                                    );
+                                })()}
+                                <Typography>支付单号: {orderData.pay.transaction_id}</Typography>
+                            </Box>
                         </Box>
                     </CardContent>
                 </Card>
@@ -235,12 +281,9 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 </Card>
             </DialogContent>
             <DialogActions>
-                {
-
-                }
-                {orderData?.status === 1 && (
+                {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && (
                     <Button onClick={handleOrderDetailCancel} variant="contained" color="secondary">
-                        确认
+                        {reasonDetails.action}
                     </Button>
                 )}
 

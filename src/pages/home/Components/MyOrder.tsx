@@ -21,7 +21,7 @@ import TableCell from '@mui/material/TableCell';
 import {TransitionProps} from '@mui/material/transitions';
 import {useFetchData} from '../../../common/FetchData';
 import {FormatTimestampAsTime} from '../../../utils/time';
-import MyOrderDetail from '../../../common/MyOrderDetail';
+import MyOrderDetail, {OpenReason} from '../../../common/MyOrderDetail';
 import PayChannel from '../../../common/PayChannel';
 import {Order} from './types';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
@@ -71,7 +71,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
     const [openPayChannel, setOpenPayChannel] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null); // 保存选中的订单
     const [openOrderDetail, setOpenOrderDetail] = useState(false); // 是否展示详情对话框
-    const [openOrderDetailWithReason, setOpenOrderDetailWithReason] = useState('订单详情'); // 是否展示详情对话框
+    const [openOrderDetailWithReason, setOpenOrderDetailWithReason] = useState(OpenReason.Default); // 是否展示详情对话框
     const [detailOrder, setDetailOrder] = useState<Order | null>(null); // 当前详情订单
     const [highlightOrderId, setHighlightOrderId] = useState(''); // 高亮订单 ID
     const { fetchData, alertComponent } = useFetchData();
@@ -129,7 +129,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
         console.log("正在申请快速取消订单")
         setDetailOrder(order); // 设置当前选中的详情订单
         setOpenOrderDetail(true);
-        setOpenOrderDetailWithReason("订单快速取消")
+        setOpenOrderDetailWithReason(OpenReason.FastCancel)
     };
 
     const handleOrderDetailClose = () => {
