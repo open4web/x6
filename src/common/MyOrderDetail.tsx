@@ -15,7 +15,7 @@ import {
     IconButton, Chip,
 } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
-import { Order } from "../pages/home/Components/types";
+import {Order} from "../pages/home/Components/types";
 import OrderWorkflow from './Workflow';
 import ListItemText from "@mui/material/ListItemText";
 import {getOrderStatus} from "./orderStatus";
@@ -29,10 +29,10 @@ interface MyOrderDetailProps {
     openOrderDetailWithReason: string;
 }
 
-const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose , openOrderDetailWithReason}) => {
+const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, openOrderDetailWithReason}) => {
 
-    const { name: statusName, color: statusColor } = getOrderStatus(orderData.status);
-    const { fetchData, alertComponent } = useFetchData();
+    const {name: statusName, color: statusColor} = getOrderStatus(orderData.status);
+    const {fetchData, alertComponent} = useFetchData();
 
     const handleOrderDetailCancel = () => {
         fetchData(
@@ -105,33 +105,35 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose 
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>
                 {openOrderDetailWithReason} - {orderData.identity.order_no}
-                <IconButton onClick={handlePrint} sx={{ float: 'right' }}>
-                    <PrintIcon />
+                <IconButton onClick={handlePrint} sx={{float: 'right'}}>
+                    <PrintIcon/>
                 </IconButton>
             </DialogTitle>
             <DialogContent>
                 {/* 订单详情信息 */}
-                <Card variant="outlined" sx={{ marginBottom: 2 }}>
+                <Typography variant="h6">基本信息</Typography>
+                <Card variant="outlined" sx={{marginBottom: 2}}>
                     <CardContent>
-                        <Typography variant="h6">基本信息</Typography>
                         <Box display="flex" flexDirection="column" gap={1}>
                             <Typography>订单号: {orderData.identity.order_no}</Typography>
                             <Typography>桌号: {orderData.identity.table_no || '未指定'}</Typography>
                             <Typography>创建时间: {new Date(orderData.stp.created_at * 1000).toLocaleString()}</Typography>
                             <Typography>
-                                状态: <Chip label={statusName} sx={{ backgroundColor: statusColor, color: '#fff', }} size={"small"} />
+                                状态: <Chip label={statusName} sx={{backgroundColor: statusColor, color: '#fff',}}
+                                            size={"small"}/>
                             </Typography>
                         </Box>
                     </CardContent>
                 </Card>
 
                 {/* 隐藏的打印清单 */}
-                <div id="print-section" style={{ display: 'none' }}>
+                <div id="print-section" style={{display: 'none'}}>
                     <div className="title">订单清单</div>
                     <div className="info">
                         <div className="info-item">订单号: {orderData.identity.order_no}</div>
                         <div className="info-item">桌号: {orderData.identity.table_no || '未指定'}</div>
-                        <div className="info-item">创建时间: {new Date(orderData.stp.created_at * 1000).toLocaleString()}</div>
+                        <div
+                            className="info-item">创建时间: {new Date(orderData.stp.created_at * 1000).toLocaleString()}</div>
                         <div className="info-item">状态: {orderData.status}</div>
                     </div>
                     <div className="items">
@@ -156,9 +158,9 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose 
                 </div>
 
                 {/* 商品列表 */}
-                <Card variant="outlined" sx={{ marginBottom: 2 }}>
+                <Typography variant="h6">商品列表</Typography>
+                <Card variant="outlined" sx={{marginBottom: 2}}>
                     <CardContent>
-                        <Typography variant="h6">商品列表</Typography>
                         <List>
                             {orderData.buckets.map((bucket) => (
                                 <React.Fragment key={bucket.id}>
@@ -183,14 +185,14 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose 
                                                 <Typography
                                                     variant="body1"
                                                     color="error"
-                                                    sx={{ fontWeight: 'bold' }}
+                                                    sx={{fontWeight: 'bold'}}
                                                 >
                                                     小计: ¥{(bucket.price * bucket.number).toFixed(2)}
                                                 </Typography>
                                             </Box>
                                         </Box>
                                     </ListItem>
-                                    <Divider />
+                                    <Divider/>
                                 </React.Fragment>
                             ))}
                         </List>
@@ -198,9 +200,9 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose 
                 </Card>
 
                 {/* 支付信息 */}
-                <Card variant="outlined" sx={{ marginBottom: 2 }}>
+                <Typography variant="h6">支付信息</Typography>
+                <Card variant="outlined" sx={{marginBottom: 2}}>
                     <CardContent>
-                        <Typography variant="h6">支付信息</Typography>
                         <Box display="flex" flexDirection="column" gap={1}>
                             <Typography>支付金额: ¥{orderData.price.pay_price}</Typography>
                             <Typography>支付状态: {orderData.pay.status === 0 ? '未支付' : '已支付'}</Typography>
@@ -209,10 +211,26 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose 
                 </Card>
 
                 {/* 订单流程 */}
-                <Card variant="outlined" sx={{ marginBottom: 2 }}>
-                    <CardContent>
-                        <Typography variant="h6">订单流程</Typography>
-                        <OrderWorkflow workflow={orderData?.workflow} />
+                <Typography variant="h6" sx={{flexShrink: 0}}>
+                    订单流程
+                </Typography>
+                <Card
+                    variant="outlined"
+                    sx={{
+                        marginBottom: 2,
+                        overflowX: "auto", // 确保卡片内部可以横向滚动
+                    }}
+                >
+                    <CardContent
+                        sx={{
+                            display: "flex",
+                            gap: 2,
+                            whiteSpace: "nowrap", // 确保内容不会换行
+                            overflowX: "auto", // 卡片内容的横向滚动
+                            paddingBottom: 1,  // 调整内边距
+                        }}
+                    >
+                        <OrderWorkflow workflow={orderData?.workflow}/>
                     </CardContent>
                 </Card>
             </DialogContent>
