@@ -12,20 +12,44 @@ import {
     ListItem,
     Divider,
     Button,
-    IconButton,
+    IconButton, Chip,
 } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import { Order } from "../pages/home/Components/types";
 import OrderWorkflow from './Workflow';
 import ListItemText from "@mui/material/ListItemText";
+import {getOrderStatus} from "./orderStatus";
+import {isOrderExpired} from "../utils/expireStore";
+import {useFetchData} from "./FetchData";
 
 interface MyOrderDetailProps {
     open: boolean;
     orderData: Order;
     onClose: () => void;
+    openOrderDetailWithReason: string;
 }
 
-const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose }) => {
+const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose , openOrderDetailWithReason}) => {
+
+    const { name: statusName, color: statusColor } = getOrderStatus(orderData.status);
+    const { fetchData, alertComponent } = useFetchData();
+
+    const handleOrderDetailCancel = () => {
+        fetchData(
+            '/v1/order/pos/fastCancel/' + orderData.id,
+            (response) => {
+                console.log("更新成功=>", response)
+                onClose();
+            },
+            'PUT',
+            '',
+        ).catch(() => {
+            console.log('Failed to fetch data.');
+        });
+
+    };
+
+
     const handlePrint = () => {
         const printContent = document.getElementById("print-section");
         const printWindow = window.open('', '_blank');
@@ -33,7 +57,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose 
             printWindow.document.write(`
                 <html>
                 <head>
-                    <title>订单清单</title>
+                    <title>{openOrderDetailWithReason}</title>
                     <style>
                         body {
                             font-family: Arial, sans-serif;
@@ -80,7 +104,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>
-                订单详情 - {orderData.identity.order_no}
+                {openOrderDetailWithReason} - {orderData.identity.order_no}
                 <IconButton onClick={handlePrint} sx={{ float: 'right' }}>
                     <PrintIcon />
                 </IconButton>
@@ -94,7 +118,9 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose 
                             <Typography>订单号: {orderData.identity.order_no}</Typography>
                             <Typography>桌号: {orderData.identity.table_no || '未指定'}</Typography>
                             <Typography>创建时间: {new Date(orderData.stp.created_at * 1000).toLocaleString()}</Typography>
-                            <Typography>状态: {orderData.status}</Typography>
+                            <Typography>
+                                状态: <Chip label={statusName} sx={{ backgroundColor: statusColor, color: '#fff', }} size={"small"} />
+                            </Typography>
                         </Box>
                     </CardContent>
                 </Card>
@@ -191,6 +217,15 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({ open, orderData, onClose 
                 </Card>
             </DialogContent>
             <DialogActions>
+                {
+
+                }
+                {orderData?.status === 1 && (
+                    <Button onClick={handleOrderDetailCancel} variant="contained" color="secondary">
+                        确认
+                    </Button>
+                )}
+
                 <Button onClick={onClose} variant="contained" color="primary">
                     关闭
                 </Button>

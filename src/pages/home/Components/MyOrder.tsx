@@ -26,6 +26,7 @@ import PayChannel from '../../../common/PayChannel';
 import {Order} from './types';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
 import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
+import CancelIcon from '@mui/icons-material/Cancel';
 import {isOrderExpired} from "../../../utils/expireStore";
 import {MyOrderSkeleton} from "../../../common/MyOrderSkeleton";
 
@@ -70,6 +71,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
     const [openPayChannel, setOpenPayChannel] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null); // 保存选中的订单
     const [openOrderDetail, setOpenOrderDetail] = useState(false); // 是否展示详情对话框
+    const [openOrderDetailWithReason, setOpenOrderDetailWithReason] = useState('订单详情'); // 是否展示详情对话框
     const [detailOrder, setDetailOrder] = useState<Order | null>(null); // 当前详情订单
     const [highlightOrderId, setHighlightOrderId] = useState(''); // 高亮订单 ID
     const { fetchData, alertComponent } = useFetchData();
@@ -119,6 +121,15 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
     const handleOrderDetail = (order: Order) => {
         setDetailOrder(order); // 设置当前选中的详情订单
         setOpenOrderDetail(true);
+    };
+
+    // 对于已支付但未出餐的可以快速申请取消
+    // 申请取消后系统会通知后台进行审批退款
+    const handleOrderCancel = (order: Order) => {
+        console.log("正在申请快速取消订单")
+        setDetailOrder(order); // 设置当前选中的详情订单
+        setOpenOrderDetail(true);
+        setOpenOrderDetailWithReason("订单快速取消")
     };
 
     const handleOrderDetailClose = () => {
@@ -210,9 +221,11 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
                                             退款
                                         </Button>
                                     )}
-                                    <IconButton aria-label="delete" size="large" color="error">
-                                        <PublishedWithChangesIcon />
-                                    </IconButton>
+                                    {order?.status === 1 && (
+                                        <IconButton aria-label="delete" size="large" color="error" onClick={() => handleOrderCancel(order)}>
+                                            <CancelIcon />
+                                        </IconButton>
+                                    )}
                                     <IconButton aria-label="delete" size="large" color="success" onClick={() => handleOrderDetail(order)}>
                                         <ExpandCircleDownIcon />
                                     </IconButton>
@@ -224,7 +237,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
 
             {/* 订单详情对话框 */}
             {detailOrder && (
-                <MyOrderDetail open={openOrderDetail} orderData={detailOrder} onClose={handleOrderDetailClose}/>
+                <MyOrderDetail open={openOrderDetail} orderData={detailOrder} onClose={handleOrderDetailClose} openOrderDetailWithReason={openOrderDetailWithReason}/>
             )}
 
             {/* 支付渠道对话框 */}

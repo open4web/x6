@@ -7,6 +7,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import MenuItem from "@mui/material/MenuItem";
 import { useCartContext } from "../../../dataProvider/MyCartProvider";
 import MyOrder from "./MyOrder";
+import {orderStatusMap} from "../../../common/orderStatus";
 
 export default function MyOrderDrawer() {
     const { orderDrawerOpen, setOrderDrawerOpen } = useCartContext();
@@ -126,11 +127,11 @@ export default function MyOrderDrawer() {
                             flexShrink: 0,
                         }}
                     >
-                        <MenuItem value="0">待支付</MenuItem>
-                        <MenuItem value="1">已支付</MenuItem>
-                        <MenuItem value="2">已发货</MenuItem>
-                        <MenuItem value="3">已完成</MenuItem>
-                        <MenuItem value="4">已取消</MenuItem>
+                        {orderStatusMap.map((status) => (
+                            <MenuItem key={status.id} value={status.id}>
+                                {status.name}
+                            </MenuItem>
+                        ))}
                     </TextField>
 
                     {/* 开始时间 */}
