@@ -181,6 +181,13 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         localStorage.setItem("peopleNumber", value);
     };
 
+    const resetCart = () => {
+        localStorage.removeItem('ticketNumber')
+        localStorage.removeItem('phoneNumber')
+        localStorage.removeItem('peopleNumber')
+        setCartItems([])
+    }
+
     // useEffect(() => {
     // }, [hasNotTicket]);
 
@@ -330,7 +337,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                     variant="outlined"
                     color="warning"
                     fullWidth
-                    onClick={() => setCartItems([])}
+                    onClick={resetCart}
                     disabled={cartItems.length === 0}
                 >
                     清空
