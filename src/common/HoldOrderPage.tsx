@@ -68,7 +68,7 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                                     sx={{
                                         py: 0,
                                         minHeight: 32,
-                                        color: 'rgba(255,255,255,.8)',
+                                        color: 'darkorange',
                                         display: 'flex',
                                         justifyContent: 'space-between'
                                     }}

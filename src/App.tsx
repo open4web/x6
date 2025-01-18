@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Admin, CustomRoutes, houseDarkTheme} from 'react-admin';
+import {Admin, CustomRoutes, houseDarkTheme, houseLightTheme} from 'react-admin';
 import polyglotI18nProvider from 'ra-i18n-polyglot';
 import {Route} from 'react-router';
 
@@ -47,6 +47,7 @@ const App = () => {
                     i18nProvider={i18nProvider}
                     disableTelemetry
                     darkTheme={houseDarkTheme}
+                    lightTheme={houseLightTheme}
                     defaultTheme={"dark"}
                     requireAuth
 

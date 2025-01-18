@@ -259,7 +259,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                             >
                                 <AddCircleIcon />
                             </IconButton>
-                            <Typography variant="h6" sx={{fontWeight: 'bold', color: 'yellow', textAlign: "right"}}>
+                            <Typography variant="h6" sx={{fontWeight: 'bold', color: 'darkorange', textAlign: "right"}}>
                                 ¥{item.price.toFixed(2)}
                             </Typography>
                         </Box>
