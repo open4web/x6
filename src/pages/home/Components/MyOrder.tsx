@@ -40,11 +40,12 @@ interface MyOrderProps {
     orderNo?: string;
     phoneNumber?: string;
     status?: number;
+    source?: number;
     startDate?: string;
     endDate?: string;
 }
 
-function generateQueryParams({ orderNo, status, startDate, endDate }: MyOrderProps) {
+function generateQueryParams({ orderNo, status, startDate, endDate, source }: MyOrderProps) {
     const queryParams: Record<string, string | number> = {};
 
     if (orderNo) {
@@ -52,6 +53,9 @@ function generateQueryParams({ orderNo, status, startDate, endDate }: MyOrderPro
     } else {
         if (status !== undefined && status !== null) {
             queryParams.status = status; // 添加状态过滤
+        }
+        if (source !== undefined && source !== null) {
+            queryParams.source = source; // 添加状态过滤
         }
         if (startDate) {
             queryParams.start_gte = startDate; // 添加开始时间
@@ -64,7 +68,7 @@ function generateQueryParams({ orderNo, status, startDate, endDate }: MyOrderPro
     return queryParams;
 }
 
-function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderProps) {
+function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source }: MyOrderProps) {
     const [orders, setOrders] = useState<Order[]>([]);
     const [viewMode, setViewMode] = useState('list');
     const [loading, setLoading] = useState<boolean>(true); // 添加加载状态
@@ -85,7 +89,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
             console.log("订单号长度不足，未触发请求");
             return;
         }
-        const queryParams = generateQueryParams({ orderNo, phoneNumber, status, startDate, endDate });
+        const queryParams = generateQueryParams({ orderNo, phoneNumber, status, startDate, endDate , source});
         fetchData(
             '/v1/order/pos',
             (response) => {
@@ -106,7 +110,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
             console.log('Failed to fetch data.');
             setLoading(false); // 加载失败
         });
-    }, [status, startDate, endDate, orderNo]);
+    }, [status, startDate, endDate, orderNo, source]);
 
     const handleClosePayChannel = () => {
         setOpenPayChannel(false);
@@ -214,11 +218,6 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate }: MyOrderPr
                                     {order?.status === 0 && (
                                         <Button size="large" color="info" onClick={() => handleContinuePay(order)}>
                                             支付
-                                        </Button>
-                                    )}
-                                    {order?.status > 0 && (
-                                        <Button size="large" color="primary">
-                                            退款
                                         </Button>
                                     )}
                                     {order?.status === 1 && (

@@ -8,6 +8,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { useCartContext } from "../../../dataProvider/MyCartProvider";
 import MyOrder from "./MyOrder";
 import {orderStatusMap} from "../../../common/orderStatus";
+import {platformTypeLists} from "../../../common/payMethod";
 
 export default function MyOrderDrawer() {
     const { orderDrawerOpen, setOrderDrawerOpen } = useCartContext();
@@ -35,6 +36,8 @@ export default function MyOrderDrawer() {
     const formattedNow = formatDateTime(getShanghaiTime()); // 当前时间作为结束时间
 
     const [status, setStatus] = React.useState<number>(1);
+    // setSource
+    const [source, setSource] = React.useState<number>(4);
     const [startDate, setStartDate] = React.useState<string>(today);
     const [endDate, setEndDate] = React.useState<string>(formattedNow);
     const [orderNo, setOrderNo] = React.useState<string>('');
@@ -55,6 +58,15 @@ export default function MyOrderDrawer() {
         console.log("订单状态:", selectedStatus);
 
         setStatus(Number(selectedStatus));
+        // 在此添加状态过滤逻辑
+    };
+
+    // handleSourceChange
+    const handleSourceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedStatus = event.target.value;
+        console.log("订单来源:", selectedStatus);
+
+        setSource(Number(selectedStatus));
         // 在此添加状态过滤逻辑
     };
 
@@ -133,7 +145,24 @@ export default function MyOrderDrawer() {
                             </MenuItem>
                         ))}
                     </TextField>
-
+                    {/* 订单来源筛选 */}
+                    <TextField
+                        select
+                        label="订单来源"
+                        value={source}
+                        onChange={handleSourceChange}
+                        size="small"
+                        sx={{
+                            minWidth: "150px",
+                            flexShrink: 0,
+                        }}
+                    >
+                        {platformTypeLists.map((status) => (
+                            <MenuItem key={status.id} value={status.id}>
+                                {status.name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
                     {/* 开始时间 */}
                     <TextField
                         label="开始时间"
@@ -171,7 +200,7 @@ export default function MyOrderDrawer() {
                 orderNo, phoneNumber, status, startDate, endDate
                 */}
                 <Box sx={{ padding: 2 }}>
-                    <MyOrder orderNo={orderNo} phoneNumber={""} status={status} startDate={startDate} endDate={endDate}/>
+                    <MyOrder orderNo={orderNo} phoneNumber={""} status={status} source={source} startDate={startDate} endDate={endDate}/>
                 </Box>
             </Drawer>
         </div>
