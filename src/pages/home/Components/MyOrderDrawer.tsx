@@ -9,6 +9,9 @@ import { useCartContext } from "../../../dataProvider/MyCartProvider";
 import MyOrder from "./MyOrder";
 import {orderStatusMap} from "../../../common/orderStatus";
 import {platformTypeLists} from "../../../common/payMethod";
+import { FormControlLabel } from "@mui/material";
+import FormGroup from "@mui/material/FormGroup";
+import Switch from "@mui/material/Switch";
 
 export default function MyOrderDrawer() {
     const { orderDrawerOpen, setOrderDrawerOpen } = useCartContext();
@@ -34,7 +37,7 @@ export default function MyOrderDrawer() {
     const now = getShanghaiTime();
     const today = formatDateTime(new Date(now.setHours(0, 0, 0, 0))); // 开始时间：当天00:00
     const formattedNow = formatDateTime(getShanghaiTime()); // 当前时间作为结束时间
-
+    const [onlyMyOrder, setOnlyMyOrder] = React.useState<boolean>(false);
     const [status, setStatus] = React.useState<number>(1);
     // setSource
     const [source, setSource] = React.useState<number>(4);
@@ -88,6 +91,14 @@ export default function MyOrderDrawer() {
         console.log("订单号已清空");
     };
 
+    const handleOnlyMeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const isChecked = event.target.checked;
+        console.log("订单设置:", isChecked ? "只看我的" : "全部订单");
+
+        setOnlyMyOrder(isChecked);
+    };
+
+
     return (
         <div>
             <Drawer open={orderDrawerOpen} onClose={toggleDrawer(false)} elevation={2} anchor="bottom">
@@ -104,6 +115,15 @@ export default function MyOrderDrawer() {
                         gap: 0.1,
                     }}
                 >
+                    <FormGroup>
+                    <FormControlLabel
+                        control={
+                            <Switch checked={onlyMyOrder} onChange={handleOnlyMeChange} name="antoine" />
+                        }
+                        label="只看我的"
+                    />
+                </FormGroup>
+
                     {/* 订单搜索框 */}
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <TextField
@@ -200,7 +220,7 @@ export default function MyOrderDrawer() {
                 orderNo, phoneNumber, status, startDate, endDate
                 */}
                 <Box sx={{ padding: 2 }}>
-                    <MyOrder orderNo={orderNo} phoneNumber={""} status={status} source={source} startDate={startDate} endDate={endDate}/>
+                    <MyOrder orderNo={orderNo} phoneNumber={""} status={status} source={source} startDate={startDate} endDate={endDate} onlyMyOrder={onlyMyOrder}/>
                 </Box>
             </Drawer>
         </div>
