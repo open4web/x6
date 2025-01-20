@@ -44,6 +44,7 @@ interface MyOrderProps {
     startDate?: string;
     endDate?: string;
     onlyMyOrder?: boolean;
+    setTotalRecord: React.Dispatch<React.SetStateAction<number>>; // 用于更新 open 状态的函数
 }
 
 function generateQueryParams({ orderNo, status, startDate, endDate, source , onlyMyOrder}: MyOrderProps) {
@@ -73,7 +74,7 @@ function generateQueryParams({ orderNo, status, startDate, endDate, source , onl
     return queryParams;
 }
 
-function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onlyMyOrder }: MyOrderProps) {
+function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onlyMyOrder, setTotalRecord }: MyOrderProps) {
     const [orders, setOrders] = useState<Order[]>([]);
     const [viewMode, setViewMode] = useState('list');
     const [loading, setLoading] = useState<boolean>(true); // 添加加载状态
@@ -94,7 +95,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
             console.log("订单号长度不足，未触发请求");
             return;
         }
-        const queryParams = generateQueryParams({ orderNo, phoneNumber, status, startDate, endDate , source, onlyMyOrder});
+        const queryParams = generateQueryParams({ orderNo, phoneNumber, status, startDate, endDate , source, onlyMyOrder, setTotalRecord});
         fetchData(
             '/v1/order/pos',
             (response) => {
@@ -106,8 +107,12 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                         setHighlightOrderId(newestOrder.identity.order_no);
                         setTimeout(() => setHighlightOrderId(''), 2000); // 2 秒后清除高亮
                     }
+
                     setLoading(false); // 加载完成
                 }
+
+                // 将查询到的数据记录数量写入
+                setTotalRecord(response?.length)
             },
             'GET',
             queryParams,

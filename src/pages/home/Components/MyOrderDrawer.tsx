@@ -5,22 +5,23 @@ import TextField from "@mui/material/TextField";
 import IconButton from "@mui/material/IconButton";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import MenuItem from "@mui/material/MenuItem";
-import { useCartContext } from "../../../dataProvider/MyCartProvider";
+import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import MyOrder from "./MyOrder";
 import {orderStatusMap} from "../../../common/orderStatus";
 import {platformTypeLists} from "../../../common/payMethod";
-import { FormControlLabel } from "@mui/material";
+import {AvatarGroup, Badge, FormControlLabel} from "@mui/material";
 import FormGroup from "@mui/material/FormGroup";
 import Switch from "@mui/material/Switch";
+import GradingIcon from '@mui/icons-material/Grading';
 
 export default function MyOrderDrawer() {
-    const { orderDrawerOpen, setOrderDrawerOpen } = useCartContext();
+    const {orderDrawerOpen, setOrderDrawerOpen} = useCartContext();
 
     // 获取中国上海时区当前时间
     const getShanghaiTime = () => {
         const now = new Date();
         const shanghaiTime = new Date(
-            now.toLocaleString("en-US", { timeZone: "Asia/Shanghai" })
+            now.toLocaleString("en-US", {timeZone: "Asia/Shanghai"})
         );
         return shanghaiTime;
     };
@@ -41,6 +42,7 @@ export default function MyOrderDrawer() {
     const [status, setStatus] = React.useState<number>(1);
     // setSource
     const [source, setSource] = React.useState<number>(4);
+    const [totalRecord, setTotalRecord] = React.useState<number>(4);
     const [startDate, setStartDate] = React.useState<string>(today);
     const [endDate, setEndDate] = React.useState<string>(formattedNow);
     const [orderNo, setOrderNo] = React.useState<string>('');
@@ -74,15 +76,20 @@ export default function MyOrderDrawer() {
     };
 
     const handleDateChange = (type: "start" | "end") => (event: React.ChangeEvent<HTMLInputElement>) => {
-        const inputDate = event.target.value; // 用户输入的值 (格式: YYYY-MM-DDTHH:mm)
-        const formattedDate = inputDate.replace("T", " "); // 替换 "T" 为 " " 符号
+        const inputDate = event.target.value; // 用户输入的值 (格式: YYYY-MM-DDTHH:mm 或 YYYY-MM-DDTHH:mm:ss)
+        const parts = inputDate.split(":"); // 分割时间部分
+
+        // 如果输入值已经包含秒部分，不进行修改
+        const hasSeconds = parts.length === 3;
 
         if (type === "start") {
-            setStartDate(formattedDate + ":00"); // 将秒数设置为 00
-            console.log("格式化后的开始日期:", formattedDate + ":00");
+            const formattedDate = hasSeconds ? inputDate.replace("T", " ") : inputDate.replace("T", " ") + ":00"; // 添加秒数为 00
+            setStartDate(formattedDate);
+            console.log("格式化后的开始日期:", formattedDate);
         } else {
-            setEndDate(formattedDate + ":59"); // 将秒数设置为 59
-            console.log("格式化后的结束日期:", formattedDate + ":59");
+            const formattedDate = hasSeconds ? inputDate.replace("T", " ") : inputDate.replace("T", " ") + ":59"; // 添加秒数为 59
+            setEndDate(formattedDate);
+            console.log("格式化后的结束日期:", formattedDate);
         }
     };
 
@@ -112,20 +119,24 @@ export default function MyOrderDrawer() {
                         borderBottom: "1px solid",
                         flexWrap: "nowrap", // 确保所有元素在同一行
                         overflowX: "auto", // 当空间不足时允许滚动
-                        gap: 0.1,
+                        gap: 3,
                     }}
                 >
+                    <Badge badgeContent={totalRecord} color="primary">
+                        <GradingIcon color="inherit" />
+                    </Badge>
+
                     <FormGroup>
-                    <FormControlLabel
-                        control={
-                            <Switch checked={onlyMyOrder} onChange={handleOnlyMeChange} name="antoine" />
-                        }
-                        label="只看我的"
-                    />
-                </FormGroup>
+                        <FormControlLabel
+                            control={
+                                <Switch checked={onlyMyOrder} onChange={handleOnlyMeChange} name="antoine"/>
+                            }
+                            label="只看我的"
+                        />
+                    </FormGroup>
 
                     {/* 订单搜索框 */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
                         <TextField
                             variant="outlined"
                             size="small"
@@ -146,81 +157,88 @@ export default function MyOrderDrawer() {
                             <RestartAltIcon/>
                         </IconButton>
                     </Box>
-
-                    {/* 订单状态筛选 */}
-                    <TextField
-                        select
-                        label="订单状态"
-                        value={status}
-                        onChange={handleStatusChange}
-                        size="small"
-                        sx={{
-                            minWidth: "150px",
-                            flexShrink: 0,
-                        }}
-                    >
-                        {orderStatusMap.map((status) => (
-                            <MenuItem key={status.id} value={status.id}>
-                                {status.name}
-                            </MenuItem>
-                        ))}
-                    </TextField>
+                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
+                        {/* 订单状态筛选 */}
+                        <TextField
+                            select
+                            label="订单状态"
+                            value={status}
+                            onChange={handleStatusChange}
+                            size="small"
+                            sx={{
+                                minWidth: "150px",
+                                flexShrink: 0,
+                            }}
+                        >
+                            {orderStatusMap.map((status) => (
+                                <MenuItem key={status.id} value={status.id}>
+                                    {status.name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </Box>
                     {/* 订单来源筛选 */}
-                    <TextField
-                        select
-                        label="订单来源"
-                        value={source}
-                        onChange={handleSourceChange}
-                        size="small"
-                        sx={{
-                            minWidth: "150px",
-                            flexShrink: 0,
-                        }}
-                    >
-                        {platformTypeLists.map((status) => (
-                            <MenuItem key={status.id} value={status.id}>
-                                {status.name}
-                            </MenuItem>
-                        ))}
-                    </TextField>
-                    {/* 开始时间 */}
-                    <TextField
-                        label="开始时间"
-                        type="datetime-local"
-                        value={startDate}
-                        onChange={handleDateChange("start")}
-                        size="small"
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                        sx={{
-                            minWidth: "200px",
-                            flexShrink: 0,
-                        }}
-                    />
-
-                    {/* 结束时间 */}
-                    <TextField
-                        label="结束时间"
-                        type="datetime-local"
-                        value={endDate}
-                        onChange={handleDateChange("end")}
-                        size="small"
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                        sx={{
-                            minWidth: "200px",
-                            flexShrink: 0,
-                        }}
-                    />
+                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
+                        <TextField
+                            select
+                            label="订单来源"
+                            value={source}
+                            onChange={handleSourceChange}
+                            size="small"
+                            sx={{
+                                minWidth: "150px",
+                                flexShrink: 0,
+                            }}
+                        >
+                            {platformTypeLists.map((status) => (
+                                <MenuItem key={status.id} value={status.id}>
+                                    {status.name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </Box>
+                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
+                        {/* 开始时间 */}
+                        <TextField
+                            label="开始时间"
+                            type="datetime-local"
+                            value={startDate}
+                            onChange={handleDateChange("start")}
+                            size="small"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            sx={{
+                                minWidth: "200px",
+                                flexShrink: 0,
+                            }}
+                        />
+                    </Box>
+                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
+                        {/* 结束时间 */}
+                        <TextField
+                            label="结束时间"
+                            type="datetime-local"
+                            value={endDate}
+                            onChange={handleDateChange("end")}
+                            size="small"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            sx={{
+                                minWidth: "200px",
+                                flexShrink: 0,
+                            }}
+                        />
+                    </Box>
                 </Box>
 
                 {/* 订单内容
                 orderNo, phoneNumber, status, startDate, endDate
                 */}
-                <Box sx={{ padding: 2 }}>
-                    <MyOrder orderNo={orderNo} phoneNumber={""} status={status} source={source} startDate={startDate} endDate={endDate} onlyMyOrder={onlyMyOrder}/>
+                <Box sx={{padding: 2}}>
+                    <MyOrder orderNo={orderNo} phoneNumber={""} status={status} source={source} startDate={startDate}
+                             endDate={endDate} onlyMyOrder={onlyMyOrder} setTotalRecord={setTotalRecord}/>
                 </Box>
             </Drawer>
         </div>
