@@ -9,9 +9,11 @@ import GradingIcon from '@mui/icons-material/Grading';
 import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 import {CartItem} from "../../common/types";
 import {useEffect, useState} from "react";
+import MyDashboard from "./MyData";
+import MyDataDrawer from "./MyDataDrawer";
 
 export const MyHome = () => {
-    const { cartItems, setCartItems, drawerOpen, setDrawerOpen, setOrderDrawerOpen } = useCartContext();
+    const { cartItems, setCartItems, drawerOpen, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen } = useCartContext();
     const [clearCartSignal, setClearCartSignal] = useState(false);
 
     const handleClick = (item: CartItem) => {
@@ -55,35 +57,41 @@ export const MyHome = () => {
                 <React.Fragment>
                     <MyCartDrawer />
                     <MyOrderDrawer/>
-                    <MyProducts handleClick={handleClick} clearCartSignal={clearCartSignal}/>
+                    <MyDataDrawer/>
+                    {/* 仅在 dataDrawerOpen 为 false 时渲染以下部分 */}
+                    {!dataDrawerOpen && (
+                        <>
+                            <MyProducts handleClick={handleClick} clearCartSignal={clearCartSignal} />
 
-                    {/* Floating Action Button */}
-                    <Fab
-                        aria-label="Expand"
-                        color="inherit"
-                        sx={{
-                            position: 'fixed',
-                            bottom: 16, // Distance from bottom
-                            right: 16, // Distance from left
-                            zIndex: 1000, // Ensure it is above other components
-                        }}
-                        onClick={() => setDrawerOpen(true)} // 点击时打开购物车抽屉
-                    >
-                        <ShoppingCartIcon  fontSize="large" color={'error'}/>
-                    </Fab>
-                    <Fab
-                        aria-label="Expand"
-                        color="inherit"
-                        sx={{
-                            position: 'fixed',
-                            bottom: 80, // Distance from bottom
-                            right: 16, // Distance from left
-                            zIndex: 1000, // Ensure it is above other components
-                        }}
-                        onClick={() => setOrderDrawerOpen(true)} // 点击时打开购物车抽屉
-                    >
-                        <GradingIcon  fontSize="large" color={'warning'}/>
-                    </Fab>
+                            {/* Floating Action Button */}
+                            <Fab
+                                aria-label="Expand"
+                                color="inherit"
+                                sx={{
+                                    position: 'fixed',
+                                    bottom: 16,
+                                    right: 16,
+                                    zIndex: 1000,
+                                }}
+                                onClick={() => setDrawerOpen(true)}
+                            >
+                                <ShoppingCartIcon fontSize="large" color={'error'} />
+                            </Fab>
+                            <Fab
+                                aria-label="Expand"
+                                color="inherit"
+                                sx={{
+                                    position: 'fixed',
+                                    bottom: 80,
+                                    right: 16,
+                                    zIndex: 1000,
+                                }}
+                                onClick={() => setOrderDrawerOpen(true)}
+                            >
+                                <GradingIcon fontSize="large" color={'warning'} />
+                            </Fab>
+                        </>
+                    )}
                 </React.Fragment>
             </Grid>
         </Grid>
