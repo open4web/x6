@@ -9,10 +9,11 @@ import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import MyOrder from "./MyOrder";
 import {orderStatusMap} from "../../../common/orderStatus";
 import {platformTypeLists} from "../../../common/payMethod";
-import {AvatarGroup, Badge, FormControlLabel} from "@mui/material";
+import {AvatarGroup, Badge, Button, FormControlLabel, InputAdornment} from "@mui/material";
 import FormGroup from "@mui/material/FormGroup";
 import Switch from "@mui/material/Switch";
 import GradingIcon from '@mui/icons-material/Grading';
+import SearchOffIcon from '@mui/icons-material/SearchOff';
 
 export default function MyOrderDrawer() {
     const {orderDrawerOpen, setOrderDrawerOpen} = useCartContext();
@@ -38,7 +39,7 @@ export default function MyOrderDrawer() {
     const now = getShanghaiTime();
     const today = formatDateTime(new Date(now.setHours(0, 0, 0, 0))); // 开始时间：当天00:00
     const formattedNow = formatDateTime(getShanghaiTime()); // 当前时间作为结束时间
-    const [onlyMyOrder, setOnlyMyOrder] = React.useState<boolean>(false);
+    const [onlyMyOrder, setOnlyMyOrder] = React.useState<boolean>(true);
     const [status, setStatus] = React.useState<number>(1);
     // setSource
     const [source, setSource] = React.useState<number>(4);
@@ -73,6 +74,14 @@ export default function MyOrderDrawer() {
 
         setSource(Number(selectedStatus));
         // 在此添加状态过滤逻辑
+    };
+
+    const handleQuickFilter = (days: number) => () => {
+        const now = getShanghaiTime();
+        const pastDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000); // 计算过去的时间
+        setStartDate(formatDateTime(pastDate));
+        setEndDate(formatDateTime(now));
+        console.log(`筛选最近${days}天:`, formatDateTime(pastDate), "到", formatDateTime(now));
     };
 
     const handleDateChange = (type: "start" | "end") => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,13 +128,13 @@ export default function MyOrderDrawer() {
                         borderBottom: "1px solid",
                         flexWrap: "nowrap", // 确保所有元素在同一行
                         overflowX: "auto", // 当空间不足时允许滚动
-                        gap: 3,
+                        gap: 2,
                     }}
                 >
                     <Badge badgeContent={totalRecord} color="primary">
                         <GradingIcon color="inherit" />
                     </Badge>
-
+                    <Box component="span" sx={{ flex: 1 }} />
                     <FormGroup>
                         <FormControlLabel
                             control={
@@ -136,7 +145,7 @@ export default function MyOrderDrawer() {
                     </FormGroup>
 
                     {/* 订单搜索框 */}
-                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
                         <TextField
                             variant="outlined"
                             size="small"
@@ -148,14 +157,20 @@ export default function MyOrderDrawer() {
                                 maxWidth: "300px", // 限制最大宽度
                                 borderRadius: "4px",
                             }}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            size="medium"
+                                            color="error"
+                                            onClick={handleClearOrderNo} // 清空订单号
+                                        >
+                                            <SearchOffIcon />
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
                         />
-                        <IconButton
-                            size="small"
-                            color="error"
-                            onClick={handleClearOrderNo} // 清空订单号
-                        >
-                            <RestartAltIcon/>
-                        </IconButton>
                     </Box>
                     <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
                         {/* 订单状态筛选 */}
@@ -231,6 +246,27 @@ export default function MyOrderDrawer() {
                             }}
                         />
                     </Box>
+
+                    {/* 快捷筛选按钮 */}
+                    <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
+                        <Button
+                            variant="contained"
+                            color={"secondary"}
+                            size="small"
+                            onClick={handleQuickFilter(3)}
+                        >
+                            最近3天
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color={"success"}
+                            size="small"
+                            onClick={handleQuickFilter(7)}
+                        >
+                            最近7天
+                        </Button>
+                    </Box>
+
                 </Box>
 
                 {/* 订单内容
