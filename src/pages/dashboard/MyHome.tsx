@@ -9,7 +9,6 @@ import GradingIcon from '@mui/icons-material/Grading';
 import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 import {CartItem} from "../../common/types";
 import {useEffect, useState} from "react";
-import MyDashboard from "./MyData";
 import MyDataDrawer from "./MyDataDrawer";
 
 export const MyHome = () => {

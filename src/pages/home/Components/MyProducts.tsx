@@ -1,34 +1,22 @@
-import React, {useEffect, useState, useMemo} from 'react';
-import {Grid, Chip, Box} from '@mui/material';
+import React, {useEffect, useMemo, useState} from 'react';
+import {Box, Chip, Grid} from '@mui/material';
 import MyCard from "../MyCard";
 import {DetailsProps, ProductCategory, ProductItem} from "./Type";
 import {useFetchData} from "../../../common/FetchData";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
+import {GenerateColorFromId} from "../../../utils/randColor";
 
-function generateColorFromId(id: string): string {
-    // 简单的哈希函数，将字符串转化为一个数值
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-        hash = id.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    // 将哈希值转化为颜色值
-    const hue = Math.abs(hash % 360); // 取模 360 得到 0-360 之间的值
-    const saturation = 70; // 固定的饱和度
-    const lightness = 50; // 固定的亮度
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-}
 
 function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
-    const {  setShowProductImage, showProductImage, cartItems } = useCartContext();
+    const {setShowProductImage, showProductImage, cartItems} = useCartContext();
     const [data, setData] = useState<ProductItem[]>([]);
     const [categories, setCategories] = useState<ProductCategory[]>([]);
     const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
     const [query, setQuery] = useState("");
     const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
     const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>({});
-    const {  merchantId } = useCartContext();
-    const { fetchData, alertComponent } = useFetchData();
+    const {merchantId} = useCartContext();
+    const {fetchData, alertComponent} = useFetchData();
 
     useEffect(() => {
         const userData = {
@@ -53,10 +41,9 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             }, {});
 
             const colorMap = cm.reduce((acc: Record<string, string>, category: ProductCategory) => {
-                acc[category.id] = generateColorFromId(category.id);
+                acc[category.id] = GenerateColorFromId(category.id);
                 return acc;
             }, {});
-
             setCategoryMap(nameMap);
             console.log("===nameMap=>", nameMap)
             setCategoryColorMap(colorMap);
