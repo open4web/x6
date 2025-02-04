@@ -86,6 +86,9 @@ export interface ProductItem {
     spiceOptions: PropsOptions[];
     menu: string[];
     stock: number;
+    CombID: string;
+    maxLimit: number;
+    combIndex: number;
 }
 
 export interface PropsOptions  {
@@ -105,4 +108,43 @@ export interface ProductCategory {
     id: string;
     name: string;
     product_id_list: string[]; // 可选字段，存储关联产品的 ID
+}
+
+interface Meta {
+    namespace: string;
+    merchant_id: string;
+    founder: string;
+    updater: string;
+    account_id: string;
+    created_at: string;
+    updated_at: string;
+    created_time: number;
+    updated_time: number;
+    status: boolean;
+    deleted: boolean;
+    access_level: number;
+}
+
+interface Context {
+    // 你可以根据实际需要扩展此类型
+}
+
+export interface MenuData {
+    _: {
+        meta: Meta;
+        context: Context;
+    };
+    id: string;
+    name: string;
+    is_show_backstage: number;
+    sort: number;
+    goods_type: number;
+    is_sell: boolean;
+    icon: string;
+    products: string[];  // 商品ID列表
+    goods_list: any | null;  // 可以根据需要进一步定义类型
+    stores: any | null;  // 可以根据需要进一步定义类型
+    update_type: number;
+    combo: any | null;  // 根据需要进一步定义
+    isComboMode: boolean;
 }

@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {Box, Chip, Grid} from '@mui/material';
 import MyCard from "../MyCard";
-import {DetailsProps, ProductCategory, ProductItem} from "./Type";
+import {DetailsProps, MenuData, ProductCategory, ProductItem} from "./Type";
 import {useFetchData} from "../../../common/FetchData";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {GenerateColorFromId} from "../../../utils/randColor";
@@ -10,7 +10,7 @@ import {GenerateColorFromId} from "../../../utils/randColor";
 function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     const {setShowProductImage, showProductImage, cartItems} = useCartContext();
     const [data, setData] = useState<ProductItem[]>([]);
-    const [categories, setCategories] = useState<ProductCategory[]>([]);
+    const [categories, setCategories] = useState<MenuData[]>([]);
     const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
     const [query, setQuery] = useState("");
     const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
@@ -19,35 +19,37 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     const {fetchData, alertComponent} = useFetchData();
 
     useEffect(() => {
-        const userData = {
-            "storeId": localStorage.getItem("current_store_id") || '',
-            "categoryId": localStorage.getItem("current_category") || '',
-        };
+        const payload = {
+            "merchantId": merchantId,
+        }
 
+        // 获取菜谱列表
         fetchData('/v1/product/pos/menu', (response) => {
-            const cm = response?.categories || [];
-            const pd = response?.products || [];
-
-            // 去重处理
-            const uniqueProducts = Array.from(new Map(pd.map((item: { id: any; }) => [item.id, item])).values());
-
+            const cm = response || [];
             setCategories(cm);
-            // @ts-ignore
-            setData(uniqueProducts);
-
-            const nameMap = cm.reduce((acc: Record<string, string>, category: ProductCategory) => {
-                acc[category.id] = category.name;
+            // 创建 nameMap, colorMap
+            const nameMap = cm.reduce((acc: Record<string, string>, item: { id: string, name: string }) => {
+                acc[item.id] = item.name;
                 return acc;
             }, {});
-
-            const colorMap = cm.reduce((acc: Record<string, string>, category: ProductCategory) => {
-                acc[category.id] = GenerateColorFromId(category.id);
+            const colorMap = cm.reduce((acc: Record<string, string>, item: { id: string }) => {
+                acc[item.id] = GenerateColorFromId(item.id); // 使用 id 生成颜色
                 return acc;
             }, {});
+            // 更新状态
             setCategoryMap(nameMap);
-            console.log("===nameMap=>", nameMap)
             setCategoryColorMap(colorMap);
-        }, "POST", userData);
+        }, "POST", payload);
+
+
+        // 获取商品列表
+        fetchData('/v1/product/pos/products', (response) => {
+            const products = response || [];
+            setData(products);
+        }, "POST", {
+            "merchantId": merchantId,
+            "menuId": activeTab,
+        });
     }, [activeTab, merchantId, cartItems]);
 
     const handleChipClick = (categoryId: string) => {
@@ -55,20 +57,30 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         localStorage.setItem("current_category", categoryId);
     };
 
-    const filteredData = useMemo(() => {
-        return data.filter(item => {
-            const matchesCategory =
-                activeTab === '' || (categories.find(cat => cat.id === activeTab)?.product_id_list || []).includes(item.id);
+    // const filteredData = useMemo(() => {
+    //     return data.filter(item => {
+    //         const matchesCategory =
+    //             activeTab === '' || (categories.find(cat => cat.id === activeTab)?.product_id_list || []).includes(item.id);
+    //
+    //         const matchesQuery = query === '' || item.name.toLowerCase().includes(query.toLowerCase());
+    //
+    //         const matchesMenu = item.menu?.some(menuId =>
+    //             categories.some(cat => cat.id === menuId)
+    //         );
+    //
+    //         return matchesCategory && matchesQuery && matchesMenu;
+    //     });
+    // }, [data, activeTab, query, categories]);
 
-            const matchesQuery = query === '' || item.name.toLowerCase().includes(query.toLowerCase());
-
-            const matchesMenu = item.menu?.some(menuId =>
-                categories.some(cat => cat.id === menuId)
-            );
-
-            return matchesCategory && matchesQuery && matchesMenu;
-        });
-    }, [data, activeTab, query, categories]);
+    // 按combIndex分组
+    const groupedData = data.reduce((acc, item) => {
+        const combIndex = item.combIndex;
+        if (!acc[combIndex]) {
+            acc[combIndex] = [];
+        }
+        acc[combIndex].push(item);
+        return acc;
+    }, {} as { [key: number]: ProductItem[] });
 
     return (
         <Box>
@@ -104,26 +116,37 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             </Box>
 
             {/* Product Grid */}
-            <Grid
-                container
-                spacing={showProductImage ? 2 : 0.1} // 动态调整间距
-            >
-                {filteredData.map((item) => (
-                    <Grid
-                        item
-                        xs={showProductImage ? 2.4 : 1.714} // 动态调整宽度，7 个项目一行
-                        key={item.id}
-                    >
-                        <MyCard
-                            item={item}
-                            handleClick={handleClick}
-                            kindName={categoryMap[activeTab] || "X"}
-                            kindColor={categoryColorMap[activeTab] || "#ccc"}
-                            clearCartSignal={clearCartSignal}
-                        />
+            {Object.keys(groupedData).map((combIndex) => {
+                const groupItems = groupedData[parseInt(combIndex, 10)];
+                // 使用combIndex计算色相，确保它在0到360之间
+                const hue = (parseInt(combIndex, 10) * 20) % 360;  // 色相（0-360）
+                const saturation = 50;  // 饱和度（40-60）
+                const lightness = 40;   // 明度（30-50），适合黑灰色背景
+
+                // 动态生成HSL颜色
+                const backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+                return (
+                    <Grid container spacing={2} key={combIndex}>
+                        {groupItems.map((item) => (
+                            <Grid
+                                item
+                                xs={showProductImage ? 2.4 : 1.714} // 动态调整宽度，7 个项目一行
+                                key={item.id}
+                            >
+                                <MyCard
+                                    item={item}
+                                    handleClick={handleClick}
+                                    kindName={categoryMap[activeTab] || 'X'}
+                                    kindColor={categoryColorMap[activeTab] || '#ccc'}
+                                    clearCartSignal={clearCartSignal}
+                                    backgroundColor={ backgroundColor}
+                                />
+                            </Grid>
+                        ))}
                     </Grid>
-                ))}
-            </Grid>
+                );
+            })}
         </Box>
     );
 }

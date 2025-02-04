@@ -34,7 +34,7 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [orderDrawerOpen, setOrderDrawerOpen] = useState(false);
     const [showProductImage, setShowProductImage] = useState(false);
-    const [merchantId, setMerchantId] = useState('');
+    const [merchantId, setMerchantId] = useState(localStorage.getItem("current_store_id") || '')
     const [dataDrawerOpen, setDataDrawerOpen] = useState(false);
     // 从 localStorage 初始化 holdOrders 列表
     const [holdOrders, setHoldOrders] = useState<CartItemHolder[]>(

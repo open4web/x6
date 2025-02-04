@@ -21,6 +21,7 @@ export default function MerchantSelect({ refreshAfterSelect = true }: SelectStor
         localStorage.setItem('current_store_id', selectedStoreId);
         setMerchantId(selectedStoreId)
         setStoreInfo(selectedStoreId);
+        console.log("merchantId is ==>", merchantId)
         if (refreshAfterSelect) {
             // Replace instead of reloading, which reloads without affecting history stack
             window.location.replace(window.location.href);
