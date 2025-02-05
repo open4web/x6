@@ -3,7 +3,8 @@ import { Box, IconButton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MyCard from "../MyCard";
-import {ProductItem} from "./Type"; // 引入你的 ProductItem 类型定义
+import {ProductItem} from "./Type";
+import Typography from "@mui/material/Typography"; // 引入你的 ProductItem 类型定义
 
 interface MyCardWithScrollProps {
     groupItems: ProductItem[]; // 直接使用传递的 groupItems 参数
@@ -77,7 +78,7 @@ const MyCardWithScroll = ({
                                         left: 0,
                                         right: 0,
                                         bottom: 0,
-                                        backgroundColor: 'rgba(0, 0, 0, 0.3)', // 遮罩层
+                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 遮罩层
                                         zIndex: 2,
                                     }}
                                 />
@@ -88,6 +89,12 @@ const MyCardWithScroll = ({
             </Box>
 
             {/* 左右滚动按钮 */}
+            {/* 左侧箭头按钮和当前数字 */}
+            <Box sx={{ position: 'absolute', top: '10%', left: 5, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Typography variant="body1" sx={{ color: 'red', marginBottom: 1 }}>
+                    {`${currentIndex + 1}/${groupItems.length}`} {/* 显示当前索引与总数 */}
+                </Typography>
+            </Box>
             <Box sx={{ position: 'absolute', top: '50%', left: 0, zIndex: 10 }}>
                 <IconButton onClick={() => handleScroll('right')} sx={{ backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }}>
                     <ArrowBackIcon />
