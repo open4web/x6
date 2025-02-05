@@ -5,6 +5,7 @@ import {DetailsProps, MenuData, ProductCategory, ProductItem} from "./Type";
 import {useFetchData} from "../../../common/FetchData";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {GenerateColorFromId} from "../../../utils/randColor";
+import MyCardWithScroll from "./MyCardWithScroll";
 
 
 function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
@@ -13,10 +14,21 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     const [categories, setCategories] = useState<MenuData[]>([]);
     const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
     const [query, setQuery] = useState("");
-    const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
+    const [categoryMap, setCategoryMap] = useState<Record<string, MenuData>>({});
     const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>({});
     const {merchantId} = useCartContext();
     const {fetchData, alertComponent} = useFetchData();
+
+    // 通过 id 获取 isComboMode
+    const getIsComboModeById = (id: string): boolean | undefined => {
+        const item = categoryMap[id]; // 获取对应的 MenuData 对象
+        return item ? item.isComboMode : undefined; // 如果找到返回 isComboMode，否则返回 undefined
+    };
+
+    const getCategoryName = (id: string): string => {
+        const item = categoryMap[id]; // 获取对应的 MenuData 对象
+        return item.name; // 如果找到返回 isComboMode，否则返回 undefined
+    };
 
     useEffect(() => {
         const payload = {
@@ -28,8 +40,8 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             const cm = response || [];
             setCategories(cm);
             // 创建 nameMap, colorMap
-            const nameMap = cm.reduce((acc: Record<string, string>, item: { id: string, name: string }) => {
-                acc[item.id] = item.name;
+            const nameMap = cm.reduce((acc: Record<string, MenuData>, item:  MenuData ) => {
+                acc[item.id] = item; // 将整个 item（即 MenuData 对象）赋值给 acc[item.id]
                 return acc;
             }, {});
             const colorMap = cm.reduce((acc: Record<string, string>, item: { id: string }) => {
@@ -128,7 +140,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
 
                 return (
                     <Grid container spacing={2} key={combIndex}>
-                        {groupItems.map((item) => (
+                        { !getIsComboModeById(activeTab) && groupItems.map((item) => (
                             <Grid
                                 item
                                 xs={showProductImage ? 2.4 : 1.714} // 动态调整宽度，7 个项目一行
@@ -137,13 +149,28 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                                 <MyCard
                                     item={item}
                                     handleClick={handleClick}
-                                    kindName={categoryMap[activeTab] || 'X'}
+                                    kindName={getCategoryName(activeTab)}
                                     kindColor={categoryColorMap[activeTab] || '#ccc'}
                                     clearCartSignal={clearCartSignal}
                                     backgroundColor={ backgroundColor}
+                                    combIndex={combIndex}
                                 />
                             </Grid>
                         ))}
+
+                        {
+                            getIsComboModeById(activeTab) &&
+                            <MyCardWithScroll
+                                groupItems={groupItems}
+                                handleClick={handleClick}
+                                kindName={getCategoryName(activeTab)}
+                                kindColor={categoryColorMap[activeTab] || '#ccc'}
+                                clearCartSignal={clearCartSignal}
+                                backgroundColor={ backgroundColor}
+                                combIndex={combIndex}
+                            />
+
+                        }
                     </Grid>
                 );
             })}

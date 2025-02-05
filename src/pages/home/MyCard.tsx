@@ -40,11 +40,12 @@ interface Props {
     kindColor: string;
     clearCartSignal: boolean; // 用于清空购物车时重置状态
     backgroundColor?: string;  // 允许外部传递 backgroundColor
+    combIndex: string;
 }
 
 const MyCard = (props: Props) => {
     const {  setShowProductImage, showProductImage } = useCartContext();
-    const {item, handleClick, kindName, kindColor, clearCartSignal, backgroundColor} = props;
+    const {item, handleClick, kindName, kindColor, clearCartSignal, backgroundColor, combIndex} = props;
     // const [expanded, setExpanded] = React.useState(false);
     const [expanded2, setExpanded2] = React.useState(false);
     const [cartCount, setCartCount] = React.useState(0); // 管理当前商品在购物车的数量
