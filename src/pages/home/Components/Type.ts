@@ -91,6 +91,11 @@ export interface ProductItem {
     combIndex: number;
 }
 
+export interface CombSelectInfo {
+    title: string;
+    maxLimit: number;
+}
+
 export interface PropsOptions  {
     name: string;
     id: string;

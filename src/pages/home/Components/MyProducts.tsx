@@ -1,7 +1,7 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Box, Chip, Grid} from '@mui/material';
 import MyCard from "../MyCard";
-import {DetailsProps, MenuData, ProductCategory, ProductItem} from "./Type";
+import {CombSelectInfo, DetailsProps, MenuData, ProductItem} from "./Type";
 import {useFetchData} from "../../../common/FetchData";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {GenerateColorFromId} from "../../../utils/randColor";
@@ -69,21 +69,6 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         localStorage.setItem("current_category", categoryId);
     };
 
-    // const filteredData = useMemo(() => {
-    //     return data.filter(item => {
-    //         const matchesCategory =
-    //             activeTab === '' || (categories.find(cat => cat.id === activeTab)?.product_id_list || []).includes(item.id);
-    //
-    //         const matchesQuery = query === '' || item.name.toLowerCase().includes(query.toLowerCase());
-    //
-    //         const matchesMenu = item.menu?.some(menuId =>
-    //             categories.some(cat => cat.id === menuId)
-    //         );
-    //
-    //         return matchesCategory && matchesQuery && matchesMenu;
-    //     });
-    // }, [data, activeTab, query, categories]);
-
     // 按combIndex分组
     const groupedData = data.reduce((acc, item) => {
         const combIndex = item.combIndex;
@@ -93,6 +78,20 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         acc[combIndex].push(item);
         return acc;
     }, {} as { [key: number]: ProductItem[] });
+
+    const groupedDataSelectInfo = data.reduce((acc, item) => {
+        const combIndex = item.combIndex;
+
+        // 确保每个combIndex只有第一次赋值时才会创建
+        if (!acc[combIndex]) {
+            acc[combIndex] = {
+                title: '粉类选择',  // 你可以根据需要调整title
+                maxLimit: item.maxLimit,  // 确保 item.maxLimit 是存在的，且有适当的值
+            };
+        }
+
+        return acc;
+    }, {} as { [key: string]: CombSelectInfo });
 
     return (
         <Box>
@@ -162,6 +161,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                             getIsComboModeById(activeTab) &&
                             <MyCardWithScroll
                                 groupItems={groupItems}
+                                groupedDataSelectInfo={groupedDataSelectInfo}
                                 handleClick={handleClick}
                                 kindName={getCategoryName(activeTab)}
                                 kindColor={categoryColorMap[activeTab] || '#ccc'}
