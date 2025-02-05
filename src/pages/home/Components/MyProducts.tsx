@@ -97,17 +97,6 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         <Box>
             {alertComponent}
             <Box sx={{display: 'flex', gap: 1, overflowX: 'auto', mb: 2}}>
-                <Chip
-                    label="All"
-                    clickable
-                    style={{
-                        backgroundColor: activeTab === '' ? '#1976d2' : '#e0e0e0',
-                        color: activeTab === '' ? '#fff' : '#000',
-                        border: activeTab === '' ? '2px solid #1976d2' : '1px solid #e0e0e0',
-                    }}
-                    icon={activeTab === '' ? <span style={{fontWeight: 'bold', color: '#fff'}}>✔</span> : undefined}
-                    onClick={() => handleChipClick('')}
-                />
                 {categories.map(category => (
                     <Chip
                         key={category.id}
