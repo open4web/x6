@@ -27,7 +27,7 @@ import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
-import {Alert} from "@mui/material";
+import {Alert, Chip} from "@mui/material";
 import {isOrderExpired, storeOrderTimestamp} from "../../../utils/expireStore";
 import {useEffect} from "react";
 
@@ -210,7 +210,27 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                 {cartItems.map((item) => (
                     <ListItem key={item.id} sx={{display: 'flex', alignItems: 'center'}}>
                         <ListItemText
-                            primary={item.name}
+                            primary={
+                                <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                                    {item.combName && (
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                fontSize: '0.7rem', // 适当增加字体
+                                                fontWeight: 'bold', // 加粗
+                                                color: '#d32f2f', // 深红色，提高对比度
+                                                transform: 'translateY(-100%)',
+                                            }}
+                                        >
+                                            {item.combName}
+                                        </Typography>
+                                    )}
+                                    <Typography variant="body1">{item.name}</Typography>
+                                </Box>
+                            }
                             secondary={`${item.desc}`}
                         />
                         <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>

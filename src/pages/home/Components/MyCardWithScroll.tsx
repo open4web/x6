@@ -59,6 +59,7 @@ const MyCardWithScroll = ({
 
         // 否则，更新选择数量并执行原来的 handleClick 函数
         setSelectNumber(prevNumber => prevNumber + 1);
+        item.combName = kindName
         handleClick(item); // 执行原始的 handleClick
     };
 

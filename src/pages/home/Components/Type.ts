@@ -89,6 +89,7 @@ export interface ProductItem {
     CombID: string;
     maxLimit: number;
     combIndex: number;
+    combName: string;
 }
 
 export interface CombSelectInfo {
