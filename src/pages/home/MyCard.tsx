@@ -105,6 +105,9 @@ const MyCard = (props: Props) => {
     };
 
     const handleAddToCart = (withoutProp: boolean) => {
+
+        // 将类型名称赋值
+        item.kindName = kindName
         setCartCount(cartCount + 1); // 每次点击增加数量
         // 当属性被提交后重置属性
         localStorage.removeItem('propMap')

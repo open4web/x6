@@ -45,6 +45,7 @@ export interface CartItem {
     spiceOptions: PropsOptions[];
     desc: string;
     combName: string;
+    kindName: string;
 }
 
 export interface MyCartProps {

@@ -41,7 +41,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const [openPhone, setOpenPhone] = React.useState(false);
     const [hasNotTicket, setHasNotTicket] = React.useState(false);
     const [takeout, setTakeout] = React.useState(0);
-    const { fetchData, alertComponent } = useFetchData();
+    const {fetchData, alertComponent} = useFetchData();
 
     const handlePlaceOrder = async () => {
 
@@ -59,9 +59,9 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         const newOrderRequest = {
             at: localStorage.getItem("current_store_id") as string,
             buckets: convertToOrderRequest(cartItems),
-            seat:  localStorage.getItem('ticketNumber'),
-            phone:  localStorage.getItem('phoneNumber'),
-            people:  localStorage.getItem('peopleNumber'),
+            seat: localStorage.getItem('ticketNumber'),
+            phone: localStorage.getItem('phoneNumber'),
+            people: localStorage.getItem('peopleNumber'),
         };
 
 
@@ -192,7 +192,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     // }, [hasNotTicket]);
 
     return (
-        <Box sx={{width: 380, padding: 1}}>
+        <Box sx={{width: 400, padding: 1}}>
 
             {
                 hasNotTicket && (
@@ -211,7 +211,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                     <ListItem key={item.id} sx={{display: 'flex', alignItems: 'center'}}>
                         <ListItemText
                             primary={
-                                <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                                <Box sx={{ position: 'relative', paddingTop: item.combName ? '0.9rem' : '0.9rem' }}>
                                     {item.combName && (
                                         <Typography
                                             variant="caption"
@@ -219,34 +219,51 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                                                 position: 'absolute',
                                                 top: 0,
                                                 left: 0,
-                                                fontSize: '0.7rem', // 适当增加字体
+                                                fontSize: '0.65rem', // 字体小一点
                                                 fontWeight: 'bold', // 加粗
                                                 color: '#d32f2f', // 深红色，提高对比度
-                                                transform: 'translateY(-100%)',
                                             }}
                                         >
                                             {item.combName}
                                         </Typography>
                                     )}
+                                    {!item.combName && (
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                fontSize: '0.65rem', // 字体小一点
+                                                fontWeight: 'bold', // 加粗
+                                                color: 'gray', // 深红色，提高对比度
+                                            }}
+                                        >
+                                            {item.kindName}
+                                        </Typography>
+                                    )}
                                     <Typography variant="body1">{item.name}</Typography>
                                 </Box>
                             }
-                            secondary={`${item.desc}`}
+                            secondary={item.desc}
                         />
-                        <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+
+                        <Box sx={{display: 'flex', alignItems: 'center', gap: 0.1}}>
+
                             <IconButton
                                 onClick={() =>
                                     setCartItems((prevItems) =>
                                         prevItems.map((it) =>
                                             it.id === item.id && it.desc === item.desc
-                                                ? { ...it, quantity: Math.max(1, it.quantity - 1) }
+                                                ? {...it, quantity: Math.max(1, it.quantity - 1)}
                                                 : it
                                         )
                                     )
                                 }
                                 size="small"
+                                disabled={!!item.combName} // 如果 combName 存在，则禁用按钮
                             >
-                                <RemoveIcon />
+                                <RemoveIcon/>
                             </IconButton>
                             <TextField
                                 type="text"
@@ -257,18 +274,31 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                                     setCartItems((prevItems) =>
                                         prevItems.map((it) =>
                                             it.id === item.id && it.desc === item.desc
-                                                ? { ...it, quantity: Math.max(1, Math.min(10, Number(e.target.value))) } // 限制范围 1-10
+                                                ? {...it, quantity: Math.max(1, Math.min(10, Number(e.target.value)))} // 限制范围 1-10
                                                 : it
                                         )
                                     )
                                 }
                                 inputProps={{
-                                    style: { textAlign: 'center' }, // 让输入的文本居中
+                                    style: {textAlign: 'center'}, // 让输入的文本居中
                                 }}
                                 sx={{
-                                    width: 60, // 增加宽度，适合展示两位数字
+                                    width: 50, // 适当缩小宽度，更紧凑
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderWidth: '1px', // 边框变细
+                                        },
+                                        '&:hover fieldset': {
+                                            borderWidth: '1px', // 悬停时保持细边框
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderWidth: '1px', // 聚焦时也保持细边框
+                                        },
+                                    },
                                     '& input': {
                                         textAlign: 'center', // 确保文本在输入框中居中
+                                        padding: '4px 0', // 减少内边距，使其更紧凑
+                                        fontSize: '0.9rem', // 字体稍微调小
                                     },
                                 }}
                             />
@@ -277,21 +307,34 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                                     setCartItems((prevItems) =>
                                         prevItems.map((it) =>
                                             it.id === item.id && it.desc === item.desc
-                                                ? { ...it, quantity: it.quantity + 1 }
+                                                ? {...it, quantity: it.quantity + 1}
                                                 : it
                                         )
                                     )
                                 }
                                 size="small"
+                                disabled={!!item.combName} // 如果 combName 存在，则禁用按钮
                             >
-                                <AddCircleIcon />
+                                <AddCircleIcon/>
                             </IconButton>
-                            <Typography variant="h6" sx={{fontWeight: 'bold', color: 'darkorange', textAlign: "right"}}>
-                                ¥{item.price.toFixed(2)}
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    fontWeight: 'bold',
+                                    color: 'darkorange',
+                                    textAlign: "right",
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    fontFamily: 'monospace', // 确保数字等宽
+                                    minWidth: '60px', // 设定最小宽度，避免价格长度变化导致对齐问题
+                                    justifyContent: 'flex-end' // 让价格靠右对齐
+                                }}
+                            >
+                                {item.price.toFixed(2)}
                             </Typography>
                         </Box>
                         <ListItemSecondaryAction>
-                            <IconButton edge="end"     onClick={() =>
+                            <IconButton edge="end" onClick={() =>
                                 setCartItems((prevItems) =>
                                     prevItems.filter(
                                         (it) => !(it.id === item.id && it.desc === item.desc)
@@ -311,7 +354,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
 
             {/*选择就餐人数*/}
             <Divider sx={{my: 2}}/>
-            <Box    sx={{
+            <Box sx={{
                 m: 1, // 外边距
                 display: 'flex', // 启用 flex 布局
                 justifyContent: 'flex-start', // 水平方向从左到右排列
@@ -321,34 +364,37 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                 overflowX: 'auto', // 横向滚动
             }}>
                 <IconButton aria-label="bindTicket">
-                    <NumbersIcon onClick={bindTicket} />
-                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindTicket}>
+                    <NumbersIcon onClick={bindTicket}/>
+                    <Typography variant="body1" sx={{ml: 1}} onClick={bindTicket}>
                         {localStorage.getItem('ticketNumber') || "-"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
                 <IconButton aria-label="bindPeople">
-                    <EmojiPeopleIcon onClick={bindPeople} />
-                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindPeople}>
+                    <EmojiPeopleIcon onClick={bindPeople}/>
+                    <Typography variant="body1" sx={{ml: 1}} onClick={bindPeople}>
                         {localStorage.getItem('peopleNumber') || "-"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
                 <IconButton aria-label="bindPhone">
-                    <PhoneIphoneIcon onClick={bindPhone} />
-                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindPhone}>
+                    <PhoneIphoneIcon onClick={bindPhone}/>
+                    <Typography variant="body1" sx={{ml: 1}} onClick={bindPhone}>
                         {localStorage.getItem('phoneNumber')
                             ? localStorage.getItem('phoneNumber')?.slice(-4) // 仅展示后 4 位
                             : "-"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
                 <IconButton aria-label="bindPeople" disabled={true}>
-                    <CardGiftcardIcon onClick={bindPeople} />
-                    <Typography variant="body1" sx={{ ml: 1 }} onClick={bindPeople}>
+                    <CardGiftcardIcon onClick={bindPeople}/>
+                    <Typography variant="body1" sx={{ml: 1}} onClick={bindPeople}>
                         {localStorage.getItem('peopleNumber') || "-"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
-                <NumericKeyboardDialog setOpen={setOpenTicket} open={openTicket} onSave={handleSaveResult} title={"请输入台号"} min={1} max={99}/>
-                <NumericKeyboardDialog setOpen={setOpenPeople} open={openPeople} onSave={handleSavePeopleResult} title={"就餐人数"} min={1} max={20}/>
-                <NumericKeyboardDialog setOpen={setOpenPhone} open={openPhone} onSave={handleSavePhoneResult} title={"会员手机号"} min={10000000000} max={19999999999}/>
+                <NumericKeyboardDialog setOpen={setOpenTicket} open={openTicket} onSave={handleSaveResult}
+                                       title={"请输入台号"} min={1} max={99}/>
+                <NumericKeyboardDialog setOpen={setOpenPeople} open={openPeople} onSave={handleSavePeopleResult}
+                                       title={"就餐人数"} min={1} max={20}/>
+                <NumericKeyboardDialog setOpen={setOpenPhone} open={openPhone} onSave={handleSavePhoneResult}
+                                       title={"会员手机号"} min={10000000000} max={19999999999}/>
             </Box>
 
             <Divider sx={{my: 2}}/>
@@ -392,7 +438,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                 <DialogTitle>
                     <Typography variant="h6" align="center">订单号: {orderID}</Typography>
                     <Typography variant="subtitle1" align="center" color="text.secondary">
-                        待支付金额: <span style={{ color: "#d32f2f", fontWeight: "bold" }}>¥{price.toFixed(2)}</span>
+                        待支付金额: <span style={{color: "#d32f2f", fontWeight: "bold"}}>¥{price.toFixed(2)}</span>
                     </Typography>
                 </DialogTitle>
                 <DialogContent>
@@ -409,7 +455,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     );
 }
 
-function Transition(props: TransitionProps & {children: React.ReactElement<any, any>}) {
+function Transition(props: TransitionProps & { children: React.ReactElement<any, any> }) {
     return <Slide direction="up" {...props} />;
 }
 
