@@ -103,6 +103,10 @@ const MyCardWithScroll = ({
 
     // 判断是否达到最大选择限制
     const isMaxLimitReached = selectNumber >= getIsComboMaxLimitById(combIndex).maxLimit;
+// 判断商品是否已经被选中
+    const isItemSelected = (item: ProductItem, combId: string) => {
+        return cartItems.some(cartItem => cartItem.id === item.id && cartItem.combID === combId);
+    };
 
     return (
         <Box sx={{ position: 'relative', overflowX: 'hidden', display: 'flex', alignItems: 'center', padding: 2 }}>
@@ -153,7 +157,8 @@ const MyCardWithScroll = ({
                                     }}
                                 />
                             )}
-                            {isMaxLimitReached && (
+                            {/* 放弃当前的选择*/}
+                            {isItemSelected(item, combID) && (
                                 <Box
                                     sx={{
                                         position: 'absolute',
@@ -161,22 +166,68 @@ const MyCardWithScroll = ({
                                         left: 0,
                                         right: 0,
                                         bottom: 0,
-                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 遮罩层
+                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 半透明遮罩层
+                                        backdropFilter: 'blur(1px)', // 模糊背景
                                         zIndex: 2,
-                                        pointerEvents: 'none', // 遮罩层不拦截点击事件
+                                        pointerEvents: 'auto', // 让遮罩层拦截点击事件
                                     }}
+                                    onClick={(e) => e.stopPropagation()} // 阻止点击事件传递到背后的元素
                                 >
                                     {/* 红色替换按钮 */}
                                     <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 3 }}>
                                         <Button
                                             variant="contained"
-                                            color="error"
+                                            color="success"
                                             onClick={() => handleCancel(item, combID)} // 传入 item 以便获取商品信息
                                             sx={{ zIndex: 4, pointerEvents: 'auto' }}
                                         >
-                                            换
+                                            <Typography
+                                                variant="h6"
+                                                sx={{
+                                                    color: '#ffcc00', // 亮黄色，突出不可选状态
+                                                    fontWeight: 'bold',
+                                                    fontSize: '16px',
+                                                    textShadow: '2px 2px 4px rgba(0,0,0,0.8)' // 增加阴影让文字更清晰
+                                                }}
+                                            >
+                                                ❌
+                                            </Typography>
                                         </Button>
                                     </Box>
+                                </Box>
+                            )}
+                            {/*其他的未选择的商品*/}
+                            {isMaxLimitReached && !isItemSelected(item, combID) &&  (
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 半透明遮罩
+                                        backdropFilter: 'blur(1px)', // 让背景模糊化
+                                        zIndex: 2,
+                                        pointerEvents: 'none', // 禁止点击
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        color: 'blue',
+                                        fontSize: '18px',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    <Typography
+                                        variant="h6"
+                                        sx={{
+                                            color: '#ffcc00', // 亮黄色，突出不可选状态
+                                            fontWeight: 'bold',
+                                            fontSize: '16px',
+                                            textShadow: '2px 2px 4px rgba(0,0,0,0.8)' // 增加阴影让文字更清晰
+                                        }}
+                                    >
+                                        🔒
+                                    </Typography>
                                 </Box>
                             )}
                         </Box>

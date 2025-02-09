@@ -155,7 +155,7 @@ const MyCard = (props: Props) => {
         <>
             <Card
                 sx={{
-                    maxWidth: 445,
+                    maxWidth: 200,
                     margin: 1,
                     position: 'relative', // 设置 Card 为相对定位
                     cursor: showProductImage ? 'default' : 'pointer', // 设置鼠标样式
