@@ -46,6 +46,8 @@ export interface CartItem {
     desc: string;
     combName: string;
     combID: string;
+    // 当不是套餐当时候，使用kindName
+    kindName: string;
 }
 
 export interface MyCartProps {
