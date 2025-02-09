@@ -30,6 +30,11 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         return item.name; // 如果找到返回 isComboMode，否则返回 undefined
     };
 
+    const getCategoryId = (id: string): string => {
+        const item = categoryMap[id]; // 获取对应的 MenuData 对象
+        return item.id; // 如果找到返回 isComboMode，否则返回 undefined
+    };
+
     useEffect(() => {
         const payload = {
             "merchantId": merchantId,
@@ -138,6 +143,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                                     item={item}
                                     handleClick={handleClick}
                                     kindName={getCategoryName(activeTab)}
+                                    combID={getCategoryId(activeTab)}
                                     kindColor={categoryColorMap[activeTab] || '#ccc'}
                                     clearCartSignal={clearCartSignal}
                                     backgroundColor={ backgroundColor}
@@ -153,6 +159,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                                 groupedDataSelectInfo={groupedDataSelectInfo}
                                 handleClick={handleClick}
                                 kindName={getCategoryName(activeTab)}
+                                combID={getCategoryId(activeTab)}
                                 kindColor={categoryColorMap[activeTab] || '#ccc'}
                                 clearCartSignal={clearCartSignal}
                                 backgroundColor={ backgroundColor}

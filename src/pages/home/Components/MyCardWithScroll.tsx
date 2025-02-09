@@ -4,7 +4,9 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MyCard from "../MyCard";
 import { CombSelectInfo, ProductItem } from "./Type";
-import Typography from "@mui/material/Typography"; // 引入你的 ProductItem 类型定义
+import Typography from "@mui/material/Typography";
+import {useCartContext} from "../../../dataProvider/MyCartProvider";
+import {CartItem} from "../../../common/types"; // 引入你的 ProductItem 类型定义
 
 interface MyCardWithScrollProps {
     groupItems: ProductItem[]; // 直接使用传递的 groupItems 参数
@@ -15,6 +17,7 @@ interface MyCardWithScrollProps {
     clearCartSignal: boolean; // 用于清空购物车时重置状态
     backgroundColor?: string;  // 允许外部传递 backgroundColor
     combIndex: string;
+    combID: string;
 }
 
 const MyCardWithScroll = ({
@@ -26,11 +29,13 @@ const MyCardWithScroll = ({
                               clearCartSignal,
                               backgroundColor,
                               combIndex,
+                              combID,
                           }: MyCardWithScrollProps) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selectNumber, setSelectNumber] = useState(0); // 记录当前 combIndex 的选择数量
     const [openAlert, setOpenAlert] = useState(false); // 控制 Alert 的显示
     const [alertMessage, setAlertMessage] = useState(''); // 控制 Alert 显示的内容
+    const { cartItems, setCartItems, drawerOpen, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen } = useCartContext();
 
     const handleScroll = (direction: 'left' | 'right') => {
         setCurrentIndex((prevIndex) => {
@@ -65,12 +70,34 @@ const MyCardWithScroll = ({
     };
 
     // 取消选择的函数
-    const handleCancel = () => {
-        // 可以根据实际情况修改此处逻辑
+// 取消选择的函数
+    const handleCancel = (item: ProductItem, combId: string) => {
+        // 更新选择数量
         if (selectNumber > 0) {
-            setSelectNumber(selectNumber - 1);
-            setAlertMessage('取消了一个选择');
-            setOpenAlert(true);
+            setSelectNumber(prevNumber => prevNumber - 1);
+        }
+        // 如果商品id相同&&combId即套餐类型id也相同则可以判断其是相同的在购物车的物品
+        // 查找购物车中是否存在该商品
+        const existingItem = cartItems.find((cartItem: CartItem) => cartItem.id === item.id && cartItem.combID === combId);
+        console.log("ready to cancel ==>", item, "existingItem==>",existingItem)
+        if (!existingItem) return; // 如果商品不存在，直接返回
+
+        if (existingItem.quantity > 1) {
+            // 商品数量大于 1，则减少数量
+            setCartItems((prevCart) =>
+                prevCart.map((cartItem: CartItem) =>
+                    cartItem.id === item.id && cartItem.combID === combId
+                        ? { ...cartItem, quantity: cartItem.quantity - 1 }
+                        : cartItem
+                )
+            );
+            // setAlertMessage(`减少 ${item.name} 数量`);
+            console.log(`减少 ${item.name} 数量`)
+        } else {
+            // 商品数量为 1，直接移除
+            setCartItems((prevCart) => prevCart.filter((cartItem: CartItem) => !(cartItem.id === item.id && cartItem.combID === combId)));
+            // setAlertMessage(`${item.name} 已从购物车移除`);
+            console.log(`${item.name} 已从购物车移除`);
         }
     };
 
@@ -106,6 +133,7 @@ const MyCardWithScroll = ({
                                 item={item}
                                 handleClick={handleCardClick}  // 使用包装后的 handleClick
                                 kindName={kindName}
+                                combID={combID}
                                 kindColor={kindColor}
                                 clearCartSignal={clearCartSignal}
                                 backgroundColor={backgroundColor}
@@ -143,8 +171,8 @@ const MyCardWithScroll = ({
                                         <Button
                                             variant="contained"
                                             color="error"
-                                            onClick={handleCancel} // 点击按钮时调用 handleCancel
-                                            sx={{ zIndex: 4, pointerEvents: 'auto' }}  // 确保按钮在遮罩层上面，并且可点击
+                                            onClick={() => handleCancel(item, combID)} // 传入 item 以便获取商品信息
+                                            sx={{ zIndex: 4, pointerEvents: 'auto' }}
                                         >
                                             换
                                         </Button>

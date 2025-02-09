@@ -37,14 +37,30 @@ interface Props {
     clearCartSignal: boolean; // 用于清空购物车时重置状态
     backgroundColor?: string;  // 允许外部传递 backgroundColor
     combIndex: string;
+    combID: string; // 套餐专属的id（其实就是kindId）
 }
 
 const MyCard = (props: Props) => {
-    const {setShowProductImage, showProductImage} = useCartContext();
-    const {item, handleClick, kindName, kindColor, clearCartSignal, backgroundColor, combIndex} = props;
+    const {cartItems, showProductImage} = useCartContext();
+    const {item, handleClick, kindName, kindColor, clearCartSignal, backgroundColor, combID} = props;
     // const [expanded, setExpanded] = React.useState(false);
     const [expanded2, setExpanded2] = React.useState(false);
-    const [cartCount, setCartCount] = React.useState(0); // 管理当前商品在购物车的数量
+
+
+    const [selectedNames, setSelectedNames] = React.useState<string>(() => {
+        // 初始化拼接字符串为本地存储中的值，或空字符串
+        return localStorage.getItem('selectedNames') || '';
+    });
+
+    const getItemCountInCart = () => {
+        return cartItems.reduce((count, cartItem) => {
+            return cartItem.id === item.id && cartItem.desc === selectedNames
+                ? count + (cartItem.quantity || 1)
+                : count;
+        }, 0);
+    };
+
+    const [cartCount, setCartCount] = React.useState(getItemCountInCart());
     const [resetTrigger, setResetTrigger] = React.useState(false);
     // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
     let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
@@ -65,11 +81,6 @@ const MyCard = (props: Props) => {
         // 初始化映射为本地存储中的值，或空对象
         const storedMap = localStorage.getItem('propMap');
         return storedMap ? JSON.parse(storedMap) : {};
-    });
-
-    const [selectedNames, setSelectedNames] = React.useState<string>(() => {
-        // 初始化拼接字符串为本地存储中的值，或空字符串
-        return localStorage.getItem('selectedNames') || '';
     });
 
     const handlePropsChange = (options: string, supportMultiProps: boolean) => {
@@ -108,6 +119,7 @@ const MyCard = (props: Props) => {
 
         // 将类型名称赋值
         item.kindName = kindName
+        item.combID = combID
         setCartCount(cartCount + 1); // 每次点击增加数量
         // 当属性被提交后重置属性
         localStorage.removeItem('propMap')
@@ -133,11 +145,10 @@ const MyCard = (props: Props) => {
     };
 
     // 当清空购物车信号变化时重置角标数量
+    // 当购物车内容变化时，更新 cartCount
     useEffect(() => {
-        if (clearCartSignal) {
-            setCartCount(0);
-        }
-    }, [clearCartSignal]);
+        setCartCount(getItemCountInCart());
+    }, [cartItems,clearCartSignal]);
 
     // @ts-ignore
     return (

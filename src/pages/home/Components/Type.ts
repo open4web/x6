@@ -81,16 +81,16 @@ export interface ProductItem {
     quantity: number;
     price: number;
     kind: string;
+    kindName: string;
     desc: string;
     // Add more properties as needed
     spiceOptions: PropsOptions[];
     menu: string[];
     stock: number;
-    CombID: string;
     maxLimit: number;
     combIndex: number;
     combName: string;
-    kindName: string;
+    combID: string;
 }
 
 export interface CombSelectInfo {
