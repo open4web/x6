@@ -163,12 +163,18 @@ const MyCardWithScroll = ({
                 </Typography>
             </Box>
             <Box sx={{ position: 'absolute', top: '50%', left: 0, zIndex: 10 }}>
-                <IconButton onClick={() => handleScroll('right')} sx={{ backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }}>
+                <IconButton onClick={() => handleScroll('right')}
+                            sx={{ backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }}
+                            disabled={currentIndex === groupItems.length - 1} // 右边没有更多物品时禁用
+                >
                     <ArrowBackIcon />
                 </IconButton>
             </Box>
             <Box sx={{ position: 'absolute', top: '50%', right: 0, zIndex: 10 }}>
-                <IconButton onClick={() => handleScroll('left')} sx={{ backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }}>
+                <IconButton onClick={() => handleScroll('left')}
+                            sx={{ backgroundColor: 'rgba(0,0,0,0.2)', color: 'white' }}
+                            disabled={currentIndex === 0} // 左边没有更多物品时禁用
+                >
                     <ArrowForwardIcon />
                 </IconButton>
             </Box>
