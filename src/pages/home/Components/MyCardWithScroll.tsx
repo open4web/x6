@@ -158,44 +158,44 @@ const MyCardWithScroll = ({
                                 />
                             )}
                             {/* 放弃当前的选择*/}
-                            {isItemSelected(item, combID) && (
-                                <Box
-                                    sx={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        bottom: 0,
-                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 半透明遮罩层
-                                        backdropFilter: 'blur(1px)', // 模糊背景
-                                        zIndex: 2,
-                                        pointerEvents: 'auto', // 让遮罩层拦截点击事件
-                                    }}
-                                    onClick={(e) => e.stopPropagation()} // 阻止点击事件传递到背后的元素
-                                >
-                                    {/* 红色替换按钮 */}
-                                    <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 3 }}>
-                                        <Button
-                                            variant="contained"
-                                            color="success"
-                                            onClick={() => handleCancel(item, combID)} // 传入 item 以便获取商品信息
-                                            sx={{ zIndex: 4, pointerEvents: 'auto' }}
-                                        >
-                                            <Typography
-                                                variant="h6"
-                                                sx={{
-                                                    color: '#ffcc00', // 亮黄色，突出不可选状态
-                                                    fontWeight: 'bold',
-                                                    fontSize: '16px',
-                                                    textShadow: '2px 2px 4px rgba(0,0,0,0.8)' // 增加阴影让文字更清晰
-                                                }}
-                                            >
-                                                ❌
-                                            </Typography>
-                                        </Button>
-                                    </Box>
-                                </Box>
-                            )}
+                            {/*{isItemSelected(item, combID) && (*/}
+                            {/*    <Box*/}
+                            {/*        sx={{*/}
+                            {/*            position: 'absolute',*/}
+                            {/*            top: 0,*/}
+                            {/*            left: 0,*/}
+                            {/*            right: 0,*/}
+                            {/*            bottom: 0,*/}
+                            {/*            backgroundColor: 'rgba(0, 0, 0, 0)', // 半透明遮罩层*/}
+                            {/*            backdropFilter: 'blur(1px)', // 模糊背景*/}
+                            {/*            zIndex: 2,*/}
+                            {/*            pointerEvents: 'auto', // 让遮罩层拦截点击事件*/}
+                            {/*        }}*/}
+                            {/*        onClick={(e) => e.stopPropagation()} // 阻止点击事件传递到背后的元素*/}
+                            {/*    >*/}
+                            {/*        /!* 红色替换按钮 *!/*/}
+                            {/*        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 3 }}>*/}
+                            {/*            <Button*/}
+                            {/*                variant="contained"*/}
+                            {/*                color="success"*/}
+                            {/*                onClick={() => handleCancel(item, combID)} // 传入 item 以便获取商品信息*/}
+                            {/*                sx={{ zIndex: 4, pointerEvents: 'auto' }}*/}
+                            {/*            >*/}
+                            {/*                <Typography*/}
+                            {/*                    variant="h6"*/}
+                            {/*                    sx={{*/}
+                            {/*                        color: '#ffcc00', // 亮黄色，突出不可选状态*/}
+                            {/*                        fontWeight: 'bold',*/}
+                            {/*                        fontSize: '16px',*/}
+                            {/*                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)' // 增加阴影让文字更清晰*/}
+                            {/*                    }}*/}
+                            {/*                >*/}
+                            {/*                    ❌*/}
+                            {/*                </Typography>*/}
+                            {/*            </Button>*/}
+                            {/*        </Box>*/}
+                            {/*    </Box>*/}
+                            {/*)}*/}
                             {/*其他的未选择的商品*/}
                             {isMaxLimitReached && !isItemSelected(item, combID) &&  (
                                 <Box

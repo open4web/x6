@@ -261,7 +261,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                                     )
                                 }
                                 size="small"
-                                disabled={!!item.combName} // 如果 combName 存在，则禁用按钮
+                                // disabled={!!item.combName} // 如果 combName 存在，则禁用按钮
                             >
                                 <RemoveIcon/>
                             </IconButton>
@@ -313,7 +313,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                                     )
                                 }
                                 size="small"
-                                disabled={!!item.combName} // 如果 combName 存在，则禁用按钮
+                                // disabled={!!item.combName} // 如果 combName 存在，则禁用按钮
                             >
                                 <AddCircleIcon/>
                             </IconButton>
