@@ -129,7 +129,7 @@ const MyCardWithScroll = ({
                                 margin: '0 10px', // 间隙
                                 opacity: isCenter ? 1 : 0.3, // 非中心项透明
                                 zIndex: isCenter ? 1 : 0, // 非中心项底层
-                                pointerEvents: isCenter && !isMaxLimitReached ? 'auto' : 'none', // 非中心项禁止点击
+                                // pointerEvents: isCenter && !isMaxLimitReached ? 'auto' : 'none', // 非中心项禁止点击
                                 transition: 'opacity 0.3s ease, transform 0.3s ease', // 渐变效果
                             }}
                         >
@@ -197,39 +197,39 @@ const MyCardWithScroll = ({
                             {/*    </Box>*/}
                             {/*)}*/}
                             {/*其他的未选择的商品*/}
-                            {isMaxLimitReached && !isItemSelected(item, combID) &&  (
-                                <Box
-                                    sx={{
-                                        position: 'absolute',
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        bottom: 0,
-                                        backgroundColor: 'rgba(0, 0, 0, 0)', // 半透明遮罩
-                                        backdropFilter: 'blur(1px)', // 让背景模糊化
-                                        zIndex: 2,
-                                        pointerEvents: 'none', // 禁止点击
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        color: 'blue',
-                                        fontSize: '18px',
-                                        fontWeight: 'bold',
-                                    }}
-                                >
-                                    <Typography
-                                        variant="h6"
-                                        sx={{
-                                            color: '#ffcc00', // 亮黄色，突出不可选状态
-                                            fontWeight: 'bold',
-                                            fontSize: '16px',
-                                            textShadow: '2px 2px 4px rgba(0,0,0,0.8)' // 增加阴影让文字更清晰
-                                        }}
-                                    >
-                                        🔒
-                                    </Typography>
-                                </Box>
-                            )}
+                            {/*{isMaxLimitReached && !isItemSelected(item, combID) &&  (*/}
+                            {/*    <Box*/}
+                            {/*        sx={{*/}
+                            {/*            position: 'absolute',*/}
+                            {/*            top: 0,*/}
+                            {/*            left: 0,*/}
+                            {/*            right: 0,*/}
+                            {/*            bottom: 0,*/}
+                            {/*            backgroundColor: 'rgba(0, 0, 0, 0)', // 半透明遮罩*/}
+                            {/*            backdropFilter: 'blur(1px)', // 让背景模糊化*/}
+                            {/*            zIndex: 2,*/}
+                            {/*            pointerEvents: 'none', // 禁止点击*/}
+                            {/*            display: 'flex',*/}
+                            {/*            justifyContent: 'center',*/}
+                            {/*            alignItems: 'center',*/}
+                            {/*            color: 'blue',*/}
+                            {/*            fontSize: '18px',*/}
+                            {/*            fontWeight: 'bold',*/}
+                            {/*        }}*/}
+                            {/*    >*/}
+                            {/*        <Typography*/}
+                            {/*            variant="h6"*/}
+                            {/*            sx={{*/}
+                            {/*                color: '#ffcc00', // 亮黄色，突出不可选状态*/}
+                            {/*                fontWeight: 'bold',*/}
+                            {/*                fontSize: '16px',*/}
+                            {/*                textShadow: '2px 2px 4px rgba(0,0,0,0.8)' // 增加阴影让文字更清晰*/}
+                            {/*            }}*/}
+                            {/*        >*/}
+                            {/*            🔒*/}
+                            {/*        </Typography>*/}
+                            {/*    </Box>*/}
+                            {/*)}*/}
                         </Box>
                     );
                 })}
