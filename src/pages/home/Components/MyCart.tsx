@@ -27,9 +27,8 @@ import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
-import {Alert, Chip} from "@mui/material";
-import {isOrderExpired, storeOrderTimestamp} from "../../../utils/expireStore";
-import {useEffect} from "react";
+import {Alert, FormControl, FormControlLabel, Radio, RadioGroup} from "@mui/material";
+import {storeOrderTimestamp} from "../../../utils/expireStore";
 
 export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const {holdOrders, setHoldOrders} = useCartContext();
@@ -40,8 +39,13 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const [openPeople, setOpenPeople] = React.useState(false);
     const [openPhone, setOpenPhone] = React.useState(false);
     const [hasNotTicket, setHasNotTicket] = React.useState(false);
-    const [takeout, setTakeout] = React.useState(0);
     const {fetchData, alertComponent} = useFetchData();
+
+    const [pick, setPick] = React.useState(1); // 默认为堂食 (1)
+
+    const handlePickChange = (event: { target: { value: any; }; }) => {
+        setPick(Number(event.target.value));
+    };
 
     const handlePlaceOrder = async () => {
 
@@ -62,8 +66,8 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             seat: localStorage.getItem('ticketNumber'),
             phone: localStorage.getItem('phoneNumber'),
             people: localStorage.getItem('peopleNumber'),
+            pick: pick,
         };
-
 
         fetchData('/v1/order/pos', (response) => {
             setPrice(response.price);
@@ -187,10 +191,6 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         localStorage.removeItem('peopleNumber')
         setCartItems([])
     }
-
-    // useEffect(() => {
-    // }, [hasNotTicket]);
-
     return (
         <Box sx={{width: 400, padding: 1}}>
 
@@ -398,6 +398,20 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             </Box>
 
             <Divider sx={{my: 2}}/>
+
+            {/* 选择取餐方式 */}
+            <FormControl component="fieldset" fullWidth={true}>
+                <RadioGroup row value={pick} onChange={handlePickChange} >
+                    <Box sx={{display: "flex", justifyContent: "space-between", gap: 2}}>
+                    <FormControlLabel value={0} control={<Radio />} label="自提" />
+                    <FormControlLabel value={1} control={<Radio />} label="堂食" />
+                    <FormControlLabel value={2} control={<Radio />} label="外卖" />
+                    </Box>
+                </RadioGroup>
+            </FormControl>
+
+            <Divider sx={{my: 2}}/>
+
             <Box sx={{display: "flex", justifyContent: "space-between", gap: 2}}>
                 <Button
                     variant="outlined"

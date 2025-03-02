@@ -41,7 +41,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         }
 
         // 获取菜谱列表
-        fetchData('/v1/product/pos/menu', (response) => {
+        fetchData('/v1/pos/menu', (response) => {
             const cm = response || [];
             setCategories(cm);
             // 创建 nameMap, colorMap
@@ -60,7 +60,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
 
 
         // 获取商品列表
-        fetchData('/v1/product/pos/products', (response) => {
+        fetchData('/v1/pos/products', (response) => {
             const products = response || [];
             setData(products);
         }, "POST", {
