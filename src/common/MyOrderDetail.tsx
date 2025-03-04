@@ -65,7 +65,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
 
     const handleOrderDetailCancel = () => {
         fetchData(
-            '/v1/order/pos/fastCancel/' + orderData.id,
+            '/v1/order/fastCancel/' + orderData.id,
             (response) => {
                 console.log("更新成功=>", response)
                 onClose();

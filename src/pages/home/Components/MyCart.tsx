@@ -402,7 +402,11 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
             {/* 选择取餐方式 */}
             <FormControl component="fieldset" fullWidth={true}>
                 <RadioGroup row value={pick} onChange={handlePickChange} >
-                    <Box sx={{display: "flex", justifyContent: "space-between", gap: 2}}>
+                    <Box sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 2
+                    }}>
                     <FormControlLabel value={0} control={<Radio />} label="自提" />
                     <FormControlLabel value={1} control={<Radio />} label="堂食" />
                     <FormControlLabel value={2} control={<Radio />} label="外卖" />
