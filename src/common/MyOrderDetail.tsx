@@ -56,6 +56,17 @@ export const OpenReasonMap: Record<OpenReason, { title: string; action: string }
     },
 };
 
+const reasonList = [
+    "商家未履约",
+    "个人原因",
+    "缺货",
+    "品质问题",
+    "点错",
+    "更换菜品",
+    "长时间未出餐",
+    "其它",
+]
+
 const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, openOrderDetailWithReason}) => {
     // 根据理由从映射中读取 title 和 action
     const reasonDetails = OpenReasonMap[openOrderDetailWithReason];
@@ -291,7 +302,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                     <DialogTitle>选择退款原因</DialogTitle>
                     <DialogContent dividers>
                         <RadioGroup value={refundReason} onChange={(e) => setRefundReason(e.target.value)}>
-                            {["商品质量问题", "商家未履约", "个人原因", "其他"].map((reason) => (
+                            {reasonList.map((reason) => (
                                 <FormControlLabel key={reason} value={reason} control={<Radio />} label={reason} />
                             ))}
                         </RadioGroup>
