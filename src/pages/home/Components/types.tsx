@@ -71,4 +71,5 @@ export type Order = {
     pay: Record<string, any>;
     price: Price;
     workflow: Workflow[];
+    refundReason: string
 };

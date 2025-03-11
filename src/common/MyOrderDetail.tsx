@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -12,7 +12,7 @@ import {
     ListItem,
     Divider,
     Button,
-    IconButton, Chip,
+    IconButton, Chip, RadioGroup, FormControlLabel, Radio,
 } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import {Order} from "../pages/home/Components/types";
@@ -63,25 +63,33 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
     const {name: statusName, color: statusColor} = getOrderStatus(orderData.status);
     const {fetchData, alertComponent} = useFetchData();
 
+    const [refundReason, setRefundReason] = useState<string>(''); // 存储退款原因
+    const [openRefundDialog, setOpenRefundDialog] = useState<boolean>(false); // 控制退款原因弹窗
     const handleOrderDetailCancel = () => {
+        if (!refundReason) {
+            setOpenRefundDialog(true)
+            return;
+        }
+
         fetchData(
-            '/v1/order/fastCancel/' + orderData.id,
+            `/v1/order/fastCancel/${orderData.id}/${refundReason}`,  // 传递退款原因
             (response) => {
-                console.log("更新成功=>", response)
+                console.log("订单取消成功 =>", response);
                 onClose();
             },
             'PUT',
             '',
         ).catch(() => {
-            console.log('Failed to fetch data.');
+            console.log('Failed to cancel order.');
         });
-
     };
+
 
 
     const handlePrint = () => {
         const printContent = document.getElementById("print-section");
         const printWindow = window.open('', '_blank');
+
         if (printWindow && printContent) {
             printWindow.document.write(`
                 <html>
@@ -279,20 +287,64 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                         <OrderWorkflow workflow={orderData?.workflow}/>
                     </CardContent>
                 </Card>
+                <Dialog open={openRefundDialog} onClose={() => setOpenRefundDialog(false)} maxWidth="sm" fullWidth>
+                    <DialogTitle>选择退款原因</DialogTitle>
+                    <DialogContent dividers>
+                        <RadioGroup value={refundReason} onChange={(e) => setRefundReason(e.target.value)}>
+                            {["商品质量问题", "商家未履约", "个人原因", "其他"].map((reason) => (
+                                <FormControlLabel key={reason} value={reason} control={<Radio />} label={reason} />
+                            ))}
+                        </RadioGroup>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenRefundDialog(false)} color="primary">取消</Button>
+                        <Button
+                            onClick={() => {
+                                if (!refundReason) {
+                                    alert("请选择退款原因");
+                                    return;
+                                }
+                                setOpenRefundDialog(false);
+                            }}
+                            color="secondary"
+                            variant="contained"
+                        >
+                            确认
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                {/* 退款原因显示 */}
+                {refundReason && (
+                    <Typography variant="body2" color="textSecondary" sx={{ marginRight: "auto" }}>
+                        退款原因：
+                        <Chip
+                            label={refundReason}
+                            color="warning"
+                            variant="outlined"
+                            size="small"
+                            sx={{ marginLeft: 1, fontWeight: "bold" }}
+                        />
+                    </Typography>
+                )}
+
+                {/* 取消订单按钮（仅在符合状态时显示） */}
                 {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && (
                     <Button onClick={handleOrderDetailCancel} variant="contained" color="secondary">
-                        {reasonDetails.action}
+                        {refundReason ? "立即取消" : "申请取消"}
                     </Button>
                 )}
 
+                {/* 关闭按钮 */}
                 <Button onClick={onClose} variant="contained" color="primary">
                     关闭
                 </Button>
             </DialogActions>
         </Dialog>
+
     );
+
 };
 
 export default MyOrderDetail;
