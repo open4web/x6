@@ -91,8 +91,41 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
                 setCart([]);
             }
             setOpen(false);
-            setOrderDrawerOpen(true);
-            toast.success("支付成功", { position: "top-center", autoClose: 3000 });
+
+            // 轮询查询支付状态
+            const maxRetries = 10; // 最大查询次数
+            const intervalTime = 2000; // 轮询间隔（3秒）
+            let attempts = 0;
+
+            const checkOrderStatus = async () => {
+                return new Promise<void>((resolve) => { // 确保 resolve 在 Promise 内部
+                    const poll = async () => {
+                        try {
+                            await fetchData('/v1/order/pos/' + userData.order_id, (response) => {
+                                if (response.status === 1) {
+                                    toast.success("支付成功", { position: "top-center", autoClose: 3000 });
+                                    setOrderDrawerOpen(true);
+                                    return resolve(); // 成功后终止轮询
+                                }
+                            }, "GET", {});
+                        } catch (error) {
+                            console.error("查询订单支付结果失败", error);
+                        }
+
+                        attempts++;
+                        if (attempts < maxRetries) {
+                            setTimeout(poll, intervalTime); // 继续轮询
+                        } else {
+                            toast.error("支付状态未确认，请稍后在订单记录中查看", { position: "top-center", autoClose: 3000 });
+                            resolve(); // 结束轮询
+                        }
+                    };
+
+                    poll(); // 启动轮询
+                });
+            };
+
+            await checkOrderStatus(); // 启动轮询
         } catch (error) {
             toast.error("支付失败，请重试", { position: "top-center", autoClose: 3000 });
         }
