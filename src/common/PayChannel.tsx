@@ -93,7 +93,7 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
             setOpen(false);
 
             // 轮询查询支付状态
-            const maxRetries = 10; // 最大查询次数
+            const maxRetries = 2; // 最大查询次数
             const intervalTime = 2000; // 轮询间隔（3秒）
             let attempts = 0;
 
