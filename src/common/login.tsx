@@ -49,6 +49,9 @@ export const HandleLogin = async (params: LoginInput) => {
 export const HandleLogout = async () => {
     const request = new Request(logoutEndpoint, {
         method: 'POST',
+        body: JSON.stringify({
+            "user_id":      localStorage.getItem('user_id')
+        }),
         headers: new Headers({ 'Content-Type': 'application/json' }),
     });
 

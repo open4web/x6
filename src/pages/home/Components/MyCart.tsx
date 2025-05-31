@@ -27,8 +27,40 @@ import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
-import {Alert, FormControl, FormControlLabel, Radio, RadioGroup} from "@mui/material";
+import {Alert, FormControl, FormControlLabel, LinearProgress, Radio, RadioGroup} from "@mui/material";
 import {storeOrderTimestamp} from "../../../utils/expireStore";
+
+/**
+ * Convert nanoseconds to human-readable time string
+ * @param nanoseconds Time duration in nanoseconds
+ * @returns Formatted time string with appropriate unit
+ */
+export function formatNanoseconds(nanoseconds: number): string {
+    // Convert nanoseconds to seconds
+    const seconds = nanoseconds / 1e9;
+
+    if (seconds < 60) {
+        // Less than 1 minute - show in seconds
+        return `${seconds.toFixed(2)}秒`;
+    }
+
+    const minutes = seconds / 60;
+    if (minutes < 60) {
+        // Less than 1 hour - show in minutes
+        return `${minutes.toFixed(2)}分钟`;
+    }
+
+    const hours = minutes / 60;
+    if (hours < 24) {
+        // Less than 1 day - show in hours
+        return `${hours.toFixed(2)}小时`;
+    }
+
+    // 1 day or more - show in days
+    const days = hours / 24;
+    return `${days.toFixed(2)}天`;
+}
+
 
 export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const {holdOrders, setHoldOrders} = useCartContext();
@@ -39,6 +71,21 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const [openPeople, setOpenPeople] = React.useState(false);
     const [openPhone, setOpenPhone] = React.useState(false);
     const [hasNotTicket, setHasNotTicket] = React.useState(false);
+
+
+
+    // 	"orderCount":    orderCount,
+    // 			"totalItems":    totalItems,
+    // 			"estimatedWait": estimatedWait,
+    const [orderCount, setOrderCount] = React.useState(0);
+    const [totalItems, setTotalItems] = React.useState(0);
+    const [estimatedWait, setEstimatedWait] = React.useState(0);
+
+    const [progress, setProgress] = React.useState(0);
+    const [buffer, setBuffer] = React.useState(10);
+
+    const progressRef = React.useRef(() => {});
+
     const {fetchData, alertComponent} = useFetchData();
 
     const [pick, setPick] = React.useState(1); // 默认为堂食 (1)
@@ -70,11 +117,16 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         };
 
         await fetchData('/v1/order/pos', (response) => {
-            setPrice(response.price);
+            setPrice(response?.price);
             setOrderID(response?.identity?.order_no);
             setOpenPayChannel(true);
             // 设置当前订单作为最新订单，这样拉取订单列表时可以标识闪烁凸显
             storeOrderTimestamp(response?.identity?.order_no)
+
+            // 设置订单预计排队信息
+            setOrderCount(response?.orderCount)
+            setTotalItems(response?.totalItems)
+            setEstimatedWait(response?.estimatedWait)
         }, "POST", newOrderRequest);
 
         // 结算后清空当前选项
@@ -457,6 +509,17 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                     <Typography variant="h6" align="center">订单号: {orderID}</Typography>
                     <Typography variant="subtitle1" align="center" color="text.secondary">
                         待支付金额: <span style={{color: "#d32f2f", fontWeight: "bold"}}>¥{price.toFixed(2)}</span>
+                    </Typography>
+                    {/*valueBuffer 应该设置为商品数量*/}
+                    <LinearProgress variant="buffer" value={totalItems} valueBuffer={30} />
+                    <Box sx={{ minWidth: 35 }}>
+                        <Typography
+                            variant="body2"
+                            sx={{ color: 'text.secondary' }}
+                        >{`${Math.round(orderCount)}%`}</Typography>
+                    </Box>
+                    <Typography variant="subtitle1" align="center" color="text.secondary">
+                        预计等待时间: <span style={{color: "#dfff2f", fontWeight: "bold"}}>⏳{formatNanoseconds(estimatedWait)}</span>
                     </Typography>
                 </DialogTitle>
                 <DialogContent>
