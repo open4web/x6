@@ -27,6 +27,7 @@ const MyAppBar = (props: any) => {
     const [currentTime, setCurrentTime] = React.useState<string>(() => FormatCurrentTime());
 
     React.useEffect(() => {
+
         const intervalId = setInterval(() => {
             setCurrentTime(FormatCurrentTime());
         }, 1000);

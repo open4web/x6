@@ -1,6 +1,5 @@
 import {useState} from 'react';
 import Box from '@mui/material/Box';
-// import IconMaps from './IconMaps';
 
 import {useSidebarState,} from 'react-admin';
 

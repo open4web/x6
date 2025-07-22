@@ -80,6 +80,7 @@ export interface ProductItem {
     name: string;
     quantity: number;
     price: number;
+    combPrice: number;
     kind: string;
     kindName: string;
     desc: string;

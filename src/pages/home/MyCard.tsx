@@ -226,15 +226,42 @@ const MyCard = (props: Props) => {
                         </Typography>
                     }
                     subheader={
-                        <Typography
-                            sx={{
-                                fontSize: '1.2rem', // 调整价格字体大小
-                                fontWeight: 'bold', // 加粗字体
-                                color: 'darkorange', // 突出显示的颜色
-                            }}
-                        >
-                            ¥ {item?.price} {/* 添加人民币符号 */}
-                        </Typography>
+                        item.combPrice !== 0 ? (
+                            // 套餐价格（显示原价和现价）
+                            <div>
+                                {/* 原价（带删除线，默认0） */}
+                                <Typography
+                                    sx={{
+                                        fontSize: '0.8rem',
+                                        textDecoration: 'line-through', // 删除线效果
+                                        color: 'text.secondary',
+                                    }}
+                                >
+                                    ¥{item?.price || 0} {/* 如果 originalPrice 不存在，默认显示 0 */}
+                                </Typography>
+                                {/* 现价（突出显示） */}
+                                <Typography
+                                    sx={{
+                                        fontSize: '1.2rem',
+                                        fontWeight: 'bold',
+                                        color: 'darkorange',
+                                    }}
+                                >
+                                    ¥{item?.combPrice}
+                                </Typography>
+                            </div>
+                        ) : (
+                            // 非套餐（仅显示现价）
+                            <Typography
+                                sx={{
+                                    fontSize: '1.2rem',
+                                    fontWeight: 'bold',
+                                    color: 'darkorange',
+                                }}
+                            >
+                                ¥{item?.price}
+                            </Typography>
+                        )
                     }
 
                     onClick={!showProductImage ? () => handleAddToCart(true) : undefined} // 整个卡片可点击
