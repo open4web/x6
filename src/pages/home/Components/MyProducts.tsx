@@ -163,6 +163,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                                     backgroundColor={ backgroundColor}
                                     combIndex={combIndex}
                                     combPrice={getCombPrice(activeTab)}
+                                    combRequestItems={getCombRequestItems(activeTab)}
                                 />
                             </Grid>
                         ))}
