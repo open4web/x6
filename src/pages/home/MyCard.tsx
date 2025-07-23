@@ -38,6 +38,8 @@ interface Props {
     backgroundColor?: string;  // 允许外部传递 backgroundColor
     combIndex: string;
     combID: string; // 套餐专属的id（其实就是kindId）
+    combPrice: number;
+    combRequestItems: { id: string; quantity: number }[];
 }
 
 const MyCard = (props: Props) => {

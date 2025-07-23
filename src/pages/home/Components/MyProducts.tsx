@@ -30,6 +30,20 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         return item.name; // 如果找到返回 isComboMode，否则返回 undefined
     };
 
+    const getCombPrice = (id: string): number => {
+        const item = categoryMap[id]; // 获取对应的 MenuData 对象
+        return item.price; // 如果找到返回 isComboMode，否则返回 undefined
+    };
+
+    // getCombRequestItems
+    const getCombRequestItems = (id: string): { id: string; quantity: number }[] => {
+        const item = categoryMap[id]; // 获取对应的 MenuData 对象
+        // return item.products; //
+        return [{
+            id: "xx",
+            quantity: 2,
+        }]
+    };
     const getCategoryId = (id: string): string => {
         const item = categoryMap[id]; // 获取对应的 MenuData 对象
         return item.id; // 如果找到返回 isComboMode，否则返回 undefined
@@ -148,6 +162,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                                     clearCartSignal={clearCartSignal}
                                     backgroundColor={ backgroundColor}
                                     combIndex={combIndex}
+                                    combPrice={getCombPrice(activeTab)}
                                 />
                             </Grid>
                         ))}
@@ -164,6 +179,8 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                                 clearCartSignal={clearCartSignal}
                                 backgroundColor={ backgroundColor}
                                 combIndex={combIndex}
+                                combPrice={getCombPrice(activeTab)}
+                                combRequestItems={getCombRequestItems(activeTab)}
                             />
 
                         }

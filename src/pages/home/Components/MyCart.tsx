@@ -73,22 +73,57 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const [hasNotTicket, setHasNotTicket] = React.useState(false);
 
 
-
-    // 	"orderCount":    orderCount,
-    // 			"totalItems":    totalItems,
-    // 			"estimatedWait": estimatedWait,
     const [orderCount, setOrderCount] = React.useState(0);
     const [totalItems, setTotalItems] = React.useState(0);
     const [estimatedWait, setEstimatedWait] = React.useState(0);
 
-    const [progress, setProgress] = React.useState(0);
-    const [buffer, setBuffer] = React.useState(10);
-
-    const progressRef = React.useRef(() => {});
-
     const {fetchData, alertComponent} = useFetchData();
 
     const [pick, setPick] = React.useState(1); // 默认为堂食 (1)
+
+    // Group combo meals by their combName and calculate their quantities and prices
+    const comboMeals = React.useMemo(() => {
+        const comboMap = new Map<string, { quantity: number, price: number, name: string }>();
+
+        cartItems.forEach(item => {
+            if (item.combName) {
+                const existing = comboMap.get(item.combName) || {
+                    quantity: 0,
+                    price: 0,
+                    name: item.combName
+                };
+
+                comboMap.set(item.combName, {
+                    quantity: existing.quantity + item.quantity,
+                    price: existing.price + item.combPrice,
+                    name: item.combName
+                });
+            }
+        });
+
+        return Array.from(comboMap.values());
+    }, [cartItems]);
+
+    // Calculate total price (including both combo and non-combo items)
+    const { totalPrices, comboTotalPrice, nonComboTotalPrice } = React.useMemo(() => {
+        let comboTotal = 0;
+        let nonComboTotal = 0;
+
+        cartItems.forEach(item => {
+            const itemTotal = item.price * item.quantity;
+            if (item.combName) {
+                comboTotal += itemTotal;
+            } else {
+                nonComboTotal += itemTotal;
+            }
+        });
+
+        return {
+            totalPrices: comboTotal + nonComboTotal,
+            comboTotalPrice: comboTotal,
+            nonComboTotalPrice: nonComboTotal
+        };
+    }, [cartItems]);
 
     const handlePickChange = (event: { target: { value: any; }; }) => {
         setPick(Number(event.target.value));
@@ -400,6 +435,25 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
                 ))}
             </List>
             <Divider sx={{my: 2}}/>
+            {/* Display combo meal summaries if there are any */}
+            {comboMeals.length > 0 && (
+                <>
+                    {comboMeals.map(combo => (
+                        <Typography
+                            key={combo.name}
+                            variant="body1"
+                            sx={{
+                                fontWeight: 'bold',
+                                color: 'yellow',
+                                textAlign: "right",
+                                mb: 1
+                            }}
+                        >
+                            {combo.name} ×{combo.quantity}: ¥{combo.price.toFixed(2)}
+                        </Typography>
+                    ))}
+                </>
+            )}
             <Typography variant="h6" sx={{fontWeight: 'bold', color: 'red', textAlign: "right"}}>
                 总计: ¥{totalPrice.toFixed(2)}
             </Typography>

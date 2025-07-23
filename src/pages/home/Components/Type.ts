@@ -92,6 +92,7 @@ export interface ProductItem {
     combIndex: number;
     combName: string;
     combID: string;
+    combRequestItems: { id: string; quantity: number }[];
 }
 
 export interface CombSelectInfo {
@@ -155,4 +156,5 @@ export interface MenuData {
     update_type: number;
     combo: any | null;  // 根据需要进一步定义
     isComboMode: boolean;
+    price: number;
 }

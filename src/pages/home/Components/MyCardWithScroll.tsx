@@ -18,6 +18,8 @@ interface MyCardWithScrollProps {
     backgroundColor?: string;  // 允许外部传递 backgroundColor
     combIndex: string;
     combID: string;
+    combPrice: number;
+    combRequestItems: { id: string; quantity: number }[];
 }
 
 const MyCardWithScroll = ({
@@ -30,6 +32,8 @@ const MyCardWithScroll = ({
                               backgroundColor,
                               combIndex,
                               combID,
+                              combPrice,
+                              combRequestItems,
                           }: MyCardWithScrollProps) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [selectNumber, setSelectNumber] = useState(0); // 记录当前 combIndex 的选择数量
@@ -66,6 +70,8 @@ const MyCardWithScroll = ({
         setSelectNumber(prevNumber => prevNumber + 1);
         item.combName = kindName
         item.kind = kindName
+        item.combPrice = combPrice
+        item.combRequestItems = combRequestItems
         handleClick(item); // 执行原始的 handleClick
     };
 
@@ -142,6 +148,8 @@ const MyCardWithScroll = ({
                                 clearCartSignal={clearCartSignal}
                                 backgroundColor={backgroundColor}
                                 combIndex={combIndex}
+                                combPrice={combPrice}
+                                combRequestItems={combRequestItems}
                             />
                             {/* 添加遮罩层，当达到最大选择时 */}
                             {!isCenter && (
