@@ -40,9 +40,14 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         const item = categoryMap[id]; // 获取对应的 MenuData 对象
         // return item.products; //
         return [{
-            id: "xx",
-            quantity: 2,
-        }]
+            id: "67a96c87b96c9779260a17f0", // 木薯糖水
+            quantity: 1,
+        },
+            {
+                id: "677f3574f52225c3b0f82019", // 可乐
+                quantity: 1,
+            }
+        ]
     };
     const getCategoryId = (id: string): string => {
         const item = categoryMap[id]; // 获取对应的 MenuData 对象
@@ -59,7 +64,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             const cm = response || [];
             setCategories(cm);
             // 创建 nameMap, colorMap
-            const nameMap = cm.reduce((acc: Record<string, MenuData>, item:  MenuData ) => {
+            const nameMap = cm.reduce((acc: Record<string, MenuData>, item: MenuData) => {
                 acc[item.id] = item; // 将整个 item（即 MenuData 对象）赋值给 acc[item.id]
                 return acc;
             }, {});
@@ -147,7 +152,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
 
                 return (
                     <Grid container spacing={2} key={combIndex}>
-                        { !getIsComboModeById(activeTab) && groupItems.map((item) => (
+                        {!getIsComboModeById(activeTab) && groupItems.map((item) => (
                             <Grid
                                 item
                                 xs={showProductImage ? 2.4 : 1.714} // 动态调整宽度，7 个项目一行
@@ -160,7 +165,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                                     combID={getCategoryId(activeTab)}
                                     kindColor={categoryColorMap[activeTab] || '#ccc'}
                                     clearCartSignal={clearCartSignal}
-                                    backgroundColor={ backgroundColor}
+                                    backgroundColor={backgroundColor}
                                     combIndex={combIndex}
                                     combPrice={getCombPrice(activeTab)}
                                     combRequestItems={getCombRequestItems(activeTab)}
@@ -178,7 +183,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                                 combID={getCategoryId(activeTab)}
                                 kindColor={categoryColorMap[activeTab] || '#ccc'}
                                 clearCartSignal={clearCartSignal}
-                                backgroundColor={ backgroundColor}
+                                backgroundColor={backgroundColor}
                                 combIndex={combIndex}
                                 combPrice={getCombPrice(activeTab)}
                                 combRequestItems={getCombRequestItems(activeTab)}
