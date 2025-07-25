@@ -29,6 +29,9 @@ import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import {Alert, FormControl, FormControlLabel, LinearProgress, Radio, RadioGroup} from "@mui/material";
 import {storeOrderTimestamp} from "../../../utils/expireStore";
+import {MenuData} from "./Type";
+import {GenerateColorFromId} from "../../../utils/randColor";
+import {useEffect, useState} from "react";
 
 /**
  * Convert nanoseconds to human-readable time string
@@ -61,8 +64,72 @@ export function formatNanoseconds(nanoseconds: number): string {
     return `${days.toFixed(2)}天`;
 }
 
+interface Meta {
+    namespace: string;
+    merchant_id: string;
+    founder: string;
+    updater: string;
+    account_id: string;
+    created_at: string;
+    updated_at: string;
+    created_time: number;
+    updated_time: number;
+    status: boolean;
+    deleted: boolean;
+    access_level: number;
+}
 
-export default function MyCart({cartItems, setCartItems}: MyCartProps) {
+interface Context {
+    // 根据实际上下文数据结构补充
+    [key: string]: any;
+}
+
+interface ComboItem {
+    combName: string;
+    price: number;
+    requires: number; // 需要选择的数量
+    products: string[]; // 可选商品列表
+}
+
+export interface ComboGroup {
+    _: {
+        meta: Meta;
+        context: Context;
+    };
+    id: string;
+    is_show_backstage: number;
+    sort: number;
+    goods_type: number;
+    is_sell: boolean;
+    icon: string;
+    products: string[];
+    goods_list: null;
+    stores: null;
+    update_type: number;
+
+    name: string; // 套餐唯一标识
+    discount: number; // 套餐优惠金额
+    combo: ComboItem[]; // 套餐包含的组合项
+}
+
+interface MatchedCombo {
+    groupId: string;
+    matchedItems: {
+        comboName: string;
+        matchedProducts: string[];
+        requires: number;
+        price: number;
+    }[];
+    discount: number;
+}
+
+interface ComboMatchResult {
+    matchedGroups: MatchedCombo[]; // 匹配成功的套餐组
+    totalDiscount: number; // 总优惠金额
+    usedProductIds: Set<string>; // 已使用的商品ID（避免重复使用）
+}
+
+export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProps) {
     const {holdOrders, setHoldOrders} = useCartContext();
     const [price, setPrice] = React.useState(0);
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
@@ -80,37 +147,7 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     const {fetchData, alertComponent} = useFetchData();
 
     const [pick, setPick] = React.useState(1); // 默认为堂食 (1)
-
-    interface ComboItem {
-        combName: string;
-        price: number;
-        requires: number; // 需要选择的数量
-        products: string[]; // 可选商品列表
-    }
-
-    interface ComboGroup {
-        groupId: string; // 套餐唯一标识
-        discount: number; // 套餐优惠金额
-        combos: ComboItem[]; // 套餐包含的组合项
-    }
-
-    interface MatchedCombo {
-        groupId: string;
-        matchedItems: {
-            comboName: string;
-            matchedProducts: string[];
-            requires: number;
-            price: number;
-        }[];
-        discount: number;
-    }
-
-    interface ComboMatchResult {
-        matchedGroups: MatchedCombo[]; // 匹配成功的套餐组
-        totalDiscount: number; // 总优惠金额
-        usedProductIds: Set<string>; // 已使用的商品ID（避免重复使用）
-    }
-
+    const {merchantId} = useCartContext();
     /**
      * 匹配购物车中的套餐组合
      * @param cartItems 购物车商品
@@ -130,14 +167,14 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
 
         for (const group of sortedGroups) {
             const groupMatch: MatchedCombo = {
-                groupId: group.groupId,
+                groupId: group.name,
                 matchedItems: [],
                 discount: group.discount
             };
             let isGroupMatched = true;
 
             // 检查套餐内每个combo是否满足
-            for (const combo of group.combos) {
+            for (const combo of group.combo) {
                 // 找出未被使用且存在于购物车的商品
                 const availableProducts = combo.products.filter(
                     productId => inputProductIds.includes(productId) &&
@@ -181,48 +218,58 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
         return result;
     }
 
-
 //     TODO 套餐需要提供一个套餐接口专门返回套餐的配置
 // 示例套餐数据
-    const comboGroups: ComboGroup[] = [
-        {
-            groupId: "明星套餐",
-            discount: 5, // 优惠5元
-            combos: [
-                {
-                    combName: "主菜",
-                    price: 19.9,
-                    requires: 1, // 必须选1个
-                    products: ["677f3d26f52225c3b0f8201c", "677be0bb0e4c843e93739d8c"],
-                },
-                {
-                    combName: "配菜",
-                    price: 20,
-                    requires: 2, // 必须选2个
-                    products: ["677e9b81f52225c3b0f82017", "677ce9850e4c843e93739d8f", "658433d6b0b2481d7f696e53"],
-                },
-            ],
-        },
-        {
-            groupId: "开心套餐2",
-            discount: 3, // 优惠5元
-            combos: [
-                {
-                    combName: "主菜",
-                    price: 39.9,
-                    requires: 1, // 必须选1个
-                    products: ["677f3d26f52225c3b0f8201c", "677be0bb0e4c843e93739d8c"],
-                },
-                {
-                    combName: "配菜",
-                    price: 10,
-                    requires: 3, // 必须选2个
-                    products: ["677e9b81f52225c3b0f82017", "677ce9850e4c843e93739d8f", "658433d6b0b2481d7f696e53"],
-                },
-            ],
-        },
-    ];
+//     const comboGroups: ComboGroup[] = [
+//         {
+//             name: "明星套餐",
+//             discount: 5, // 优惠5元
+//             combos: [
+//                 {
+//                     combName: "主菜",
+//                     price: 19.9,
+//                     requires: 1, // 必须选1个
+//                     products: ["677f3d26f52225c3b0f8201c", "677be0bb0e4c843e93739d8c"],
+//                 },
+//                 {
+//                     combName: "配菜",
+//                     price: 20,
+//                     requires: 2, // 必须选2个
+//                     products: ["677e9b81f52225c3b0f82017", "677ce9850e4c843e93739d8f", "658433d6b0b2481d7f696e53"],
+//                 },
+//             ],
+//         },
+//         {
+//             name: "开心套餐2",
+//             discount: 3, // 优惠5元
+//             combos: [
+//                 {
+//                     combName: "主菜",
+//                     price: 39.9,
+//                     requires: 1, // 必须选1个
+//                     products: ["677f3d26f52225c3b0f8201c", "677be0bb0e4c843e93739d8c"],
+//                 },
+//                 {
+//                     combName: "配菜",
+//                     price: 10,
+//                     requires: 3, // 必须选2个
+//                     products: ["677e9b81f52225c3b0f82017", "677ce9850e4c843e93739d8f", "658433d6b0b2481d7f696e53"],
+//                 },
+//             ],
+//         },
+//     ];
 
+    // [
+    //     {
+    //         "combName": "",
+    //         "price": 1,
+    //         "quantity": 4,
+    //         "requires": 0,
+    //         "products": [
+    //             "6584328ab0b2481d7f696e3d",
+    //             "65843326b0b2481d7f696e49"
+    //         ]
+    //     },
 
     const handlePickChange = (event: { target: { value: any; }; }) => {
         setPick(Number(event.target.value));
@@ -379,8 +426,21 @@ export default function MyCart({cartItems, setCartItems}: MyCartProps) {
     }
 
     const comboResult = React.useMemo(() => {
-        return matchComboGroups(cartItems, comboGroups);
+        console.log("comboGroups-->", comboGroup)
+        return matchComboGroups(cartItems, comboGroup);
     }, [cartItems]);
+    //
+    // useEffect(() => {
+    //     const payload = {
+    //         "merchantId": merchantId,
+    //     }
+    //
+    //     // 获取菜谱列表
+    //     fetchData('/v1/pos/combs', (response) => {
+    //         const cm = response || [];
+    //         setCombs(cm);
+    //     }, "POST", payload);
+    // }, [merchantId]);
 
     return (
         <Box sx={{width: 400, padding: 1}}>

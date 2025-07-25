@@ -1,5 +1,6 @@
 import * as React from "react";
 import {PropsOptions} from "../pages/home/Components/Type";
+import {ComboGroup} from "../pages/home/Components/MyCart";
 
 export interface LoginInput {
     phone?: string;
@@ -56,6 +57,7 @@ export interface CartItem {
 export interface MyCartProps {
     cartItems: CartItem[];
     setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+    comboGroup: ComboGroup[];
 }
 
 export interface CartItemHolder {
