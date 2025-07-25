@@ -29,10 +29,6 @@ import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import {Alert, FormControl, FormControlLabel, LinearProgress, Radio, RadioGroup} from "@mui/material";
 import {storeOrderTimestamp} from "../../../utils/expireStore";
-import {MenuData} from "./Type";
-import {GenerateColorFromId} from "../../../utils/randColor";
-import {useEffect, useState} from "react";
-
 /**
  * Convert nanoseconds to human-readable time string
  * @param nanoseconds Time duration in nanoseconds
@@ -147,7 +143,6 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     const {fetchData, alertComponent} = useFetchData();
 
     const [pick, setPick] = React.useState(1); // 默认为堂食 (1)
-    const {merchantId} = useCartContext();
     /**
      * 匹配购物车中的套餐组合
      * @param cartItems 购物车商品
@@ -185,7 +180,8 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                 if (availableProducts.length >= combo.requires) {
                     // 选择前requires个商品
                     const matchedProducts = availableProducts.slice(0, combo.requires);
-
+                    // 如果商品匹配数量是0则不匹配任何套餐
+                    if (matchedProducts.length==0) continue ;
                     groupMatch.matchedItems.push({
                         comboName: combo.combName,
                         matchedProducts,
@@ -217,59 +213,6 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
         return result;
     }
-
-//     TODO 套餐需要提供一个套餐接口专门返回套餐的配置
-// 示例套餐数据
-//     const comboGroups: ComboGroup[] = [
-//         {
-//             name: "明星套餐",
-//             discount: 5, // 优惠5元
-//             combos: [
-//                 {
-//                     combName: "主菜",
-//                     price: 19.9,
-//                     requires: 1, // 必须选1个
-//                     products: ["677f3d26f52225c3b0f8201c", "677be0bb0e4c843e93739d8c"],
-//                 },
-//                 {
-//                     combName: "配菜",
-//                     price: 20,
-//                     requires: 2, // 必须选2个
-//                     products: ["677e9b81f52225c3b0f82017", "677ce9850e4c843e93739d8f", "658433d6b0b2481d7f696e53"],
-//                 },
-//             ],
-//         },
-//         {
-//             name: "开心套餐2",
-//             discount: 3, // 优惠5元
-//             combos: [
-//                 {
-//                     combName: "主菜",
-//                     price: 39.9,
-//                     requires: 1, // 必须选1个
-//                     products: ["677f3d26f52225c3b0f8201c", "677be0bb0e4c843e93739d8c"],
-//                 },
-//                 {
-//                     combName: "配菜",
-//                     price: 10,
-//                     requires: 3, // 必须选2个
-//                     products: ["677e9b81f52225c3b0f82017", "677ce9850e4c843e93739d8f", "658433d6b0b2481d7f696e53"],
-//                 },
-//             ],
-//         },
-//     ];
-
-    // [
-    //     {
-    //         "combName": "",
-    //         "price": 1,
-    //         "quantity": 4,
-    //         "requires": 0,
-    //         "products": [
-    //             "6584328ab0b2481d7f696e3d",
-    //             "65843326b0b2481d7f696e49"
-    //         ]
-    //     },
 
     const handlePickChange = (event: { target: { value: any; }; }) => {
         setPick(Number(event.target.value));
@@ -429,18 +372,6 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         console.log("comboGroups-->", comboGroup)
         return matchComboGroups(cartItems, comboGroup);
     }, [cartItems]);
-    //
-    // useEffect(() => {
-    //     const payload = {
-    //         "merchantId": merchantId,
-    //     }
-    //
-    //     // 获取菜谱列表
-    //     fetchData('/v1/pos/combs', (response) => {
-    //         const cm = response || [];
-    //         setCombs(cm);
-    //     }, "POST", payload);
-    // }, [merchantId]);
 
     return (
         <Box sx={{width: 400, padding: 1}}>
@@ -602,23 +533,31 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             {/* Display combo meal summaries if there are any */}
             <div>
                 { comboResult.matchedGroups.map(group => (
-                    <div key={group.groupId}>
-                        <h3>{group.groupId} (优惠: ¥{group.discount})</h3>
-                        {group.matchedItems.map((item, index) => (
-                            <div key={index}>
-                                <p>{item.comboName}: {item.matchedProducts.join(", ")}</p>
-                            </div>
-                        ))}
-                    </div>
+                    group.matchedItems.length > 0 ?
+                        <div key={group.groupId}>
+                            <h4>
+                                {group.groupId}
+                                {group.discount > 0 ? ` (优惠: ¥${group.discount})` : ''}
+                            </h4>
+                            {group.matchedItems.map((item, index) => (
+                                <div key={index}>
+                                    <p>{item.comboName}: {item.matchedProducts.join(", ")}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        : <div></div>
                 ))
                 }
 
-            {
-                comboResult.totalDiscount > 0 && (
-                    <p>总优惠: ¥{comboResult.totalDiscount}</p>
-                )
-            }
-        </div>
+                {
+                    comboResult.totalDiscount > 0 && (
+                        <p>总优惠: ¥{comboResult.totalDiscount}</p>
+                    )
+                }
+            </div>
+            <Divider sx={{my: 2}}/>
+
             <Typography variant="h6" sx={{fontWeight: 'bold', color: 'red', textAlign: "right"}}>
                 总计: ¥{totalPrice.toFixed(2)}
             </Typography>
