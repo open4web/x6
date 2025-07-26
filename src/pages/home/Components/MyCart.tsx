@@ -29,101 +29,9 @@ import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import {Alert, FormControl, FormControlLabel, LinearProgress, Radio, RadioGroup} from "@mui/material";
 import {storeOrderTimestamp} from "../../../utils/expireStore";
-/**
- * Convert nanoseconds to human-readable time string
- * @param nanoseconds Time duration in nanoseconds
- * @returns Formatted time string with appropriate unit
- */
-export function formatNanoseconds(nanoseconds: number): string {
-    // Convert nanoseconds to seconds
-    const seconds = nanoseconds / 1e9;
+import {ComboGroup, ComboMatchResult, MatchedCombo} from "../types";
+import {convertToOrderRequest, FormatNanoseconds} from "../../../utils/time";
 
-    if (seconds < 60) {
-        // Less than 1 minute - show in seconds
-        return `${seconds.toFixed(2)}秒`;
-    }
-
-    const minutes = seconds / 60;
-    if (minutes < 60) {
-        // Less than 1 hour - show in minutes
-        return `${minutes.toFixed(2)}分钟`;
-    }
-
-    const hours = minutes / 60;
-    if (hours < 24) {
-        // Less than 1 day - show in hours
-        return `${hours.toFixed(2)}小时`;
-    }
-
-    // 1 day or more - show in days
-    const days = hours / 24;
-    return `${days.toFixed(2)}天`;
-}
-
-interface Meta {
-    namespace: string;
-    merchant_id: string;
-    founder: string;
-    updater: string;
-    account_id: string;
-    created_at: string;
-    updated_at: string;
-    created_time: number;
-    updated_time: number;
-    status: boolean;
-    deleted: boolean;
-    access_level: number;
-}
-
-interface Context {
-    // 根据实际上下文数据结构补充
-    [key: string]: any;
-}
-
-interface ComboItem {
-    combName: string;
-    price: number;
-    requires: number; // 需要选择的数量
-    products: string[]; // 可选商品列表
-}
-
-export interface ComboGroup {
-    _: {
-        meta: Meta;
-        context: Context;
-    };
-    id: string;
-    is_show_backstage: number;
-    sort: number;
-    goods_type: number;
-    is_sell: boolean;
-    icon: string;
-    products: string[];
-    goods_list: null;
-    stores: null;
-    update_type: number;
-
-    name: string; // 套餐唯一标识
-    discount: number; // 套餐优惠金额
-    combo: ComboItem[]; // 套餐包含的组合项
-}
-
-interface MatchedCombo {
-    groupId: string;
-    matchedItems: {
-        comboName: string;
-        matchedProducts: string[];
-        requires: number;
-        price: number;
-    }[];
-    discount: number;
-}
-
-interface ComboMatchResult {
-    matchedGroups: MatchedCombo[]; // 匹配成功的套餐组
-    totalDiscount: number; // 总优惠金额
-    usedProductIds: Set<string>; // 已使用的商品ID（避免重复使用）
-}
 
 export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProps) {
     const {holdOrders, setHoldOrders} = useCartContext();
@@ -134,12 +42,9 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     const [openPeople, setOpenPeople] = React.useState(false);
     const [openPhone, setOpenPhone] = React.useState(false);
     const [hasNotTicket, setHasNotTicket] = React.useState(false);
-
-
     const [orderCount, setOrderCount] = React.useState(0);
     const [totalItems, setTotalItems] = React.useState(0);
     const [estimatedWait, setEstimatedWait] = React.useState(0);
-
     const {fetchData, alertComponent} = useFetchData();
 
     const [pick, setPick] = React.useState(1); // 默认为堂食 (1)
@@ -154,7 +59,8 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         const result: ComboMatchResult = {
             matchedGroups: [],
             totalDiscount: 0,
-            usedProductIds: new Set<string>()
+            usedProductIds: new Set<string>(),
+            price: 0
         };
 
         // 按优惠金额降序排序，优先匹配优惠大的套餐
@@ -162,9 +68,11 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
         for (const group of sortedGroups) {
             const groupMatch: MatchedCombo = {
+                count: 1,
                 groupId: group.name,
                 matchedItems: [],
-                discount: group.discount
+                discount: group.discount,
+                price: group.price
             };
             let isGroupMatched = true;
 
@@ -201,6 +109,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             if (isGroupMatched) {
                 result.matchedGroups.push(groupMatch);
                 result.totalDiscount += group.discount;
+                result.price += group.price;
             } else {
                 // 如果套餐不匹配，回滚已使用的商品
                 groupMatch.matchedItems.forEach(item => {
@@ -303,6 +212,8 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
     // 统计各个属性的单价
     const totalPrice = cartItems.reduce((total, item) => {
+
+        // item.combPrice
         // 从 desc 分隔出属性名称
         const descNames = item.desc.split(",").map(name => name.trim());
 
@@ -320,10 +231,9 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
             return propsTotal + matchedPrice;
         }, 0);
-
+        // TODO 套餐不在这里进行加和
         // 当前商品的总价（含属性价格）
         const itemTotalPrice = (item.price + propsTotalPrice) * item.quantity;
-
         // 累加到总价
         return total + itemTotalPrice;
     }, 0);
@@ -372,6 +282,45 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         console.log("comboGroups-->", comboGroup)
         return matchComboGroups(cartItems, comboGroup);
     }, [cartItems]);
+
+    function getDialog() {
+        return <Dialog
+            open={openPayChannel}
+            fullWidth={true}
+            TransitionComponent={Transition}
+            keepMounted
+            onClose={() => setOpenPayChannel(false)}
+            aria-describedby="alert-dialog-slide-description"
+        >
+            <DialogTitle>
+                <Typography variant="h6" align="center">订单号: {orderID}</Typography>
+                <Typography variant="subtitle1" align="center" color="text.secondary">
+                    待支付金额: <span style={{color: "#d32f2f", fontWeight: "bold"}}>¥{price.toFixed(2)}</span>
+                </Typography>
+                {/*valueBuffer 应该设置为商品数量*/}
+                <LinearProgress variant="buffer" value={totalItems} valueBuffer={30}/>
+                <Box sx={{minWidth: 35}}>
+                    <Typography
+                        variant="body2"
+                        sx={{color: 'text.secondary'}}
+                    >{`${Math.round(orderCount)}%`}</Typography>
+                </Box>
+                <Typography variant="subtitle1" align="center" color="text.secondary">
+                    预计等待时间: <span
+                    style={{color: "#dfff2f", fontWeight: "bold"}}>⏳{FormatNanoseconds(estimatedWait)}</span>
+                </Typography>
+            </DialogTitle>
+            <DialogContent>
+                <PayChannel
+                    setCart={setCartItems}
+                    price={price}
+                    setOpen={setOpenPayChannel}
+                    orderID={orderID}
+                    at={localStorage.getItem("current_store_id")}
+                />
+            </DialogContent>
+        </Dialog>;
+    }
 
     return (
         <Box sx={{width: 400, padding: 1}}>
@@ -532,15 +481,16 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             <Divider sx={{my: 2}}/>
             {/* Display combo meal summaries if there are any */}
             <div>
-                { comboResult.matchedGroups.map(group => (
+                {comboResult.matchedGroups.map(group => (
                     group.matchedItems.length > 0 ?
                         <div key={group.groupId}>
                             <h4>
-                                {group.groupId}
+                                {group.groupId}: {group.price > 0 ? ` ¥${group.price}` : ''} x {group.count}
                                 {group.discount > 0 ? ` (优惠: ¥${group.discount})` : ''}
                             </h4>
                             {group.matchedItems.map((item, index) => (
                                 <div key={index}>
+                                    {/*这里可以选择展示商品名称*/}
                                     <p>{item.comboName}: {item.matchedProducts.join(", ")}</p>
                                 </div>
                             ))}
@@ -655,56 +605,12 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     结算
                 </Button>
             </Box>
-            <Dialog
-                open={openPayChannel}
-                fullWidth={true}
-                TransitionComponent={Transition}
-                keepMounted
-                onClose={() => setOpenPayChannel(false)}
-                aria-describedby="alert-dialog-slide-description"
-            >
-                <DialogTitle>
-                    <Typography variant="h6" align="center">订单号: {orderID}</Typography>
-                    <Typography variant="subtitle1" align="center" color="text.secondary">
-                        待支付金额: <span style={{color: "#d32f2f", fontWeight: "bold"}}>¥{price.toFixed(2)}</span>
-                    </Typography>
-                    {/*valueBuffer 应该设置为商品数量*/}
-                    <LinearProgress variant="buffer" value={totalItems} valueBuffer={30}/>
-                    <Box sx={{minWidth: 35}}>
-                        <Typography
-                            variant="body2"
-                            sx={{color: 'text.secondary'}}
-                        >{`${Math.round(orderCount)}%`}</Typography>
-                    </Box>
-                    <Typography variant="subtitle1" align="center" color="text.secondary">
-                        预计等待时间: <span
-                        style={{color: "#dfff2f", fontWeight: "bold"}}>⏳{formatNanoseconds(estimatedWait)}</span>
-                    </Typography>
-                </DialogTitle>
-                <DialogContent>
-                    <PayChannel
-                        setCart={setCartItems}
-                        price={price}
-                        setOpen={setOpenPayChannel}
-                        orderID={orderID}
-                        at={localStorage.getItem("current_store_id")}
-                    />
-                </DialogContent>
-            </Dialog>
+            {getDialog()}
         </Box>
+
     );
 }
 
 function Transition(props: TransitionProps & { children: React.ReactElement<any, any> }) {
     return <Slide direction="up" {...props} />;
-}
-
-function convertToOrderRequest(cartItems: CartItem[]) {
-    return cartItems.map((item) => ({
-        ID: item.id,
-        Number: item.quantity,
-        Price: item.price,
-        Name: item.name,
-        props_text: item.desc,
-    }));
 }
