@@ -1,9 +1,10 @@
 import * as React from 'react';
 import Drawer from '@mui/material/Drawer';
-import MyCart, {ComboGroup} from "./MyCart";
+import MyCart from "./MyCart";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {useEffect, useState} from "react";
 import {useFetchData} from "../../../common/FetchData";
+import {ComboGroup} from "../types";
 
 
 export default function MyCartDrawer() {

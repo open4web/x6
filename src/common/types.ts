@@ -1,6 +1,6 @@
 import * as React from "react";
 import {PropsOptions} from "../pages/home/Components/Type";
-import {ComboGroup} from "../pages/home/Components/MyCart";
+import {ComboGroup} from "../pages/home/types";
 
 export interface LoginInput {
     phone?: string;
