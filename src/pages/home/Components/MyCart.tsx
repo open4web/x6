@@ -48,6 +48,42 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     const {fetchData, alertComponent} = useFetchData();
 
     const [pick, setPick] = React.useState(1); // 默认为堂食 (1)
+
+
+    // 初始化一个空的 Map<string, number>
+    const [numberMap, setNumberMap] = React.useState<Map<string, number>>(() => new Map());
+
+    // 添加或更新键值对
+    const addOrUpdateEntry = (key: string, value: number) => {
+
+        const old = getValue(key)
+        if (old != undefined ) {
+            // 如果存在则进行加1
+            value = old + 1
+        }
+
+        setNumberMap(prevMap => {
+            const newMap = new Map(prevMap);
+            newMap.set(key, value);
+            return newMap;
+        });
+    };
+
+    // 删除键值对
+    const removeEntry = (key: string) => {
+        setNumberMap(prevMap => {
+            const newMap = new Map(prevMap);
+            newMap.delete(key);
+            return newMap;
+        });
+    };
+
+    // 获取值
+    const getValue = (key: string) => {
+        return numberMap.get(key) ;
+    };
+
+
     /**
      * 匹配购物车中的套餐组合
      * @param cartItems 购物车商品
@@ -60,7 +96,8 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             matchedGroups: [],
             totalDiscount: 0,
             usedProductIds: new Set<string>(),
-            price: 0
+            price: 0,
+            count: 0,
         };
 
         // 按优惠金额降序排序，优先匹配优惠大的套餐
@@ -68,7 +105,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
         for (const group of sortedGroups) {
             const groupMatch: MatchedCombo = {
-                count: 1,
+                count: 0,
                 groupId: group.name,
                 matchedItems: [],
                 discount: group.discount,
@@ -89,7 +126,10 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     // 选择前requires个商品
                     const matchedProducts = availableProducts.slice(0, combo.requires);
                     // 如果商品匹配数量是0则不匹配任何套餐
-                    if (matchedProducts.length==0) continue ;
+                    if (matchedProducts.length==0) {
+                        isGroupMatched = false
+                        continue 
+                    }
                     groupMatch.matchedItems.push({
                         comboName: combo.combName,
                         matchedProducts,
@@ -107,9 +147,12 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
             // 如果套餐完全匹配，则加入结果
             if (isGroupMatched) {
+                groupMatch.count+=1
                 result.matchedGroups.push(groupMatch);
                 result.totalDiscount += group.discount;
                 result.price += group.price;
+                // result.count += 1
+                addOrUpdateEntry(groupMatch.groupId, 1)
             } else {
                 // 如果套餐不匹配，回滚已使用的商品
                 groupMatch.matchedItems.forEach(item => {
@@ -485,7 +528,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     group.matchedItems.length > 0 ?
                         <div key={group.groupId}>
                             <h4>
-                                {group.groupId}: {group.price > 0 ? ` ¥${group.price}` : ''} x {group.count}
+                                {group.groupId}: {group.price > 0 ? ` ¥${group.price}` : ''} x {getValue(group.groupId)}
                                 {group.discount > 0 ? ` (优惠: ¥${group.discount})` : ''}
                             </h4>
                             {group.matchedItems.map((item, index) => (

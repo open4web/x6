@@ -95,6 +95,24 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         });
     };
 
+    const handleOrderRefund = () => {
+        if (!refundReason) {
+            setOpenRefundDialog(true)
+            return;
+        }
+
+        fetchData(
+            `/v1/order/fastRefund/${orderData.id}/${refundReason}`,  // 传递退款原因
+            (response) => {
+                console.log("订单取消成功 =>", response);
+                onClose();
+            },
+            'PUT',
+            '',
+        ).catch(() => {
+            console.log('Failed to cancel order.');
+        });
+    };
 
 
     const handlePrint = () => {
@@ -344,6 +362,12 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && (
                     <Button onClick={handleOrderDetailCancel} variant="contained" color="secondary">
                         {refundReason ? "立即取消" : "申请取消"}
+                    </Button>
+                )}
+                {/* 快速退款订单按钮（仅在符合状态时显示） */}
+                {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && (
+                    <Button onClick={handleOrderRefund} variant="contained" color="error">
+                        {refundReason ? "立即退款" : "申请退款"}
                     </Button>
                 )}
 

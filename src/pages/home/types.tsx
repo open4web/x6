@@ -65,4 +65,5 @@ export interface ComboMatchResult {
     totalDiscount: number; // 总优惠金额
     usedProductIds: Set<string>; // 已使用的商品ID（避免重复使用）
     price: number;
+    count: number;
 }
