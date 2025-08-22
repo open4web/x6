@@ -85,21 +85,35 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
 
     // 处理商品选择
     const handleItemSelect = (itemId: string) => {
+        // 检查商品是否已退款，已退款的不允许选择
+        const item = orderData.buckets.find(b => b.id === itemId);
+        if (item && item.status === 1) {
+            return; // 已退款，不处理选择
+        }
+
         setSelectedItems(prev => ({
             ...prev,
             [itemId]: !prev[itemId]
         }));
     };
 
-    // 全选/取消全选
+    // 全选/取消全选 - 只选择未退款的商品
     const handleSelectAll = (selectAll: boolean) => {
         const newSelected: SelectedItems = {};
         if (selectAll) {
             orderData.buckets.forEach(item => {
-                newSelected[item.id] = true;
+                // 只选择未退款的商品
+                if (item.status !== 1) {
+                    newSelected[item.id] = true;
+                }
             });
         }
         setSelectedItems(newSelected);
+    };
+
+    // 获取可选择的商品（未退款的）
+    const getSelectableItems = () => {
+        return orderData.buckets.filter(item => item.status !== 1);
     };
 
     // 获取选中的商品ID列表
@@ -110,22 +124,30 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
     // 获取选中商品的总金额
     const getSelectedItemsTotal = (): number => {
         return orderData.buckets.reduce((total, item) => {
-            if (selectedItems[item.id]) {
+            if (selectedItems[item.id] && item.status !== 1) { // 只计算未退款的选中商品
                 return total + (item.price * item.number);
             }
             return total;
         }, 0);
     };
 
-    // 检查是否所有商品都被选中
+    // 检查是否所有可选择的商品都被选中
     const areAllItemsSelected = (): boolean => {
-        if (orderData.buckets.length === 0) return false;
-        return orderData.buckets.every(item => selectedItems[item.id]);
+        const selectableItems = getSelectableItems();
+        if (selectableItems.length === 0) return false;
+        return selectableItems.every(item => selectedItems[item.id]);
     };
 
     // 检查是否有选中的商品
     const hasSelectedItems = (): boolean => {
-        return Object.values(selectedItems).some(selected => selected);
+        return Object.keys(selectedItems).some(id =>
+            selectedItems[id] && orderData.buckets.find(b => b.id === id)?.status !== 1
+        );
+    };
+
+    // 检查是否有可退款的商品
+    const hasRefundableItems = (): boolean => {
+        return orderData.buckets.some(item => item.status !== 1);
     };
 
     const handleOrderDetailCancel = () => {
@@ -226,6 +248,10 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                             font-weight: bold;
                             text-align: right;
                         }
+                        .refunded {
+                            color: #999;
+                            text-decoration: line-through;
+                        }
                     </style>
                 </head>
                 <body>
@@ -279,13 +305,15 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                             <span>单价</span>
                             <span>数量</span>
                             <span>小计</span>
+                            <span>状态</span>
                         </div>
                         {orderData.buckets.map((bucket) => (
-                            <div className="item" key={bucket.id}>
+                            <div className={`item ${bucket.status === 1 ? 'refunded' : ''}`} key={bucket.id}>
                                 <span>{bucket.name}</span>
                                 <span>¥{bucket.price.toFixed(2)}</span>
                                 <span>{bucket.number}</span>
                                 <span>¥{(bucket.price * bucket.number).toFixed(2)}</span>
+                                <span>{bucket.status === 1 ? '已退款' : '正常'}</span>
                             </div>
                         ))}
                     </div>
@@ -297,65 +325,93 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 {/* 商品列表 */}
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                     <Typography variant="h6">商品列表</Typography>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={areAllItemsSelected()}
-                                indeterminate={hasSelectedItems() && !areAllItemsSelected()}
-                                onChange={(e) => handleSelectAll(e.target.checked)}
-                            />
-                        }
-                        label="全选"
-                    />
+                    {hasRefundableItems() && (
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={areAllItemsSelected()}
+                                    indeterminate={hasSelectedItems() && !areAllItemsSelected()}
+                                    onChange={(e) => handleSelectAll(e.target.checked)}
+                                />
+                            }
+                            label="全选可退款商品"
+                        />
+                    )}
                 </Box>
                 <Card variant="outlined" sx={{marginBottom: 2}}>
                     <CardContent>
                         <List>
-                            {orderData.buckets.map((bucket) => (
-                                <React.Fragment key={bucket.id}>
-                                    <ListItem>
-                                        <Box display="flex" alignItems="center" width="100%">
-                                            <Checkbox
-                                                checked={!!selectedItems[bucket.id]}
-                                                onChange={() => handleItemSelect(bucket.id)}
-                                                sx={{ mr: 1 }}
-                                            />
-                                            <Box
-                                                display="flex"
-                                                justifyContent="space-between"
-                                                alignItems="center"
-                                                width="100%"
-                                            >
-                                                <ListItemText
-                                                    primary={bucket.name}
-                                                    secondary={bucket.props_text}
+                            {orderData.buckets.map((bucket) => {
+                                const isRefunded = bucket.status === 1;
+                                return (
+                                    <React.Fragment key={bucket.id}>
+                                        <ListItem sx={{
+                                            opacity: isRefunded ? 0.4 : 1,
+                                            backgroundColor: isRefunded ? 'inherit' : 'transparent'
+                                        }}>
+                                            <Box display="flex" alignItems="center" width="100%">
+                                                <Checkbox
+                                                    checked={!!selectedItems[bucket.id]}
+                                                    onChange={() => handleItemSelect(bucket.id)}
+                                                    disabled={isRefunded}
+                                                    sx={{ mr: 1 }}
                                                 />
-                                                <Box textAlign="right">
-                                                    <Typography variant="body2" color="textSecondary">
-                                                        x {bucket.number}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="textSecondary">
-                                                        ¥{bucket.price.toFixed(2)}
-                                                    </Typography>
-                                                    <Typography
-                                                        variant="body1"
-                                                        color="error"
-                                                        sx={{fontWeight: 'bold'}}
-                                                    >
-                                                        小计: ¥{(bucket.price * bucket.number).toFixed(2)}
-                                                    </Typography>
+                                                <Box
+                                                    display="flex"
+                                                    justifyContent="space-between"
+                                                    alignItems="center"
+                                                    width="100%"
+                                                >
+                                                    <ListItemText
+                                                        primary={
+                                                            <Box display="flex" alignItems="center">
+                                                                {bucket.name}
+                                                                {isRefunded && (
+                                                                    <Chip
+                                                                        label="已退款"
+                                                                        size="small"
+                                                                        color="default"
+                                                                        sx={{ ml: 1 }}
+                                                                    />
+                                                                )}
+                                                            </Box>
+                                                        }
+                                                        secondary={bucket.props_text}
+                                                    />
+                                                    <Box textAlign="right">
+                                                        <Typography variant="body2" color="textSecondary">
+                                                            x {bucket.number}
+                                                        </Typography>
+                                                        <Typography variant="body2" color="textSecondary">
+                                                            ¥{bucket.price.toFixed(2)}
+                                                        </Typography>
+                                                        <Typography
+                                                            variant="body1"
+                                                            color={isRefunded ? "textSecondary" : "error"}
+                                                            sx={{fontWeight: 'bold', textDecoration: isRefunded ? 'line-through' : 'none'}}
+                                                        >
+                                                            小计: ¥{(bucket.price * bucket.number).toFixed(2)}
+                                                        </Typography>
+                                                    </Box>
                                                 </Box>
                                             </Box>
-                                        </Box>
-                                    </ListItem>
-                                    <Divider/>
-                                </React.Fragment>
-                            ))}
+                                        </ListItem>
+                                        <Divider/>
+                                    </React.Fragment>
+                                );
+                            })}
                         </List>
                         {hasSelectedItems() && (
                             <Box mt={2} p={1} bgcolor="red.100" borderRadius={1}>
                                 <Typography variant="body2">
                                     已选商品金额: <strong>¥{getSelectedItemsTotal().toFixed(2)}</strong>
+                                </Typography>
+                            </Box>
+                        )}
+                        {!hasRefundableItems() && (
+                            <Box mt={2} p={2} textAlign="center" bgcolor="grey.100" borderRadius={1}>
+                                <Typography variant="body2" color="textSecondary">
+                                    所有商品均已退款，无法再次退款
                                 </Typography>
                             </Box>
                         )}
@@ -492,7 +548,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                     </Button>
                 )}
                 {/* 快速退款订单按钮（仅在符合状态时显示） */}
-                {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && (
+                {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && hasRefundableItems() && (
                     <Button onClick={handleOrderRefund} variant="contained" color="error">
                         {refundReason ? (refundType === 'partial' ? "退款选中商品" : "立即退款") : "申请退款"}
                     </Button>

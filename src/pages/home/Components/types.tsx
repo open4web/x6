@@ -53,6 +53,7 @@ export type Bucket = {
     unit: string;
     props_id: number[];
     props_text: string;
+    status: number;
 };
 
 // 更新订单数据类型，增加 `buckets` 字段
