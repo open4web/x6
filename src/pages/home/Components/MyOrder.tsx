@@ -74,6 +74,11 @@ function generateQueryParams({ orderNo, status, startDate, endDate, source , onl
     return queryParams;
 }
 
+// 计算订单中所有商品的总数量
+function calculateTotalItems(buckets: any[]): number {
+    return buckets.reduce((total, bucket) => total + bucket.number, 0);
+}
+
 function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onlyMyOrder, setTotalRecord }: MyOrderProps) {
     const [orders, setOrders] = useState<Order[]>([]);
     const [viewMode, setViewMode] = useState('list');
@@ -198,6 +203,17 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                                             )}
                                         </Box>
                                     </Typography>
+
+                                    {/* 显示订单总金额和商品总数 */}
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                        <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
+                                            总计: ¥{order.price?.pay_price?.toFixed(2)}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#6d4c41' }}>
+                                            共{calculateTotalItems(order.buckets)}件商品
+                                        </Typography>
+                                    </Box>
+
                                     <Box sx={{ height: 100, overflowY: 'auto' }}>
                                         <Table size="small" aria-label="buckets table">
                                             <TableBody>
