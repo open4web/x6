@@ -44,7 +44,16 @@ export const orderStatusMap = [
     { id: 4, name: '订单完成', color: 'green' },
     { id: 6, name: '申请取消', color: 'red' },
     { id: 7, name: '同意取消', color: 'red' },
+    { id: 8, name: '已经退款', color: 'lightGreen' },
+    { id: 9, name: '外卖待接单', color: 'amber' },
+    { id: 10, name: '外卖接单', color: 'deepOrange' },
+    { id: 11, name: '外卖放弃接单', color: 'brown' },
+    { id: 12, name: '外卖取货', color: 'cyan' },
+    { id: 13, name: '已经送达', color: 'lime' },
+    { id: 14, name: '已经评论', color: 'blueGrey' },
     { id: 15, name: '订单关闭', color: 'gray' },
+    { id: 16, name: '申请退款', color: 'pink' },
+    { id: 17, name: '退款完成', color: 'lightBlue' }
 ];
 
 // 获取状态的名称和颜色
