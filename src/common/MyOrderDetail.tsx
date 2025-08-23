@@ -422,7 +422,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 <Typography variant="h6">支付信息</Typography>
                 <Card variant="outlined" sx={{marginBottom: 2}}>
                     <CardContent>
-                        <Box display="flex" flexDirection="row" gap={4} justifyContent="space-between">
+                        <Box display="flex" flexDirection="row" gap={2} justifyContent="space-between">
                             <Box display="flex" flexDirection="column" gap={1} flex="1">
                                 <Typography>支付金额: ¥{orderData.price.pay_price}</Typography>
                                 <Typography>支付状态: {orderData.pay.status === 0 ? '未支付' : '已支付'}</Typography>
@@ -431,8 +431,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                                 {(() => {
                                     const { name, color } = getPlatformInfo(orderData.pay.method);
                                     return (
-                                        <Box
-                                        >
+                                        <Box>
                                             <Typography>
                                                 支付方式: <Chip label={name} sx={{backgroundColor: color, color: '#fff',}}
                                                                 size={"small"}/>
@@ -441,6 +440,10 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                                     );
                                 })()}
                                 <Typography>支付单号: {orderData.pay.transaction_id}</Typography>
+                            </Box>
+                            <Box display="flex" flexDirection="column" gap={1} flex="1">
+                                <Typography> 退款次数: {orderData.refund_summary.total_times || 0}</Typography>
+                                <Typography>已退款金额: ¥{(orderData.refund_summary.total_amount || 0).toFixed(2)}</Typography>
                             </Box>
                         </Box>
                     </CardContent>
