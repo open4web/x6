@@ -557,6 +557,13 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                     </Button>
                 )}
 
+                {/* 快速退款订单按钮（仅在符合状态时显示） */}
+                {orderData?.status === 16 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && hasRefundableItems() && (
+                    <Button onClick={handleOrderRefund} variant="contained" color="error">
+                        {refundReason ? (refundType === 'partial' ? "退款选中商品" : "继续退款") : "申请再次退款"}
+                    </Button>
+                )}
+
                 {/* 关闭按钮 */}
                 <Button onClick={onClose} variant="contained" color="primary">
                     关闭

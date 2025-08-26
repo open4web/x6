@@ -26,6 +26,7 @@ import PayChannel from '../../../common/PayChannel';
 import {Order} from './types';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
 import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
+import SubscriptIcon from '@mui/icons-material/Subscript';
 import CancelIcon from '@mui/icons-material/Cancel';
 import {isOrderExpired} from "../../../utils/expireStore";
 import {MyOrderSkeleton} from "../../../common/MyOrderSkeleton";
@@ -249,6 +250,11 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                                     {order?.status === 1 && (
                                         <IconButton aria-label="delete" size="large" color="error" onClick={() => handleOrderCancel(order)}>
                                             <CancelIcon />
+                                        </IconButton>
+                                    )}
+                                    {order?.status === 16 && (
+                                        <IconButton aria-label="delete" size="large" color="error" onClick={() => handleOrderCancel(order)}>
+                                            <SubscriptIcon />
                                         </IconButton>
                                     )}
                                     <IconButton aria-label="delete" size="large" color="success" onClick={() => handleOrderDetail(order)}>
