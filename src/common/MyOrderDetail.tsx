@@ -149,6 +149,11 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         return orderData.buckets.some(item => item.status !== 1);
     };
 
+    // 检查是否有退款记录
+    const hasRefundHistory = (): boolean => {
+        return (orderData.refund_summary?.total_times || 0) > 0;
+    };
+
     const handleOrderDetailCancel = () => {
         if (!refundReason) {
             setOpenRefundDialog(true);
@@ -156,11 +161,16 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         }
 
         const selectedIds = getSelectedItemIds();
-        const isPartialRefund = !areAllItemsSelected() && selectedIds.length > 0;
+        // 检查是否有退款记录
+        const hasHistory = hasRefundHistory();
+
+        // 如果有退款记录，则必须传items参数
+        // 即使全选也要传，因为这是部分退款（相对于原始订单）
+        const shouldSendItems = hasHistory || selectedIds.length > 0;
 
         let url = `/v1/order/fastCancel/${orderData.id}/${refundReason}`;
 
-        if (isPartialRefund) {
+        if (shouldSendItems && selectedIds.length > 0) {
             url += `?items=${selectedIds.join(',')}`;
         }
 
@@ -184,11 +194,16 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         }
 
         const selectedIds = getSelectedItemIds();
-        const isPartialRefund = !areAllItemsSelected() && selectedIds.length > 0;
+        // 检查是否有退款记录
+        const hasHistory = hasRefundHistory();
+
+        // 如果有退款记录，则必须传items参数
+        // 即使全选也要传，因为这是部分退款（相对于原始订单）
+        const shouldSendItems = hasHistory || selectedIds.length > 0;
 
         let url = `/v1/order/fastRefund/${orderData.id}/${refundReason}`;
 
-        if (isPartialRefund) {
+        if (shouldSendItems && selectedIds.length > 0) {
             url += `?items=${selectedIds.join(',')}`;
         }
 
@@ -483,9 +498,11 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                                 <FormLabel component="legend">退款类型</FormLabel>
                                 <Box sx={{ mt: 1 }}>
                                     <Typography variant="body2" color="textSecondary">
-                                        {areAllItemsSelected()
-                                            ? "全额退款 (已选中所有可退款商品)"
-                                            : `部分退款 (已选中 ${getSelectedItemIds().length} 个商品，金额: ¥${getSelectedItemsTotal().toFixed(2)})`}
+                                        {hasRefundHistory()
+                                            ? `部分退款 (已选中 ${getSelectedItemIds().length} 个商品，金额: ¥${getSelectedItemsTotal().toFixed(2)})`
+                                            : areAllItemsSelected()
+                                                ? "全额退款 (已选中所有可退款商品)"
+                                                : `部分退款 (已选中 ${getSelectedItemIds().length} 个商品，金额: ¥${getSelectedItemsTotal().toFixed(2)})`}
                                     </Typography>
                                 </Box>
                             </FormControl>
@@ -521,9 +538,9 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                             size="small"
                             sx={{ marginLeft: 1, fontWeight: "bold" }}
                         />
-                        {hasSelectedItems() && !areAllItemsSelected() && (
+                        {hasSelectedItems() && (
                             <Chip
-                                label={`部分退款: ¥${getSelectedItemsTotal().toFixed(2)}`}
+                                label={`${hasRefundHistory() ? '部分' : areAllItemsSelected() ? '全额' : '部分'}退款: ¥${getSelectedItemsTotal().toFixed(2)}`}
                                 color="info"
                                 variant="outlined"
                                 size="small"
@@ -536,20 +553,20 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 {/* 取消订单按钮（仅在符合状态时显示） */}
                 {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && (
                     <Button onClick={handleOrderDetailCancel} variant="contained" color="secondary">
-                        {refundReason ? (areAllItemsSelected() ? "立即取消" : "取消选中商品") : "申请取消"}
+                        {refundReason ? (hasRefundHistory() ? "取消选中商品" : areAllItemsSelected() ? "立即取消" : "取消选中商品") : "申请取消"}
                     </Button>
                 )}
                 {/* 快速退款订单按钮（仅在符合状态时显示） */}
                 {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && hasRefundableItems() && (
                     <Button onClick={handleOrderRefund} variant="contained" color="error">
-                        {refundReason ? (areAllItemsSelected() ? "立即退款" : "退款选中商品") : "申请退款"}
+                        {refundReason ? (hasRefundHistory() ? "退款选中商品" : areAllItemsSelected() ? "立即退款" : "退款选中商品") : "申请退款"}
                     </Button>
                 )}
 
                 {/* 快速退款订单按钮（仅在符合状态时显示） */}
                 {orderData?.status === 16 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && hasRefundableItems() && (
                     <Button onClick={handleOrderRefund} variant="contained" color="error">
-                        {refundReason ? (areAllItemsSelected() ? "继续退款" : "退款选中商品") : "申请再次退款"}
+                        {refundReason ? (hasRefundHistory() ? "退款选中商品" : areAllItemsSelected() ? "继续退款" : "退款选中商品") : "申请再次退款"}
                     </Button>
                 )}
 
