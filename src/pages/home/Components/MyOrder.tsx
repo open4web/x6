@@ -4,7 +4,7 @@ import {
     Button,
     Card,
     CardActions,
-    CardContent,
+    CardContent, Chip,
     Container,
     Dialog,
     DialogActions,
@@ -30,6 +30,7 @@ import SubscriptIcon from '@mui/icons-material/Subscript';
 import CancelIcon from '@mui/icons-material/Cancel';
 import {isOrderExpired} from "../../../utils/expireStore";
 import {MyOrderSkeleton} from "../../../common/MyOrderSkeleton";
+import { orderStatusMap } from '../../../common/orderStatus';
 
 const statusColors = ['#ffe0b2', '#c5e1a5']; // OrderInit, OrderPaid
 
@@ -46,24 +47,31 @@ interface MyOrderProps {
     endDate?: string;
     onlyMyOrder?: boolean;
     setTotalRecord: React.Dispatch<React.SetStateAction<number>>; // 用于更新 open 状态的函数
+    saleStatus?: number;
 }
 
-function generateQueryParams({ orderNo, status, startDate, endDate, source , onlyMyOrder}: MyOrderProps) {
+function generateQueryParams({ orderNo, status, startDate, endDate, source , onlyMyOrder, saleStatus}: MyOrderProps) {
     const queryParams: Record<string, string | number> = {};
     console.log("onlyMyOrder===>", onlyMyOrder)
 
     if (orderNo) {
         queryParams.order_no = orderNo; // 如果有 orderNo，仅返回 orderNo
+    } else if (saleStatus !== undefined && saleStatus !== null && saleStatus != -1) {
+        queryParams.status_gte = saleStatus; // 售前/售后查询
     } else {
-        if (status !== undefined && status !== null) {
+        if (status !== undefined && status !== null && saleStatus != -1) {
             queryParams.status = status; // 添加状态过滤
         }
-        if (source !== undefined && source !== null) {
+        if (source !== undefined && source !== null && saleStatus != -1) {
             queryParams.source = source; // 添加状态过滤
         }
         if (onlyMyOrder !== undefined && onlyMyOrder !== null) {
             queryParams.onlyMyOrder = onlyMyOrder ? 1 : 0; // 转换为 0 或 1
         }
+    }
+
+    // 除了订单号精准查询，其他都可以增加日期
+    if (orderNo?.length == 0) {
         if (startDate) {
             queryParams.start_gte = startDate; // 添加开始时间
         }
@@ -80,7 +88,7 @@ function calculateTotalItems(buckets: any[]): number {
     return buckets.reduce((total, bucket) => total + bucket.number, 0);
 }
 
-function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onlyMyOrder, setTotalRecord }: MyOrderProps) {
+function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onlyMyOrder, setTotalRecord , saleStatus}: MyOrderProps) {
     const [orders, setOrders] = useState<Order[]>([]);
     const [viewMode, setViewMode] = useState('list');
     const [loading, setLoading] = useState<boolean>(true); // 添加加载状态
@@ -101,7 +109,10 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
             console.log("订单号长度不足，未触发请求");
             return;
         }
-        const queryParams = generateQueryParams({ orderNo, phoneNumber, status, startDate, endDate , source, onlyMyOrder, setTotalRecord});
+
+        console.log("saleStatus ===>", saleStatus)
+
+        const queryParams = generateQueryParams({ orderNo, phoneNumber, status, startDate, endDate , source, onlyMyOrder, setTotalRecord, saleStatus});
         fetchData(
             '/v1/order/pos',
             (response) => {
@@ -126,7 +137,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
             console.log('Failed to fetch data.');
             setLoading(false); // 加载失败
         });
-    }, [status, startDate, endDate, orderNo, source, onlyMyOrder]);
+    }, [status, startDate, endDate, orderNo, source, onlyMyOrder, saleStatus]);
 
     const handleClosePayChannel = () => {
         setOpenPayChannel(false);
@@ -210,6 +221,26 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                                         <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
                                             总计: ¥{order.price?.pay_price?.toFixed(2)}
                                         </Typography>
+
+                                        {/* 添加状态展示 */}
+                                        {(() => {
+                                            const statusInfo = orderStatusMap.find(item => item.id === order.status);
+                                            if (statusInfo) {
+                                                return (
+                                                    <Chip
+                                                        label={statusInfo.name}
+                                                        size="small"
+                                                        sx={{
+                                                            backgroundColor: 'darkgray',
+                                                            color: `${statusInfo.color}`,
+                                                            fontWeight: 'bold'
+                                                        }}
+                                                    />
+                                                );
+                                            }
+                                            return null;
+                                        })()}
+
                                         <Typography variant="body2" sx={{ color: '#6d4c41' }}>
                                             共{calculateTotalItems(order.buckets)}件商品
                                         </Typography>

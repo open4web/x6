@@ -8,6 +8,7 @@ enum platformTypes {
 }
 
 export const platformTypeLists = [
+    { id: -1, name: '忽略', color: 'red' },
     { id: platformTypes.WxMiniApp, name: '微信', color: '#1AAD19' },
     { id: platformTypes.DouYinMiniApp, name: '抖音', color: '#010101' },
     { id: platformTypes.AlipayMiniApp, name: '支付宝', color: '#1677FF' },

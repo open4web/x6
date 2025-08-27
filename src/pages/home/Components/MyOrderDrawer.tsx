@@ -6,7 +6,7 @@ import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import MyOrder from "./MyOrder";
-import {orderStatusMap} from "../../../common/orderStatus";
+import {orderSaleStatusMap, orderStatusMap} from "../../../common/orderStatus";
 import {platformTypeLists} from "../../../common/payMethod";
 import {Badge, Button, FormControlLabel, InputAdornment} from "@mui/material";
 import FormGroup from "@mui/material/FormGroup";
@@ -40,6 +40,7 @@ export default function MyOrderDrawer() {
     const formattedNow = formatDateTime(getShanghaiTime()); // 当前时间作为结束时间
     const [onlyMyOrder, setOnlyMyOrder] = React.useState<boolean>(true);
     const [status, setStatus] = React.useState<number>(1);
+    const [saleStatus, setSaleStatus] = React.useState<number>(1);
     // setSource
     const [source, setSource] = React.useState<number>(4);
     const [totalRecord, setTotalRecord] = React.useState<number>(4);
@@ -56,6 +57,9 @@ export default function MyOrderDrawer() {
         console.log(`搜索${type === "order" ? "订单" : "会员"}:`, searchTermWithUpper);
         // 在此添加搜索逻辑
         setOrderNo(searchTermWithUpper)
+        // 清除销售状态过滤
+        setSaleStatus(-1)
+        setSource(-1)
     };
 
     const handleStatusChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,6 +68,22 @@ export default function MyOrderDrawer() {
 
         setStatus(Number(selectedStatus));
         // 在此添加状态过滤逻辑
+
+        // 清除销售状态过滤
+        setSaleStatus(-1)
+        setSource(-1)
+
+    };
+
+    // 销售状态： 售前，售后
+    const handleSaleStatusChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedStatus = event.target.value;
+        console.log("订单状态:", selectedStatus);
+
+        setSaleStatus(Number(selectedStatus));
+        // 在此添加状态过滤逻辑
+        setSource(-1)
+        setStatus(-1)
     };
 
     // handleSourceChange
@@ -73,6 +93,8 @@ export default function MyOrderDrawer() {
 
         setSource(Number(selectedStatus));
         // 在此添加状态过滤逻辑
+        // 清除销售状态过滤
+        setSaleStatus(-1)
     };
 
     const handleQuickFilter = (days: number) => () => {
@@ -99,11 +121,16 @@ export default function MyOrderDrawer() {
             setEndDate(formattedDate);
             console.log("格式化后的结束日期:", formattedDate);
         }
+
+
     };
 
     const handleClearOrderNo = () => {
         setOrderNo(""); // 重置订单号为空
         console.log("订单号已清空");
+        // 清除销售状态过滤
+        setSaleStatus(-1)
+        setSource(-1)
     };
 
     const handleOnlyMeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,6 +138,9 @@ export default function MyOrderDrawer() {
         console.log("订单设置:", isChecked ? "只看我的" : "全部订单");
 
         setOnlyMyOrder(isChecked);
+        // 清除销售状态过滤
+        setSaleStatus(-1)
+
     };
 
 
@@ -171,6 +201,27 @@ export default function MyOrderDrawer() {
                             }}
                         />
                     </Box>
+                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
+                        {/* 订单状态筛选 */}
+                        <TextField
+                            select
+                            label="销售状态"
+                            value={saleStatus}
+                            onChange={handleSaleStatusChange}
+                            size="small"
+                            sx={{
+                                minWidth: "150px",
+                                flexShrink: 0,
+                            }}
+                        >
+                            {orderSaleStatusMap.map((status) => (
+                                <MenuItem key={status.id} value={status.id}>
+                                    {status.name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    </Box>
+
                     <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
                         {/* 订单状态筛选 */}
                         <TextField
@@ -273,7 +324,7 @@ export default function MyOrderDrawer() {
                 */}
                 <Box sx={{padding: 2}}>
                     <MyOrder orderNo={orderNo} phoneNumber={""} status={status} source={source} startDate={startDate}
-                             endDate={endDate} onlyMyOrder={onlyMyOrder} setTotalRecord={setTotalRecord}/>
+                             endDate={endDate} onlyMyOrder={onlyMyOrder} setTotalRecord={setTotalRecord} saleStatus={saleStatus}/>
                 </Box>
             </Drawer>
         </div>

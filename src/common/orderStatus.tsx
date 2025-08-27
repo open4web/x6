@@ -17,6 +17,7 @@
 // 	OrderCancelApproved
 // 	// OrderCancelCompleted 订单取消（完成）已经退款
 export const orderStatus = [
+    { id: -1, name: '忽略', color: 'red' },
     {id: 0, name: '待支付'},
     {id: 1, name: '已支付'},
     {id: 2, name: '制作中'},
@@ -37,6 +38,7 @@ export const orderStatus = [
 
 // 状态映射表
 export const orderStatusMap = [
+    { id: -1, name: '忽略', color: 'red' },
     { id: 0, name: '待支付', color: 'orange' },
     { id: 1, name: '已支付', color: 'blue' },
     { id: 2, name: '制作中', color: 'purple' },
@@ -55,6 +57,12 @@ export const orderStatusMap = [
     { id: 16, name: '申请退款', color: 'pink' },
     { id: 17, name: '退款完成', color: 'lightBlue' }
 ];
+
+export const orderSaleStatusMap = [
+    { id: -1, name: '忽略', color: 'red' },
+    { id: 0, name: '所有', color: 'orange' },
+    { id: 1, name: '售后', color: 'blue' }
+]
 
 // 获取状态的名称和颜色
 export const getOrderStatus = (statusId: number) => {
