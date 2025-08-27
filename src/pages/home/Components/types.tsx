@@ -32,6 +32,7 @@ export type Workflow = {
     description: string;
     operator: string;
     operator_id: string;
+    datetime: string;
 }
 
 export type STP = {

@@ -7,6 +7,7 @@ interface WorkflowStep {
     description: string;
     operator: string;
     operator_id: string;
+    datetime?: string; // 新增的 datetime 字段
 }
 
 interface OrderWorkflowProps {
@@ -53,9 +54,27 @@ const OrderWorkflow: React.FC<OrderWorkflowProps> = ({ workflow, loading = false
                             </Typography>
                         </StepLabel>
                         <Box sx={{ marginLeft: 2, marginTop: 1 }}>
-                            <Typography variant="body2" sx={{ color: "#616161" }}>
-                                时间: {step.description ? step.description : "未知"}
-                            </Typography>
+                            {/* 展示 datetime 字段 */}
+                            {step.datetime && (
+                                <Typography variant="body2" sx={{ color: "#616161" }}>
+                                    时间: {step.datetime}
+                                </Typography>
+                            )}
+                            {/* 如果没有 datetime 字段，则回退到 description */}
+                            {!step.datetime && step.description && (
+                                <Typography variant="body2" sx={{ color: "#616161" }}>
+                                    时间: {step.description}
+                                </Typography>
+                            )}
+                            {/*兼容旧数据 datetime存储在 description */}
+
+                            {/*如果同时存在datetime和description 说明数据字段已经更新，使用新字段展示数据*/}
+                            {step.datetime && step.description && (
+                                <Typography variant="body2" sx={{ color: "#616161" }}>
+                                    描述: {step.description}
+                                </Typography>
+                            )}
+
                             {step.operator && (
                                 <Typography variant="body2" sx={{ color: "#616161" }}>
                                     操作人: {step.operator}
