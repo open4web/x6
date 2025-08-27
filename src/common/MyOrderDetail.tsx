@@ -421,7 +421,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                             </Box>
                         )}
                         {!hasRefundableItems() && (
-                            <Box mt={2} p={2} textAlign="center" bgcolor="grey.100" borderRadius={1}>
+                            <Box mt={2} p={2} textAlign="center" bgcolor="grey30" borderRadius={1}>
                                 <Typography variant="body2" color="textSecondary">
                                     所有商品均已退款，无法再次退款
                                 </Typography>
