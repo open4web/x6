@@ -81,7 +81,6 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
     const [refundReason, setRefundReason] = useState<string>(''); // 存储退款原因
     const [openRefundDialog, setOpenRefundDialog] = useState<boolean>(false); // 控制退款原因弹窗
     const [selectedItems, setSelectedItems] = useState<SelectedItems>({}); // 存储选中的商品
-    const [refundType, setRefundType] = useState<'full' | 'partial'>('full'); // 退款类型：全额或部分
 
     // 处理商品选择
     const handleItemSelect = (itemId: string) => {
@@ -157,7 +156,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         }
 
         const selectedIds = getSelectedItemIds();
-        const isPartialRefund = refundType === 'partial' && selectedIds.length > 0;
+        const isPartialRefund = !areAllItemsSelected() && selectedIds.length > 0;
 
         let url = `/v1/order/fastCancel/${orderData.id}/${refundReason}`;
 
@@ -185,9 +184,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         }
 
         const selectedIds = getSelectedItemIds();
-        const isPartialRefund = refundType === 'partial' && selectedIds.length > 0;
-
-        console.log("isPartialRefund-->", isPartialRefund, "selectedIds-->", selectedIds)
+        const isPartialRefund = !areAllItemsSelected() && selectedIds.length > 0;
 
         let url = `/v1/order/fastRefund/${orderData.id}/${refundReason}`;
 
@@ -484,21 +481,13 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                         {hasSelectedItems() && (
                             <FormControl component="fieldset" sx={{ mt: 2 }}>
                                 <FormLabel component="legend">退款类型</FormLabel>
-                                <RadioGroup
-                                    value={refundType}
-                                    onChange={(e) => setRefundType(e.target.value as 'full' | 'partial')}
-                                >
-                                    <FormControlLabel
-                                        value="partial"
-                                        control={<Radio />}
-                                        label={`部分退款 (仅选中商品: ¥${getSelectedItemsTotal().toFixed(2)})`}
-                                    />
-                                    <FormControlLabel
-                                        value="full"
-                                        control={<Radio />}
-                                        label="全额退款"
-                                    />
-                                </RadioGroup>
+                                <Box sx={{ mt: 1 }}>
+                                    <Typography variant="body2" color="textSecondary">
+                                        {areAllItemsSelected()
+                                            ? "全额退款 (已选中所有可退款商品)"
+                                            : `部分退款 (已选中 ${getSelectedItemIds().length} 个商品，金额: ¥${getSelectedItemsTotal().toFixed(2)})`}
+                                    </Typography>
+                                </Box>
                             </FormControl>
                         )}
                     </DialogContent>
@@ -532,7 +521,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                             size="small"
                             sx={{ marginLeft: 1, fontWeight: "bold" }}
                         />
-                        {hasSelectedItems() && refundType === 'partial' && (
+                        {hasSelectedItems() && !areAllItemsSelected() && (
                             <Chip
                                 label={`部分退款: ¥${getSelectedItemsTotal().toFixed(2)}`}
                                 color="info"
@@ -547,20 +536,20 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 {/* 取消订单按钮（仅在符合状态时显示） */}
                 {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && (
                     <Button onClick={handleOrderDetailCancel} variant="contained" color="secondary">
-                        {refundReason ? (refundType === 'partial' ? "取消选中商品" : "立即取消") : "申请取消"}
+                        {refundReason ? (areAllItemsSelected() ? "立即取消" : "取消选中商品") : "申请取消"}
                     </Button>
                 )}
                 {/* 快速退款订单按钮（仅在符合状态时显示） */}
                 {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && hasRefundableItems() && (
                     <Button onClick={handleOrderRefund} variant="contained" color="error">
-                        {refundReason ? (refundType === 'partial' ? "退款选中商品" : "立即退款") : "申请退款"}
+                        {refundReason ? (areAllItemsSelected() ? "立即退款" : "退款选中商品") : "申请退款"}
                     </Button>
                 )}
 
                 {/* 快速退款订单按钮（仅在符合状态时显示） */}
                 {orderData?.status === 16 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && hasRefundableItems() && (
                     <Button onClick={handleOrderRefund} variant="contained" color="error">
-                        {refundReason ? (refundType === 'partial' ? "退款选中商品" : "继续退款") : "申请再次退款"}
+                        {refundReason ? (areAllItemsSelected() ? "继续退款" : "退款选中商品") : "申请再次退款"}
                     </Button>
                 )}
 
@@ -569,6 +558,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                     关闭
                 </Button>
             </DialogActions>
+            {alertComponent}
         </Dialog>
     );
 };
