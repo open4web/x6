@@ -169,7 +169,7 @@ export default function MyOrderDrawer() {
                             control={
                                 <Switch checked={onlyMyOrder} onChange={handleOnlyMeChange} name="antoine"/>
                             }
-                            label="只看我的"
+                            label="我的"
                         />
                     </FormGroup>
 
@@ -305,7 +305,7 @@ export default function MyOrderDrawer() {
                             size="small"
                             onClick={handleQuickFilter(3)}
                         >
-                            最近3天
+                            近3天
                         </Button>
                         <Button
                             variant="contained"
@@ -313,7 +313,23 @@ export default function MyOrderDrawer() {
                             size="small"
                             onClick={handleQuickFilter(7)}
                         >
-                            最近7天
+                            近7天
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color={"warning"}
+                            size="small"
+                            onClick={handleQuickFilter(15)}
+                        >
+                            近15天
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color={"error"}
+                            size="small"
+                            onClick={handleQuickFilter(30)}
+                        >
+                            近30天
                         </Button>
                     </Box>
 
