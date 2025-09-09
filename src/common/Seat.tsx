@@ -51,7 +51,7 @@ export default function MySeat({ storeId, onSelectSeat }: MySeatProps) {
         try {
             const Cookie = localStorage.getItem('cookie') || '';
             const response = await axios.get<SeatConfig[]>(
-                `/v1/store/seat/${storeId}`,
+                `/v1/hlj/store/seat/${storeId}`,
                 {
                     headers: {
                         'Content-Type': 'application/json',

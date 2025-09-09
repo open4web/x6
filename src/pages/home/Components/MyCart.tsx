@@ -192,7 +192,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             pick: pick,
         };
 
-        await fetchData('/v1/order/pos', (response) => {
+        await fetchData('/v1/hlj/order/pos', (response) => {
             setPrice(response?.price);
             setOrderID(response?.identity?.order_no);
             setOpenPayChannel(true);

@@ -114,7 +114,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
 
         const queryParams = generateQueryParams({ orderNo, phoneNumber, status, startDate, endDate , source, onlyMyOrder, setTotalRecord, saleStatus});
         fetchData(
-            '/v1/order/pos',
+            '/v1/hlj/order/pos',
             (response) => {
                 setOrders(response);
                 // 高亮最新订单

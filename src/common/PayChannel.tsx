@@ -101,7 +101,7 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
                 return new Promise<void>((resolve) => { // 确保 resolve 在 Promise 内部
                     const poll = async () => {
                         try {
-                            await fetchData('/v1/order/pos/' + userData.order_id, (response) => {
+                            await fetchData('/v1/hlj/order/pos/' + userData.order_id, (response) => {
                                 if (response.status === 1) {
                                     toast.success("支付成功", { position: "top-center", autoClose: 3000 });
                                     setOrderDrawerOpen(true);

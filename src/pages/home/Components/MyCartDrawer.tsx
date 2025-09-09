@@ -19,7 +19,7 @@ export default function MyCartDrawer() {
 
     useEffect(() => {
     // 获取菜谱列表
-    fetchData('/v1/pos/combs', (response) => {
+    fetchData('/v1/hlj/product/pos/combs', (response) => {
         const cm = response || [];
         setCombs(cm);
     }, "POST", payload);

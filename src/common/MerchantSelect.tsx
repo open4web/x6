@@ -30,7 +30,7 @@ export default function MerchantSelect({ refreshAfterSelect = true }: SelectStor
     const { fetchData, alertComponent } = useFetchData();
 
     React.useEffect(() => {
-        fetchData('/v1/store/list', (response) => setStores(response));
+        fetchData('/v1/hlj/store/list', (response) => setStores(response));
     }, [fetchData]);
 
     return (
