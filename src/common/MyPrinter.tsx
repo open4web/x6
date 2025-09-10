@@ -41,7 +41,7 @@ export default function MyPrinter() {
 
     React.useEffect(() => {
         const localMerchantId = localStorage.getItem('current_store_id');
-        fetchData('/v1/device/pos/printer', (response) => {
+        fetchData('/v1/hlj/device/pos/printer', (response) => {
             setPrinters(response || []);
         }, "POST", { "merchant_id": localMerchantId });
     }, [fetchData, merchantId]);
