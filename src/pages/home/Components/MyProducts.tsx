@@ -27,12 +27,12 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
 
     const getCategoryName = (id: string): string => {
         const item = categoryMap[id]; // 获取对应的 MenuData 对象
-        return item.name; // 如果找到返回 isComboMode，否则返回 undefined
+        return item?.name; // 如果找到返回 isComboMode，否则返回 undefined
     };
 
     const getCombPrice = (id: string): number => {
         const item = categoryMap[id]; // 获取对应的 MenuData 对象
-        return item.price; // 如果找到返回 isComboMode，否则返回 undefined
+        return item?.price; // 如果找到返回 isComboMode，否则返回 undefined
     };
 
     // getCombRequestItems
@@ -51,7 +51,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     };
     const getCategoryId = (id: string): string => {
         const item = categoryMap[id]; // 获取对应的 MenuData 对象
-        return item.id; // 如果找到返回 isComboMode，否则返回 undefined
+        return item?.id; // 如果找到返回 isComboMode，否则返回 undefined
     };
 
     useEffect(() => {
@@ -152,7 +152,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
 
                 return (
                     <Grid container spacing={2} key={combIndex}>
-                        {!getIsComboModeById(activeTab) && groupItems.map((item) => (
+                        {!getIsComboModeById(activeTab) && groupItems && groupItems?.map((item) => (
                             <Grid
                                 item
                                 xs={showProductImage ? 2.4 : 1.714} // 动态调整宽度，7 个项目一行
