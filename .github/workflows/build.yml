@@ -100,3 +100,65 @@ jobs:
               }
             ]
           }" $SLACK_WEBHOOK_URL
+
+      - name: Record Result to PullBot Repo
+        if: success()
+        env:
+          PULLBOT_TOKEN: ${{ secrets.PULLBOT_TOKEN }}
+          TARGET_REPO: "share2024/pullbot"
+          ORIGIN_REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          FILE_PATH="logs.json"
+          API_URL="https://api.github.com/repos/${TARGET_REPO}/contents/${FILE_PATH}"
+
+          # Fetch existing file (if exists)
+          HTTP_STATUS=$(curl -o old.json -s -w "%{http_code}" \
+            -H "Authorization: token ${PULLBOT_TOKEN}" \
+            "${API_URL}")
+
+          if [ "$HTTP_STATUS" = "200" ]; then
+            FILE_SHA=$(jq -r '.sha' old.json)
+            CONTENT=$(jq -r '.content' old.json | base64 --decode)
+          else
+            FILE_SHA=""
+            CONTENT="[]"
+          fi
+
+          # Create diff URL
+          DIFF_URL="https://github.com/${ORIGIN_REPO}/commit/${COMMIT_SHA}"
+
+          # Append new record
+          UPDATED=$(echo "$CONTENT" | jq \
+            --arg repo "$ORIGIN_REPO" \
+            --arg branch "$BRANCH" \
+            --arg actor "$ACTOR" \
+            --arg commit "$COMMIT_MSG" \
+            --arg sha "$COMMIT_SHA" \
+            --arg diff "$DIFF_URL" \
+            --arg time "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+            '. += [{
+              "repo": $repo,
+              "branch": $branch,
+              "actor": $actor,
+              "commit_message": $commit,
+              "commit_sha": $sha,
+              "diff_url": $diff,
+              "timestamp": $time
+            }]'
+          )
+
+          # Encode file
+          ENCODED=$(echo "$UPDATED" | base64 -w 0)
+
+          # Push to pullbot repo
+          curl -X PUT "$API_URL" \
+            -H "Authorization: token ${PULLBOT_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"message\": \"Record CI result: ${COMMIT_SHA}\",
+              \"content\": \"${ENCODED}\",
+              \"sha\": \"${FILE_SHA}\"
