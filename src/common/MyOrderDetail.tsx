@@ -168,7 +168,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         // 即使全选也要传，因为这是部分退款（相对于原始订单）
         const shouldSendItems = hasHistory || selectedIds.length > 0;
 
-        let url = `/v1/order/fastCancel/${orderData.id}/${refundReason}`;
+        let url = `/v1/hlj/order/fastCancel/${orderData.id}/${refundReason}`;
 
         if (shouldSendItems && selectedIds.length > 0) {
             url += `?items=${selectedIds.join(',')}`;
@@ -201,7 +201,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         // 即使全选也要传，因为这是部分退款（相对于原始订单）
         const shouldSendItems = hasHistory || selectedIds.length > 0;
 
-        let url = `/v1/order/fastRefund/${orderData.id}/${refundReason}`;
+        let url = `/v1/hlj/order/fastRefund/${orderData.id}/${refundReason}`;
 
         if (shouldSendItems && selectedIds.length > 0) {
             url += `?items=${selectedIds.join(',')}`;
