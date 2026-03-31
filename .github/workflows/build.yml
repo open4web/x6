@@ -1,4 +1,4 @@
-name: Docker Build and Push v2
+name: Docker Build and Push
 
 
 on:
@@ -100,7 +100,6 @@ jobs:
               }
             ]
           }" $SLACK_WEBHOOK_URL
-
       - name: Record Result to PullBot Repo
         if: success()
         env:
@@ -115,7 +114,6 @@ jobs:
           FILE_PATH="logs.json"
           API_URL="https://api.github.com/repos/${TARGET_REPO}/contents/${FILE_PATH}"
 
-          # Fetch existing file (if exists)
           HTTP_STATUS=$(curl -o old.json -s -w "%{http_code}" \
             -H "Authorization: token ${PULLBOT_TOKEN}" \
             "${API_URL}")
@@ -128,10 +126,8 @@ jobs:
             CONTENT="[]"
           fi
 
-          # Create diff URL
           DIFF_URL="https://github.com/${ORIGIN_REPO}/commit/${COMMIT_SHA}"
 
-          # Append new record
           UPDATED=$(echo "$CONTENT" | jq \
             --arg repo "$ORIGIN_REPO" \
             --arg branch "$BRANCH" \
@@ -151,10 +147,8 @@ jobs:
             }]'
           )
 
-          # Encode file
           ENCODED=$(echo "$UPDATED" | base64 -w 0)
 
-          # Push to pullbot repo
           curl -X PUT "$API_URL" \
             -H "Authorization: token ${PULLBOT_TOKEN}" \
             -H "Content-Type: application/json" \
@@ -162,3 +156,4 @@ jobs:
               \"message\": \"Record CI result: ${COMMIT_SHA}\",
               \"content\": \"${ENCODED}\",
               \"sha\": \"${FILE_SHA}\"
+            }"
