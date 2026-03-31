@@ -87,6 +87,7 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                     variant="body1"
                     sx={{ color: "error.main", fontSize: "1.2rem", fontWeight: "bold" }}
                 >
+                    {/*@ts-ignore*/}
                     <Countdown
                         date={Date.now() + 1000 * parseInt(localStorage.getItem("mfa_expire") || '0', 10)}
                         intervalDelay={1000}
