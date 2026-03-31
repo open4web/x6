@@ -38,7 +38,6 @@ const LoginCard: React.FC<LoginCardProps> = ({ loading, color }) => {
                     color: (theme) => theme.palette.grey[500],
                 }}
             >
-                {/*@ts-ignore*/}
                 {import.meta.env.VITE_HTML_TITLE}
             </Box>
             <Box sx={{padding: "0 1em 1em 1em"}}>

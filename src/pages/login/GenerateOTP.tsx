@@ -11,6 +11,7 @@ import {useNotify, useRedirect, useTranslate} from "react-admin";
 import {authApi} from "../../utils/axios";
 import OtpInput from "react-otp-input";
 import TokenIcon from '@mui/icons-material/Token';
+import {useCartContext} from "../../dataProvider/MyCartProvider";
 
 // @ts-ignore
 export default function GenerateOTP({loading, myOtpUrl}) {
@@ -18,11 +19,20 @@ export default function GenerateOTP({loading, myOtpUrl}) {
     const [qrcodeUrl, setqrCodeUrl] = useState("");
     const notify = useNotify();
     const redirect = useRedirect();
+    const {loginStep} = useCartContext();
+
 
     useEffect(() => {
-        // @ts-ignore
-        QRCode.toDataURL(myOtpUrl).then(setqrCodeUrl);
-    }, []);
+        if (!myOtpUrl) return; // ✅ 防止空值
+
+        QRCode.toDataURL(myOtpUrl)
+            .then(setqrCodeUrl)
+            .catch(err => {
+                console.error("二维码生成失败:", err);
+            });
+
+    }, [myOtpUrl,loginStep ]); // ✅ 关键：依赖变化时重新生成
+
     const translate = useTranslate();
 
     const verifyOtp = async () => {

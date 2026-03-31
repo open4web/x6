@@ -11,6 +11,7 @@ import {
 import Box from "@mui/material/Box";
 import LoginTabs from './LoginTabs';
 import {LoginInput} from "./types";
+import {useCartContext} from "../../dataProvider/MyCartProvider";
 
 const Login = () => {
     const [loading, setLoading] = useState(false);
@@ -19,15 +20,22 @@ const Login = () => {
     const login = useLogin();
     const location = useLocation();
 
+    const { setLoginStep } = useCartContext();
+
     const handleSubmit = (auth: LoginInput) => {
         setLoading(true);
         // 默认 0 即对应LoginStep 为 0的密码登陆阶段
         auth.step = loginType;
+
+        console.log("handler submit  to next step -->", auth)
         login(
             auth,
             location.state ? (location.state as any).nextPathname : "/"
         ).catch((error: Error) => {
             setLoading(false);
+            setLoginStep(Date.now().toString())
+
+            console.log("jump to next step -->", error.message)
             notify(
                 typeof error === "string"
                     ? error

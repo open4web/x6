@@ -17,6 +17,8 @@ type CartContextType = {
 
     dataDrawerOpen: boolean;
     setDataDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    loginStep: string;
+    setLoginStep: React.Dispatch<React.SetStateAction<string>>;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -36,6 +38,8 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
     const [showProductImage, setShowProductImage] = useState(false);
     const [merchantId, setMerchantId] = useState(localStorage.getItem("current_store_id") || '')
     const [dataDrawerOpen, setDataDrawerOpen] = useState(false);
+    const [loginStep, setLoginStep] = useState<string>('password')
+
     // 从 localStorage 初始化 holdOrders 列表
     const [holdOrders, setHoldOrders] = useState<CartItemHolder[]>(
         JSON.parse(localStorage.getItem("holdOrders") || "[]")
@@ -51,6 +55,8 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
             merchantId,
             dataDrawerOpen,
             setDataDrawerOpen,
+            loginStep,
+            setLoginStep,
         }}>
             {children}
         </CartContext.Provider>

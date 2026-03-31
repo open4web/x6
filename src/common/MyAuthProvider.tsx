@@ -3,6 +3,7 @@ import {AuthProvider} from "react-admin";
 import {HandleLogin, HandleLogout} from "./login";
 
 const MyAuthProvider: AuthProvider = {
+
     login: async (params: any) => {
         // 实现登录逻辑
         await HandleLogin(params);
@@ -38,7 +39,7 @@ const MyAuthProvider: AuthProvider = {
         // 实现获取权限逻辑
         const toolbar = localStorage.getItem('toolbar') || 3;
         return Promise.resolve(toolbar);
-    }
+    },
 };
 
 export default MyAuthProvider;

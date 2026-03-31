@@ -17,8 +17,12 @@ Features:
 
 Feel free to expand this as needed based on additional features!
 
-## deploy
+## releases
 
-- deploy again
-- add mini
-- update api path
+- update auth & multi merchant 
+- changed: 
+    - src/common/login.tsx 
+    - src/dataProvider/MyCartProvider.tsx
+    - src/pages/login/
+  
+## deploy

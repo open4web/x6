@@ -32,7 +32,7 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                 login_id: loginId,
             });
 
-            notify('验证成功', { type: 'success' });
+            notify('msg.verify_success', { type: 'success' });
 
             const keysToRemove = ['verified_otp', 'user_id', 'code', 'otp_url', 'step', 'mfa_expire', 'login_id'];
             keysToRemove.forEach((key) => localStorage.removeItem(key));
@@ -46,13 +46,13 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
             localStorage.setItem('avatar', avatar ? avatar : generateRandomAvatar());
             redirect('/');
         } catch (error) {
-            notify('安全码不正确，请重新输入', { type: 'error' });
+            notify('msg.verify_error', { type: 'error' });
         }
     };
 
     const handleSubmit = () => {
         verifyOtp().then(() => {
-            notify('请求验证中', { type: 'info' });
+            notify('msg.verify_processing', { type: 'info' });
         });
     };
 
@@ -87,7 +87,6 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                     variant="body1"
                     sx={{ color: "error.main", fontSize: "1.2rem", fontWeight: "bold" }}
                 >
-                    {/*@ts-ignore*/}
                     <Countdown
                         date={Date.now() + 1000 * parseInt(localStorage.getItem("mfa_expire") || '0', 10)}
                         intervalDelay={1000}

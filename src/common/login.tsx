@@ -1,17 +1,19 @@
-import {LoginInput} from "./types";
+import {LoginInput} from "../pages/login/types";
 import {redirect} from "react-router";
-
 
 const loginEndpoint = "/v1/system/auth/user/signin";
 const logoutEndpoint = "/v1/system/auth/user/signout";
 
-export const HandleLogin = async (params: LoginInput) => {
+export const HandleLogin = async (
+    params: LoginInput
+) =>  {
     const { phone, password, step } = params;
     const request = new Request(loginEndpoint, {
         method: 'POST',
         body: JSON.stringify({ phone, password, step }),
         headers: new Headers({ 'Content-Type': 'application/json' }),
     });
+
 
     try {
         const response = await fetch(request);
@@ -21,10 +23,15 @@ export const HandleLogin = async (params: LoginInput) => {
             throw new Error(responseData.message);
         }
 
-        console.log("username -->", responseData.username)
-
         // Handle specific status codes
         switch (response.status) {
+            case 300:
+                // Multiple Choices
+                localStorage.setItem('step', responseData.step);
+                localStorage.setItem('mchStatus', responseData.status)
+                localStorage.setItem('verified_otp', responseData.verified_otp);
+                localStorage.setItem('merchant', JSON.stringify(responseData.merchant));
+                throw new Error(responseData.message);
             case 307:
                 localStorage.setItem('user_id', responseData.user_id);
                 localStorage.setItem('step', responseData.step);
@@ -49,9 +56,6 @@ export const HandleLogin = async (params: LoginInput) => {
 export const HandleLogout = async () => {
     const request = new Request(logoutEndpoint, {
         method: 'POST',
-        body: JSON.stringify({
-            "user_id":      localStorage.getItem('user_id')
-        }),
         headers: new Headers({ 'Content-Type': 'application/json' }),
     });
 
@@ -78,7 +82,6 @@ export const HandleLogout = async () => {
         itemsToRemove.forEach(item => localStorage.removeItem(item));
     } catch (error) {
         // @ts-ignore
-        // throw new Error(error.message);
         redirect("/#/login")
 
     }
