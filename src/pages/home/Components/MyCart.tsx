@@ -171,18 +171,19 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     };
 
     const handlePlaceOrder = async () => {
-
         const ticketNumber = localStorage.getItem('ticketNumber');
-        if (!ticketNumber) {
-            // 检查是否为 null 或空字符串
+
+        // 如果没有设置座位号，先弹出输入框
+        if (!ticketNumber || ticketNumber.trim() === "") {
             setHasNotTicket(true);
             setOpenTicket(true);
-            return
-        } else {
-            setHasNotTicket(false);
+            return;   // 先不往下执行，等用户输入完后再继续
         }
 
-        // 增加seat 和phone
+        // 如果已经有座位号，则直接继续执行结算逻辑
+        setHasNotTicket(false);
+
+        // 增加 seat 和 phone 等信息
         const newOrderRequest = {
             at: localStorage.getItem("current_store_id") as string,
             buckets: convertToOrderRequest(cartItems),
@@ -192,28 +193,32 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             pick: pick,
         };
 
+        // 执行下单请求
         await fetchData('/v1/hlj/order/pos', (response) => {
-            setPrice(response?.price);
-            setOrderID(response?.identity?.order_no);
+            setPrice(response?.price || 0);
+            setOrderID(response?.identity?.order_no || "");
             setOpenPayChannel(true);
-            // 设置当前订单作为最新订单，这样拉取订单列表时可以标识闪烁凸显
-            storeOrderTimestamp(response?.identity?.order_no)
+
+            // 设置当前订单作为最新订单
+            storeOrderTimestamp(response?.identity?.order_no);
 
             // 设置订单预计排队信息
-            setOrderCount(response?.orderCount)
-            setTotalItems(response?.totalItems)
-            setEstimatedWait(response?.estimatedWait)
+            setOrderCount(response?.orderCount || 0);
+            setTotalItems(response?.totalItems || 0);
+            setEstimatedWait(response?.estimatedWait || 0);
         }, "POST", newOrderRequest);
 
-        // 结算后清空当前选项
-        localStorage.removeItem('ticketNumber')
-        localStorage.removeItem('phoneNumber')
-        localStorage.removeItem('peopleNumber')
-
-        // 清空购物车
-        setCartItems([]);
+        // 清空购物车和临时数据
+        resetCartAfterOrder();
     };
 
+// 新增一个专门用于结算后清理的函数
+    const resetCartAfterOrder = () => {
+        localStorage.removeItem('ticketNumber');
+        localStorage.removeItem('phoneNumber');
+        localStorage.removeItem('peopleNumber');
+        setCartItems([]);
+    };
 
     const holdOrder = () => {
         console.log("Holding order...");
@@ -299,9 +304,17 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     }
 
     const handleSaveResult = (value: string) => {
-        console.log("保存的数字是:", value);
-        localStorage.setItem("ticketNumber", value);
-        setHasNotTicket(false)
+        console.log("保存的台号是:", value);
+
+        if (value && value.trim() !== "") {
+            localStorage.setItem("ticketNumber", value);
+            setHasNotTicket(false);
+
+            // 关键：输入完座位号后，自动继续执行结算逻辑
+            setTimeout(() => {
+                handlePlaceOrder();   // 自动调用结算
+            }, 300); // 给一点延迟，让对话框关闭
+        }
     };
 
     // handleSavePhoneResult
