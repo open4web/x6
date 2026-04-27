@@ -32,6 +32,46 @@ import {storeOrderTimestamp} from "../../../utils/expireStore";
 import {ComboGroup, ComboMatchResult, MatchedCombo} from "../types";
 import {convertToOrderRequest, FormatNanoseconds} from "../../../utils/time";
 
+import {
+    Storefront,
+    DeliveryDining,
+    Restaurant,
+    LocalShipping,
+    Cloud,
+} from '@mui/icons-material';
+
+export const pickTypes = [
+    {
+        id: 0,
+        name: '自提',
+        color: 'primary',
+        icon: <Storefront />, // 到店取
+    },
+    {
+        id: 1,
+        name: '外卖',
+        color: 'success',
+        icon: <DeliveryDining />, // 即时配送
+    },
+    {
+        id: 2,
+        name: '堂食',
+        color: 'secondary',
+        icon: <Restaurant />, // 店内消费
+    },
+    {
+        id: 3,
+        name: '快递',
+        color: 'info',
+        icon: <LocalShipping />, // 物流配送
+    },
+    {
+        id: 4,
+        name: '虚拟',
+        color: 'warning',
+        icon: <Cloud />, // 虚拟商品 / 服务
+    },
+];
 
 export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProps) {
     const {holdOrders, setHoldOrders} = useCartContext();
@@ -615,17 +655,46 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
             <Divider sx={{my: 2}}/>
 
+
+
             {/* 选择取餐方式 */}
-            <FormControl component="fieldset" fullWidth={true}>
+            {/* 选择取餐方式 */}
+            <FormControl component="fieldset" fullWidth>
                 <RadioGroup row value={pick} onChange={handlePickChange}>
-                    <Box sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 2
-                    }}>
-                        <FormControlLabel value={0} control={<Radio/>} label="自提"/>
-                        <FormControlLabel value={1} control={<Radio/>} label="外卖"/>
-                        <FormControlLabel value={2} control={<Radio/>} label="堂食"/>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: 2,
+                            flexWrap: "wrap",
+                            width: "100%",
+                        }}
+                    >
+                        {pickTypes
+                            .filter(type => type.id <= 2) // 如果只展示：自提/外卖/堂食（可按需删）
+                            .map(type => (
+                                <FormControlLabel
+                                    key={type.id}
+                                    value={type.id}
+                                    control={<Radio />}
+                                    label={
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 0.5,
+                                            }}
+                                        >
+                                            {React.cloneElement(type.icon, {
+                                                sx: { fontSize: 18 },
+                                            })}
+                                            <Typography variant="body2">
+                                                {type.name}
+                                            </Typography>
+                                        </Box>
+                                    }
+                                />
+                            ))}
                     </Box>
                 </RadioGroup>
             </FormControl>
