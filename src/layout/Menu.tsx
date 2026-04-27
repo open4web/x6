@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import Box from '@mui/material/Box';
 
 import {useSidebarState,} from 'react-admin';
@@ -10,7 +10,13 @@ import HoldOrderPage from '../common/HoldOrderPage';
 const Menu = () => {
     // 主目录（是否展开)
     const [state, setState] = useState({});
-    const [open] = useSidebarState();
+    const [open, setOpen] = useSidebarState();
+
+    useEffect(() => {
+
+        setOpen(false);
+
+    }, []);
 
     // @ts-ignore
     const handleToggle = (menu: string) => {

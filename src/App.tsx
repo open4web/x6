@@ -51,6 +51,7 @@ const App = () => {
                     defaultTheme={"dark"}
                     requireAuth
 
+
                 >
                     <CustomRoutes>
                         <Route path="/configuration" element={<Configuration/>}/>
