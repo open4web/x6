@@ -171,8 +171,68 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
         }
     }, [isWeChatTab, code]);
 
-    const handlePayByCash = (value: string) => {
-        console.log("提交现金支付:", value);
+    const handlePayByCash = async (value: string) => {
+        const amount = parseFloat(value);
+
+        if (!amount || amount <= 0) {
+            toast.error("请输入正确金额", { position: "top-center" });
+            return;
+        }
+
+        try {
+            await fetchData('/v1/pay/cash/pay', () => {}, "POST", {
+                order_id: orderID,
+                amount: amount, // 👉 元（后端会转分）
+                remark: "现金支付",
+            });
+
+            // 清空购物车
+            if (setCart) {
+                setCart([]);
+            }
+
+            // 关闭支付弹窗
+            setOpen(false);
+
+            toast.success("支付成功", { position: "top-center", autoClose: 2000 });
+
+            // 👉 和扫码支付保持一致：轮询订单状态
+            const maxRetries = 2;
+            const intervalTime = 2000;
+            let attempts = 0;
+
+            const checkOrderStatus = async () => {
+                return new Promise<void>((resolve) => {
+                    const poll = async () => {
+                        try {
+                            await fetchData('/v1/hlj/order/pos/' + orderID, (response) => {
+                                if (response.status === 1) {
+                                    setOrderDrawerOpen(true);
+                                    return resolve();
+                                }
+                            }, "GET", {});
+                        } catch (error) {
+                            console.error("查询订单失败", error);
+                        }
+
+                        attempts++;
+                        if (attempts < maxRetries) {
+                            setTimeout(poll, intervalTime);
+                        } else {
+                            toast.warning("支付已完成，请在订单中查看", { position: "top-center" });
+                            resolve();
+                        }
+                    };
+
+                    poll();
+                });
+            };
+
+            await checkOrderStatus();
+
+        } catch (error) {
+            toast.error("现金支付失败", { position: "top-center" });
+        }
     };
 
     const PayCodeInput = (
@@ -220,7 +280,7 @@ export default function PayChannel({ setCart, price, setOpen, orderID, at }: any
                 />
             </CustomTabPanel>
             <CustomTabPanel key={2} value={value} index={2}>
-                <NumericKeyboardDialog  open={cash} setOpen={setCash} onSave={handlePayByCash} title={"请输入现金数额"} min={1} max={9999}/>
+                <NumericKeyboardDialog  open={cash} setOpen={setCash} onSave={handlePayByCash} title={"请输入现金数额"} min={1} max={9999} defaultValue={price} />
             </CustomTabPanel>
         </Box>
     );

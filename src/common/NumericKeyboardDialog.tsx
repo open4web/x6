@@ -19,6 +19,7 @@ interface Props {
     min?: number; // 最小值限制
     max?: number; // 最大值限制
     requiredLength?: number; // 要求的数字长度
+    defaultValue?: string;
 }
 
 export default function NumericKeyboardDialog(props: Props) {
@@ -30,8 +31,9 @@ export default function NumericKeyboardDialog(props: Props) {
         min = 0,
         max = 100,
         requiredLength = 5,
+        defaultValue =  "",
     } = props; // 默认值
-    const [inputValue, setInputValue] = useState("");
+    const [inputValue, setInputValue] = useState(defaultValue);
     const [error, setError] = useState(false);
 
     // 更新输入值的同时检查范围和长度
@@ -58,7 +60,7 @@ export default function NumericKeyboardDialog(props: Props) {
 
     // 删除按钮点击事件
     const handleDelete = () => {
-        const newValue = inputValue.slice(0, -1);
+        const newValue = inputValue?.slice(0, -1);
         updateInputValue(newValue);
     };
 

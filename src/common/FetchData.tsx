@@ -35,6 +35,7 @@ export const useFetchData = () => {
                     headers: {
                         'Content-Type': 'application/json',
                         Cookies: cookie,
+                        Authorization: cookie,
                     },
                     data: method !== 'GET' ? data : undefined,
                 };
