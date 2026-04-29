@@ -220,6 +220,25 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         });
     };
 
+    const handleCloudPrint = () => {
+        const url = `/v1/hlj/device/rpc/reprint/${orderData.identity.order_no}`;
+        // @ts-ignore
+        fetchData(
+            url,
+            () => {
+                // setSnackbar({ open: true, message: '云打印已提交', severity: 'success' });
+                // setPrintOptionsOpen(false);
+                console.log("云打印已提交")
+            },
+            'POST',  // 根据后端接口实际方法调整，常见为 POST
+            '',
+        ).catch(() => {
+            console.log("云打印请求异常")
+            // setSnackbar({ open: true, message: '云打印请求异常', severity: 'error' });
+        });
+    };
+
+
     const handlePrint = () => {
         const printContent = document.getElementById("print-section");
         const printWindow = window.open('', '_blank');
@@ -280,7 +299,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>
                 {reasonDetails.title} - {orderData.identity.order_no}
-                <IconButton onClick={handlePrint} sx={{float: 'right'}}>
+                <IconButton onClick={handleCloudPrint} sx={{float: 'right'}}>
                     <PrintIcon/>
                 </IconButton>
             </DialogTitle>
