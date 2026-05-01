@@ -23,6 +23,7 @@ import {useFetchData} from "./FetchData";
 import {useCartContext} from "../dataProvider/MyCartProvider";
 import {ChannelType, ScanPayRequest} from "./types";
 import NumericKeyboardDialog from "./NumericKeyboardDialog";
+import PayCodeDisplay from "./PayCodeInput";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -282,24 +283,6 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
     }, [phoneSuffix, value]);
 
 
-    const PayCodeInput = (
-        <FormControl sx={{m: 2, width: '100%'}} variant="filled">
-            <InputLabel htmlFor="filled-adornment-code">支付授权码</InputLabel>
-            <FilledInput
-                id="filled-adornment-code"
-                value={code}
-                onChange={handleCodeChange}
-                endAdornment={
-                    <InputAdornment position="end">
-                        <IconButton onClick={handleResetInput} edge="end">
-                            {verified ? <VerifiedIcon color="success"/> : <RestartAltIcon/>}
-                        </IconButton>
-                    </InputAdornment>
-                }
-            />
-        </FormControl>
-    );
-
     return (
         <Box sx={{width: '100%', p: 2, borderRadius: 2, boxShadow: 3}}>
             {alertComponent}
@@ -312,7 +295,11 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
                 </Tabs>
             </Box>
             <CustomTabPanel key={0} value={value} index={0}>
-                {PayCodeInput}
+                {<PayCodeDisplay
+                    value={code}
+                    verified={verified}
+                    onReset={handleResetInput}
+                />}
             </CustomTabPanel>
             <CustomTabPanel key={1} value={value} index={1}>
                 <QRScanner
@@ -332,7 +319,8 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
             </CustomTabPanel>
             <CustomTabPanel key={2} value={value} index={2}>
                 <NumericKeyboardDialog open={cash} setOpen={setCash} onSave={handlePayByCash} title={"请输入现金数额"}
-                                       min={1} max={9999} defaultValue={price} confirmText={"确认余额支付"} clearText={"免单"}/>
+                                       min={1} max={9999} defaultValue={price} confirmText={"确认余额支付"}
+                                       clearText={"免单"}/>
 
             </CustomTabPanel>
             <CustomTabPanel value={value} index={3}>
