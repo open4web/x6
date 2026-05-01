@@ -185,7 +185,7 @@ export default function MemberBalancePay({
                                 await fetchData('/v1/pay/balance/pay', () => {
                                 }, "POST", {
                                     order_id: orderID,
-                                    member_id: selectedMember.id,
+                                    account_id: selectedMember.id,
                                     amount: price,
                                     remark: "余额支付"
                                 });
