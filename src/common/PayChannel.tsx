@@ -254,7 +254,8 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
             </CustomTabPanel>
             <CustomTabPanel key={2} value={value} index={2}>
                 <NumericKeyboardDialog open={cash} setOpen={setCash} onSave={handlePayByCash} title={"请输入现金数额"}
-                                       min={1} max={9999} defaultValue={price} confirmText={"确认余额支付"}
+                                       min={1} max={999} defaultValue={price} confirmText={"确认余额支付"}
+                                       type="money"
                                        clearText={"免单"}
                                        inline={true}
                 />

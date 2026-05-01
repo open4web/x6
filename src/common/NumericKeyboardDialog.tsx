@@ -9,6 +9,7 @@ import {
     TextField,
     InputAdornment,
     Box,
+    Typography,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 
@@ -23,9 +24,10 @@ interface Props {
     defaultValue?: string;
     confirmText?: string;
     clearText?: string;
+    inline?: boolean;
 
     // 🚀 新增
-    inline?: boolean;
+    type?: "number" | "money";
 }
 
 export default function NumericKeyboardDialog(props: Props) {
@@ -41,16 +43,41 @@ export default function NumericKeyboardDialog(props: Props) {
         confirmText = "保存",
         clearText = "清空",
         inline = false,
+        type = "number",
     } = props;
 
-    const [inputValue, setInputValue] = useState(defaultValue);
+    // 🚀 money 默认 0
+    const [inputValue, setInputValue] = useState(
+        type === "money" ? "0" : defaultValue
+    );
+
     const [error, setError] = useState(false);
 
-    const updateInputValue = (newValue: string) => {
-        const numericValue = parseInt(newValue, 10);
+    // ================================
+    // 🚀 money 输入控制
+    // ================================
+    const updateInputValue = (val: string) => {
+
+        if (type === "money") {
+            // 只允许数字 + 小数点
+            if (!/^\d*\.?\d*$/.test(val)) return;
+
+            // 防止多个点
+            const parts = val.split(".");
+            if (parts.length > 2) return;
+
+            // 防止空
+            if (val === "") val = "0";
+
+            setInputValue(val);
+            return;
+        }
+
+        // number 模式
+        const numericValue = parseInt(val, 10);
 
         if (
-            newValue === "" ||
+            val === "" ||
             (numericValue >= min && numericValue <= max)
         ) {
             setError(false);
@@ -58,19 +85,36 @@ export default function NumericKeyboardDialog(props: Props) {
             setError(true);
         }
 
-        setInputValue(newValue);
+        setInputValue(val);
     };
 
     const handleNumberClick = (num: string) => {
+        if (type === "money") {
+            // 防止 0 开头重复
+            setInputValue((prev) => {
+                if (prev === "0") return num;
+                return prev + num;
+            });
+            return;
+        }
+
         updateInputValue(inputValue + num);
     };
 
     const handleDelete = () => {
+        if (type === "money") {
+            setInputValue((prev) => {
+                if (prev.length <= 1) return "0";
+                return prev.slice(0, -1);
+            });
+            return;
+        }
+
         updateInputValue(inputValue.slice(0, -1));
     };
 
     const handleClear = () => {
-        updateInputValue("");
+        setInputValue(type === "money" ? "0" : "");
     };
 
     const handleSave = () => {
@@ -86,24 +130,45 @@ export default function NumericKeyboardDialog(props: Props) {
 
     const isValidLength = inputValue.length === requiredLength;
 
+    // ================================
+    // 🚀 输入框 UI
+    // ================================
+    const renderInput = () => (
+        <TextField
+            value={inputValue}
+            fullWidth
+            variant="outlined"
+            inputProps={{ readOnly: true }}
+            placeholder={title}
+            error={error}
+            helperText={error ? `请输入 ${min} 到 ${max} 之间的数字` : " "}
+            InputProps={{
+                startAdornment: type === "money" && (
+                    <InputAdornment position="start">
+                        <Typography sx={{ fontSize: 24, fontWeight: "bold" }}>
+                            ¥
+                        </Typography>
+                    </InputAdornment>
+                ),
+                endAdornment: isValidLength && (
+                    <InputAdornment position="end">
+                        <CheckIcon color="success" />
+                    </InputAdornment>
+                ),
+                sx: {
+                    input: {
+                        fontSize: type === "money" ? 32 : 18,
+                        fontWeight: type === "money" ? "bold" : "normal",
+                        textAlign: type === "money" ? "right" : "left",
+                    }
+                }
+            }}
+        />
+    );
+
     const KeyboardContent = (
         <Box>
-            <TextField
-                value={inputValue}
-                fullWidth
-                variant="outlined"
-                inputProps={{ readOnly: true }}
-                placeholder={title}
-                error={error}
-                helperText={error ? `请输入 ${min} 到 ${max} 之间的数字` : " "}
-                InputProps={{
-                    endAdornment: isValidLength && (
-                        <InputAdornment position="end">
-                            <CheckIcon color="success" />
-                        </InputAdornment>
-                    ),
-                }}
-            />
+            {renderInput()}
 
             <Grid container spacing={1} sx={{ marginTop: 2 }}>
                 {[1,2,3,4,5,6,7,8,9,0].map((num) => (
@@ -156,12 +221,10 @@ export default function NumericKeyboardDialog(props: Props) {
         </Box>
     );
 
-    // 🚀 inline 模式
     if (inline) {
         return (
             <Box sx={{ p: 2 }}>
                 {KeyboardContent}
-
                 <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
                     <Button onClick={handleCancel}>取消</Button>
                     <Button
@@ -176,7 +239,6 @@ export default function NumericKeyboardDialog(props: Props) {
         );
     }
 
-    // 🚀 dialog 模式（默认）
     return (
         <Dialog open={open} onClose={handleCancel}>
             <DialogTitle>{title}</DialogTitle>
