@@ -1,29 +1,17 @@
 import * as React from 'react';
-import {useEffect, useState} from 'react';
-import {
-    Tabs,
-    Tab,
-    Typography,
-    Box,
-    FormControl,
-    InputLabel,
-    FilledInput,
-    InputAdornment,
-    IconButton,
-    Dialog,
-    DialogActions,
-    Button,
-    DialogContent, DialogTitle,
-} from "@mui/material";
-import VerifiedIcon from '@mui/icons-material/Verified';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import {useEffect, useRef, useState} from 'react';
+import {Box, Tab, Tabs,} from "@mui/material";
 import {toast} from "react-toastify";
 import QRScanner from "./ScanCode";
 import {useFetchData} from "./FetchData";
 import {useCartContext} from "../dataProvider/MyCartProvider";
-import {ChannelType, ScanPayRequest} from "./types";
+import {ChannelType} from "./types";
 import NumericKeyboardDialog from "./NumericKeyboardDialog";
 import PayCodeDisplay from "./PayCodeInput";
+import MemberBalancePay from './PayBalance';
+import {useOrderPolling} from "./OrderPulling";
+
+// const payingRef = useRef(false);
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -67,10 +55,8 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
     // ================= 余额模块 =================
     const [phoneSuffix, setPhoneSuffix] = useState('');
     const [memberList, setMemberList] = useState<any[]>([]);
-    const [selectedMember, setSelectedMember] = useState<any>(null);
-    const [memberOpen, setMemberOpen] = useState(false);
     const [loadingMember, setLoadingMember] = useState(false);
-
+    const {pollOrder} = useOrderPolling(fetchData, setOrderDrawerOpen);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -80,70 +66,32 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
     };
 
     const handleResetInput = () => setCode('');
-
-    const handleCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const inputValue = event.target.value.slice(-18); // Keep the last 18 characters
-        setCode(inputValue);
-        setVerified(inputValue.length === 18);
-    };
-
     const submitPay = async (scannedCode: string) => {
-        const userData: ScanPayRequest = {
-            channel: ChannelType.WeChatPay,
-            order_id: orderID,
-            desc: '商品支付',
-            amount: price,
-            at: at,
-            code: scannedCode,
-        };
+
+        // if (payingRef.current) return;
+        // payingRef.current = true;
 
         try {
             await fetchData('/v1/pay/scan/pay', () => {
-            }, "POST", userData);
-            if (setCart) {
-                setCart([]);
-            }
+            }, "POST", {
+                channel: ChannelType.WeChatPay,
+                order_id: orderID,
+                desc: '商品支付',
+                amount: price,
+                at,
+                code: scannedCode,
+            });
+
+            setCart([]);
             setOpen(false);
 
-            // 轮询查询支付状态
-            const maxRetries = 2; // 最大查询次数
-            const intervalTime = 2000; // 轮询间隔（3秒）
-            let attempts = 0;
+            // ✅ 核心：统一调用
+            await pollOrder(orderID);
 
-            const checkOrderStatus = async () => {
-                return new Promise<void>((resolve) => { // 确保 resolve 在 Promise 内部
-                    const poll = async () => {
-                        try {
-                            await fetchData('/v1/hlj/order/pos/' + userData.order_id, (response) => {
-                                if (response.status === 1) {
-                                    toast.success("支付成功", {position: "top-center", autoClose: 3000});
-                                    setOrderDrawerOpen(true);
-                                    return resolve(); // 成功后终止轮询
-                                }
-                            }, "GET", {});
-                        } catch (error) {
-                            console.error("查询订单支付结果失败", error);
-                        }
-
-                        attempts++;
-                        if (attempts < maxRetries) {
-                            setTimeout(poll, intervalTime); // 继续轮询
-                        } else {
-                            toast.error("支付状态未确认，请稍后在订单记录中查看", {
-                                position: "top-center",
-                                autoClose: 3000
-                            });
-                            resolve(); // 结束轮询
-                        }
-                    };
-
-                    poll(); // 启动轮询
-                });
-            };
-
-            await checkOrderStatus(); // 启动轮询
-        } catch (error) {
-            toast.error("支付失败，请重试", {position: "top-center", autoClose: 3000});
+        } catch {
+            toast.error("支付失败");
+        } finally {
+            // payingRef.current = false;
         }
     };
 
@@ -213,39 +161,9 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
 
             toast.success("支付成功", {position: "top-center", autoClose: 2000});
 
-            // 👉 和扫码支付保持一致：轮询订单状态
-            const maxRetries = 2;
-            const intervalTime = 2000;
-            let attempts = 0;
+            // ✅ 统一轮询
 
-            const checkOrderStatus = async () => {
-                return new Promise<void>((resolve) => {
-                    const poll = async () => {
-                        try {
-                            await fetchData('/v1/hlj/order/pos/' + orderID, (response) => {
-                                if (response.status === 1) {
-                                    setOrderDrawerOpen(true);
-                                    return resolve();
-                                }
-                            }, "GET", {});
-                        } catch (error) {
-                            console.error("查询订单失败", error);
-                        }
-
-                        attempts++;
-                        if (attempts < maxRetries) {
-                            setTimeout(poll, intervalTime);
-                        } else {
-                            toast.warning("支付已完成，请在订单中查看", {position: "top-center"});
-                            resolve();
-                        }
-                    };
-
-                    poll();
-                });
-            };
-
-            await checkOrderStatus();
+            await pollOrder(orderID);
 
         } catch (error) {
             toast.error("现金支付失败", {position: "top-center"});
@@ -284,14 +202,31 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
 
 
     return (
-        <Box sx={{width: '100%', p: 2, borderRadius: 2, boxShadow: 3}}>
+        <Box sx={{width: '100%', p: 1, borderRadius: 1, boxShadow: 2}}>
             {alertComponent}
-            <Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2}}>
-                <Tabs value={value} onChange={handleChange} aria-label="支付渠道选择">
-                    <Tab label="自动" {...a11yProps(0)} />
-                    <Tab label="扫码" {...a11yProps(1)} />
-                    <Tab label="现金" {...a11yProps(2)} />
-                    <Tab label="余额" {...a11yProps(3)} />
+            <Box sx={{borderBottom: 1, borderColor: 'divider', mb: 1}}>
+                <Tabs
+                    value={value}
+                    onChange={handleChange}
+                    aria-label="支付渠道选择"
+                    variant="fullWidth"
+                    sx={{
+                        minHeight: 64, // 🔥 增大整体高度（触屏友好）
+                        "& .MuiTab-root": {
+                            minHeight: 64,
+                            fontSize: 16,
+                            fontWeight: 600,
+                            textTransform: "none",
+                            display: "flex",
+                            flexDirection: "row",
+                            gap: 1,
+                        }
+                    }}
+                >
+                    <Tab icon="⚡" iconPosition="start" label="自动" {...a11yProps(0)} />
+                    <Tab icon="📷" iconPosition="start" label="扫码" {...a11yProps(1)} />
+                    <Tab icon="💰" iconPosition="start" label="现金" {...a11yProps(2)} />
+                    <Tab icon="👤" iconPosition="start" label="余额" {...a11yProps(3)} />
                 </Tabs>
             </Box>
             <CustomTabPanel key={0} value={value} index={0}>
@@ -320,139 +255,22 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
             <CustomTabPanel key={2} value={value} index={2}>
                 <NumericKeyboardDialog open={cash} setOpen={setCash} onSave={handlePayByCash} title={"请输入现金数额"}
                                        min={1} max={9999} defaultValue={price} confirmText={"确认余额支付"}
-                                       clearText={"免单"}/>
+                                       clearText={"免单"}
+                                       inline={true}
+                />
 
             </CustomTabPanel>
             <CustomTabPanel value={value} index={3}>
-
-                {/* 输入框 */}
-                <FormControl fullWidth variant="filled">
-                    <InputLabel>手机号后4位</InputLabel>
-
-                    <FilledInput
-                        value={phoneSuffix}
-                        onChange={(e) => {
-                            const v = e.target.value.replace(/\D/g, '').slice(0, 4);
-                            setPhoneSuffix(v);
-                        }}
-                    />
-                </FormControl>
-
-                {/* loading */}
-                {loadingMember && (
-                    <Typography sx={{mt: 2}}>查询中...</Typography>
-                )}
-
-                {/* list */}
-                <Box sx={{mt: 1}}>
-                    {memberList.map((m) => (
-                        <Box
-                            key={m.id}
-                            onClick={() => {
-                                setSelectedMember(m);
-                                setMemberOpen(true);
-                            }}
-                            sx={{
-                                p: 2,
-                                mb: 1,
-                                border: "0.2px solid #ddd",
-                                borderRadius: 0.2,
-                                cursor: "pointer",
-                                "&:hover": {background: "blue"}
-                            }}
-                        >
-                            <Typography>
-                                手机尾号：****{m.phone.slice(-4)}
-                            </Typography>
-                            <Typography>姓名：{m.name}</Typography>
-                            <Typography>余额：¥{m.balance}</Typography>
-                        </Box>
-                    ))}
-                </Box>
-
-                {/* 详情 */}
-                <Dialog open={memberOpen} onClose={() => setMemberOpen(false)} fullWidth>
-                    <DialogTitle>会员详情</DialogTitle>
-
-                    <DialogContent>
-                        {selectedMember && (
-                            <>
-                                <Typography>姓名：{selectedMember.name}</Typography>
-                                <Typography>手机号：{selectedMember.phone}</Typography>
-                                <Typography>余额：¥{selectedMember.balance}</Typography>
-
-                                <Box sx={{
-                                    mt: 1,
-                                    p: 1,
-                                    borderRadius: 1,
-                                    bgcolor: selectedMember.balance >= price ? "#e8f5e9" : "#ffebee"
-                                }}>
-                                    <Typography color={"red"}>订单金额：¥{price}</Typography>
-                                    <Box
-                                        sx={{
-                                            mt: 1,
-                                            display: "inline-flex",
-                                            alignItems: "center",
-                                            px: 1.5,
-                                            py: 0.5,
-                                            borderRadius: 2,
-                                            fontSize: 12,
-                                            fontWeight: 600,
-                                            backgroundColor:
-                                                selectedMember.balance >= price
-                                                    ? "rgba(46, 125, 50, 0.12)"
-                                                    : "rgba(211, 47, 47, 0.12)",
-                                            color:
-                                                selectedMember.balance >= price
-                                                    ? "#2e7d32"
-                                                    : "#d32f2f",
-                                            border:
-                                                selectedMember.balance >= price
-                                                    ? "1px solid rgba(46, 125, 50, 0.3)"
-                                                    : "1px solid rgba(211, 47, 47, 0.3)",
-                                        }}
-                                    >
-                                        {selectedMember.balance >= price ? "✔ 余额充足" : "✖ 余额不足"}
-                                    </Box>
-                                </Box>
-                            </>
-                        )}
-                    </DialogContent>
-
-                    <DialogActions>
-                        <Button onClick={() => setMemberOpen(false)}>取消</Button>
-
-                        <Button
-                            variant="contained"
-                            disabled={!selectedMember || selectedMember.balance < price}
-                            onClick={async () => {
-                                try {
-                                    await fetchData('/v1/pay/balance/pay', () => {
-                                    }, "POST", {
-                                        order_id: orderID,
-                                        member_id: selectedMember.id,
-                                        amount: price,
-                                        remark: "余额支付"
-                                    });
-
-                                    setCart([]);
-                                    setOpen(false);
-                                    setMemberOpen(false);
-
-                                    toast.success("支付成功");
-                                    setOrderDrawerOpen(true);
-
-                                } catch {
-                                    toast.error("支付失败");
-                                }
-                            }}
-                        >
-                            余额支付
-                        </Button>
-
-                    </DialogActions>
-                </Dialog>
-
+                <MemberBalancePay
+                    value={value}
+                    index={3}
+                    price={price}
+                    orderID={orderID}
+                    fetchData={fetchData}
+                    setCart={setCart}
+                    setOpen={setOpen}
+                    setOrderDrawerOpen={setOrderDrawerOpen}
+                />
             </CustomTabPanel>
 
         </Box>

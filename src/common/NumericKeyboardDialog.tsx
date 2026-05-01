@@ -8,6 +8,7 @@ import {
     Grid,
     TextField,
     InputAdornment,
+    Box,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 
@@ -20,10 +21,11 @@ interface Props {
     max?: number;
     requiredLength?: number;
     defaultValue?: string;
-
-    // 🚀 新增：按钮文案（可选）
     confirmText?: string;
     clearText?: string;
+
+    // 🚀 新增
+    inline?: boolean;
 }
 
 export default function NumericKeyboardDialog(props: Props) {
@@ -36,10 +38,9 @@ export default function NumericKeyboardDialog(props: Props) {
         max = 100,
         requiredLength = 5,
         defaultValue = "",
-
-        // 🚀 默认值（关键）
         confirmText = "保存",
         clearText = "清空",
+        inline = false,
     } = props;
 
     const [inputValue, setInputValue] = useState(defaultValue);
@@ -85,76 +86,101 @@ export default function NumericKeyboardDialog(props: Props) {
 
     const isValidLength = inputValue.length === requiredLength;
 
+    const KeyboardContent = (
+        <Box>
+            <TextField
+                value={inputValue}
+                fullWidth
+                variant="outlined"
+                inputProps={{ readOnly: true }}
+                placeholder={title}
+                error={error}
+                helperText={error ? `请输入 ${min} 到 ${max} 之间的数字` : " "}
+                InputProps={{
+                    endAdornment: isValidLength && (
+                        <InputAdornment position="end">
+                            <CheckIcon color="success" />
+                        </InputAdornment>
+                    ),
+                }}
+            />
+
+            <Grid container spacing={1} sx={{ marginTop: 2 }}>
+                {[1,2,3,4,5,6,7,8,9,0].map((num) => (
+                    <Grid item xs={4} key={num}>
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            onClick={() => handleNumberClick(num.toString())}
+                        >
+                            {num}
+                        </Button>
+                    </Grid>
+                ))}
+
+                <Grid item xs={4}>
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        color="warning"
+                        onClick={handleDelete}
+                    >
+                        删除
+                    </Button>
+                </Grid>
+
+                <Grid item xs={4}>
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        color="error"
+                        onClick={handleClear}
+                    >
+                        {clearText}
+                    </Button>
+                </Grid>
+            </Grid>
+
+            {!inline && (
+                <DialogActions>
+                    <Button onClick={handleCancel}>取消</Button>
+                    <Button
+                        onClick={handleSave}
+                        color="primary"
+                        disabled={error || inputValue === ""}
+                    >
+                        {confirmText}
+                    </Button>
+                </DialogActions>
+            )}
+        </Box>
+    );
+
+    // 🚀 inline 模式
+    if (inline) {
+        return (
+            <Box sx={{ p: 2 }}>
+                {KeyboardContent}
+
+                <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+                    <Button onClick={handleCancel}>取消</Button>
+                    <Button
+                        onClick={handleSave}
+                        variant="contained"
+                        disabled={error || inputValue === ""}
+                    >
+                        {confirmText}
+                    </Button>
+                </Box>
+            </Box>
+        );
+    }
+
+    // 🚀 dialog 模式（默认）
     return (
         <Dialog open={open} onClose={handleCancel}>
             <DialogTitle>{title}</DialogTitle>
-
-            <DialogContent>
-                <TextField
-                    value={inputValue}
-                    fullWidth
-                    variant="outlined"
-                    inputProps={{ readOnly: true }}
-                    placeholder={title}
-                    error={error}
-                    helperText={error ? `请输入 ${min} 到 ${max} 之间的数字` : " "}
-                    InputProps={{
-                        endAdornment: isValidLength && (
-                            <InputAdornment position="end">
-                                <CheckIcon color="success" />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-
-                <Grid container spacing={1} sx={{ marginTop: 2 }}>
-                    {[1,2,3,4,5,6,7,8,9,0].map((num) => (
-                        <Grid item xs={4} key={num}>
-                            <Button
-                                fullWidth
-                                variant="contained"
-                                onClick={() => handleNumberClick(num.toString())}
-                            >
-                                {num}
-                            </Button>
-                        </Grid>
-                    ))}
-
-                    <Grid item xs={4}>
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            color="warning"
-                            onClick={handleDelete}
-                        >
-                            删除
-                        </Button>
-                    </Grid>
-
-                    <Grid item xs={4}>
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            color="error"
-                            onClick={handleClear}
-                        >
-                            {clearText}
-                        </Button>
-                    </Grid>
-                </Grid>
-            </DialogContent>
-
-            <DialogActions>
-                <Button onClick={handleCancel}>取消</Button>
-
-                <Button
-                    onClick={handleSave}
-                    color="primary"
-                    disabled={error || inputValue === ""}
-                >
-                    {confirmText}
-                </Button>
-            </DialogActions>
+            <DialogContent>{KeyboardContent}</DialogContent>
         </Dialog>
     );
 }
