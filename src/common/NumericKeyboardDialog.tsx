@@ -39,7 +39,7 @@ export default function NumericKeyboardDialog(props: Props) {
         min = 0,
         max = 100,
         requiredLength = 5,
-        defaultValue = "",
+        defaultValue = "0",
         confirmText = "保存",
         clearText = "清空",
         inline = false,
@@ -48,7 +48,7 @@ export default function NumericKeyboardDialog(props: Props) {
 
     // 🚀 money 默认 0
     const [inputValue, setInputValue] = useState(
-        type === "money" ? "0" : defaultValue
+        type === "money" && defaultValue === "" ? "0" : defaultValue
     );
 
     const [error, setError] = useState(false);

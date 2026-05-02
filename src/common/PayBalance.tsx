@@ -53,7 +53,7 @@ export default function MemberBalancePay({
     const fetchMemberList = async (suffix: string) => {
         setLoadingMember(true);
         try {
-            await fetchData('/v1/hlj/member/search', (res: any) => {
+            await fetchData('/v1/hlj/member/account/search', (res: any) => {
                 setMemberList(res || []);
             }, "GET", {suffix});
         } catch {
