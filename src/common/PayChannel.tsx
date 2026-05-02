@@ -214,19 +214,27 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
                         minHeight: 64, // 🔥 增大整体高度（触屏友好）
                         "& .MuiTab-root": {
                             minHeight: 64,
-                            fontSize: 16,
+                            fontSize: 20, // 大一号
                             fontWeight: 600,
                             textTransform: "none",
                             display: "flex",
                             flexDirection: "row",
-                            gap: 1,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 3,
+                            marginTop: "10px",
+                            "& .MuiTab-wrapper": {
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 1,
+                            }
                         }
                     }}
                 >
-                    <Tab icon="⚡" iconPosition="start" label="自动" {...a11yProps(0)} />
+                    <Tab icon="🤖" iconPosition="start" label="自动" {...a11yProps(0)} />
                     <Tab icon="📷" iconPosition="start" label="扫码" {...a11yProps(1)} />
-                    <Tab icon="💰" iconPosition="start" label="现金" {...a11yProps(2)} />
-                    <Tab icon="👤" iconPosition="start" label="余额" {...a11yProps(3)} />
+                    <Tab icon="💵" iconPosition="start" label="现金" {...a11yProps(2)} />
+                    <Tab icon="💰" iconPosition="start" label="余额" {...a11yProps(3)} />
                 </Tabs>
             </Box>
             <CustomTabPanel key={0} value={value} index={0}>
