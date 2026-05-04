@@ -7,7 +7,7 @@ import MenuItem from "@mui/material/MenuItem";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import MyOrder from "./MyOrder";
 import {orderSaleStatusMap, orderStatusMap} from "../../../common/orderStatus";
-import {platformTypeLists} from "../../../common/payMethod";
+import {payMethodList} from "../../../common/payMethod";
 import {Badge, Button, FormControlLabel, InputAdornment} from "@mui/material";
 import FormGroup from "@mui/material/FormGroup";
 import Switch from "@mui/material/Switch";
@@ -255,7 +255,7 @@ export default function MyOrderDrawer() {
                                 flexShrink: 0,
                             }}
                         >
-                            {platformTypeLists.map((status) => (
+                            {payMethodList.map((status) => (
                                 <MenuItem key={status.id} value={status.id}>
                                     {status.name}
                                 </MenuItem>
