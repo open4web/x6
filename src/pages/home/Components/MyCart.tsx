@@ -39,6 +39,7 @@ import {
     LocalShipping,
     Cloud,
 } from '@mui/icons-material';
+import MemberSelector from "../../../common/MemberSelector";
 
 export const pickTypes = [
     {
@@ -649,8 +650,20 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                                        title={"请输入台号"} min={1} max={99}/>
                 <NumericKeyboardDialog setOpen={setOpenPeople} open={openPeople} onSave={handleSavePeopleResult}
                                        title={"就餐人数"} min={1} max={20}/>
-                <NumericKeyboardDialog setOpen={setOpenPhone} open={openPhone} onSave={handleSavePhoneResult}
-                                       title={"会员手机号"} min={10000000000} max={19999999999}/>
+                <MemberSelector
+                    price={price}
+                    orderID={orderID}
+                    fetchData={fetchData}
+                    modal={true}
+                    open={openPhone}
+                    onClose={() => setOpenPhone(false)}
+                    onSuccess={() => {
+                        setOpenPhone(false);
+                        // 其他成功逻辑...
+                    }}
+                />
+
+
             </Box>
 
             <Divider sx={{my: 2}}/>

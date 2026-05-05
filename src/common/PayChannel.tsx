@@ -8,8 +8,8 @@ import {useCartContext} from "../dataProvider/MyCartProvider";
 import {ChannelType} from "./types";
 import NumericKeyboardDialog from "./NumericKeyboardDialog";
 import PayCodeDisplay from "./PayCodeInput";
-import MemberBalancePay from './PayBalance';
 import {useOrderPolling} from "./OrderPulling";
+import MemberBalancePay from './MemberBalancePay';
 
 // const payingRef = useRef(false);
 

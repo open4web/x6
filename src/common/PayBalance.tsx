@@ -32,7 +32,7 @@ function CustomTabPanel({children, value, index}: any) {
     );
 }
 
-export default function MemberBalancePay({
+export default function MemberBalancePayOld({
                                              value,
                                              index,
                                              price,
