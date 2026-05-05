@@ -22,10 +22,10 @@ interface MemberSelectorProps {
     onSuccess?: () => void;
     onCancel?: () => void;
 
-    // 新增参数：是否以弹窗模式显示（默认 false）
+    // 新增参数
     modal?: boolean;
-    open?: boolean;      // modal=true 时使用
-    onClose?: () => void; // modal=true 时使用
+    open?: boolean;
+    onClose?: () => void;
 }
 
 export default function MemberSelector({
@@ -44,6 +44,7 @@ export default function MemberSelector({
     const [internalOpen, setInternalOpen] = useState(false);
 
     const isOpen = modal ? (open ?? internalOpen) : true;
+
     const handleClose = () => {
         if (modal) {
             onClose?.();
@@ -74,7 +75,7 @@ export default function MemberSelector({
 
     const content = (
         <>
-            {/* 查询输入框 - 完全保留原样 */}
+            {/* 查询输入框 */}
             <FormControl fullWidth variant="filled">
                 <InputLabel>手机号后4位</InputLabel>
                 <FilledInput
@@ -89,7 +90,7 @@ export default function MemberSelector({
             {/* Loading */}
             {loading && <Typography sx={{ mt: 2 }}>查询中...</Typography>}
 
-            {/* 会员列表 - 完全保留你原来的 sx */}
+            {/* 会员列表 */}
             <Box sx={{ mt: 1 }}>
                 {memberList.map((m) => (
                     <Box
@@ -107,9 +108,7 @@ export default function MemberSelector({
                             "&:hover": { background: "blue" }
                         }}
                     >
-                        <Typography>
-                            手机尾号：****{m.phone.slice(-4)}
-                        </Typography>
+                        <Typography>手机尾号：****{m.phone?.slice(-4)}</Typography>
                         <Typography>姓名：{m.name}</Typography>
                         <Typography>余额：¥{m.balance}</Typography>
                     </Box>
@@ -124,15 +123,15 @@ export default function MemberSelector({
         </>
     );
 
-    // ====================== 弹窗模式 ======================
+    // ====================== 弹窗模式 (modal=true) ======================
     if (modal) {
         return (
             <Dialog open={!!isOpen} onClose={handleClose} fullWidth>
-                <DialogTitle>会员余额支付</DialogTitle>
+                <DialogTitle>会员余额查询</DialogTitle>
                 <DialogContent>
                     {content}
 
-                    {/* 详情弹窗（嵌套） - 完全保留你原来的样式 */}
+                    {/* 详情弹窗 - 弹窗模式下显示更详细会员信息，不做余额比较 */}
                     <Dialog
                         open={!!selectedMember}
                         onClose={() => setSelectedMember(null)}
@@ -145,53 +144,17 @@ export default function MemberSelector({
                                     <Typography>姓名：{selectedMember.name}</Typography>
                                     <Typography>手机号：{selectedMember.phone}</Typography>
                                     <Typography>余额：¥{selectedMember.balance}</Typography>
-
-                                    <Box sx={{
-                                        mt: 1,
-                                        p: 1,
-                                        borderRadius: 1,
-                                        bgcolor: selectedMember.balance >= price ? "#e8f5e9" : "#ffebee"
-                                    }}>
-                                        <Typography color={"red"}>
-                                            订单金额：¥{price}
-                                        </Typography>
-
-                                        <Box
-                                            sx={{
-                                                mt: 1,
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                px: 1.5,
-                                                py: 0.5,
-                                                borderRadius: 2,
-                                                fontSize: 12,
-                                                fontWeight: 600,
-                                                backgroundColor:
-                                                    selectedMember.balance >= price
-                                                        ? "rgba(46, 125, 50, 0.12)"
-                                                        : "rgba(211, 47, 47, 0.12)",
-                                                color:
-                                                    selectedMember.balance >= price
-                                                        ? "#2e7d32"
-                                                        : "#d32f2f",
-                                            }}
-                                        >
-                                            {selectedMember.balance >= price ? "✔ 余额充足" : "✖ 余额不足"}
-                                        </Box>
-                                    </Box>
+                                    {selectedMember.id && <Typography>会员卡号：{selectedMember.id}</Typography>}
+                                    {selectedMember.level && <Typography>会员等级：{selectedMember.level}</Typography>}
+                                    {selectedMember.birthday && <Typography>生日：{selectedMember.birthday}</Typography>}
+                                    {selectedMember.gender && <Typography>性别：{selectedMember.gender}</Typography>}
+                                    {selectedMember.registerTime && <Typography>注册时间：{selectedMember.registerTime}</Typography>}
                                 </>
                             )}
                         </DialogContent>
 
                         <DialogActions>
-                            <Button onClick={() => setSelectedMember(null)}>取消</Button>
-                            <Button
-                                variant="contained"
-                                disabled={!selectedMember || selectedMember.balance < price}
-                                onClick={handlePay}
-                            >
-                                确认余额支付
-                            </Button>
+                            <Button onClick={() => setSelectedMember(null)}>关闭</Button>
                         </DialogActions>
                     </Dialog>
                 </DialogContent>
@@ -204,7 +167,7 @@ export default function MemberSelector({
         <>
             {content}
 
-            {/* 详情弹窗 - 完全保留你原来的样式 */}
+            {/* 详情弹窗 - 保持原有逻辑（有余额比较） */}
             <Dialog open={!!selectedMember} onClose={() => setSelectedMember(null)} fullWidth>
                 <DialogTitle>会员详情</DialogTitle>
                 <DialogContent>
