@@ -5,17 +5,22 @@ RUN apk add --no-cache libc6-compat
 RUN corepack enable && corepack prepare yarn@stable --activate
 
 WORKDIR /app
-COPY package.json yarn.lock vite.config.ts ./
-RUN yarn install --immutable-cache
+
+# ⚠️ 必须带上 yarn berry 配置
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn ./.yarn
+
+RUN yarn install --immutable
 
 
 # ====================== 2. Builder ======================
 FROM node:20-alpine AS builder
 
-RUN corepack enable
+RUN corepack enable && corepack prepare yarn@stable --activate
 
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+
+COPY --from=deps /app ./
 COPY . .
 
 ENV BASE_PATH=admin
@@ -27,9 +32,6 @@ RUN yarn build
 FROM nginx:alpine AS runner
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# 如果有自定义 nginx 配置
-# COPY ./deployment/docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 8000
 CMD ["nginx", "-g", "daemon off;"]
