@@ -6,10 +6,10 @@ RUN corepack enable && corepack prepare yarn@stable --activate
 
 WORKDIR /app
 
-# ⚠️ 必须带上 yarn berry 配置
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn ./.yarn
+# ❗只复制必要文件
+COPY package.json yarn.lock ./
 
+# ❗关键修改（去掉 --immutable-cache）
 RUN yarn install --immutable
 
 
@@ -20,7 +20,7 @@ RUN corepack enable && corepack prepare yarn@stable --activate
 
 WORKDIR /app
 
-COPY --from=deps /app ./
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV BASE_PATH=admin
