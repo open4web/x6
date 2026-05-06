@@ -60,7 +60,6 @@ export const MyHome = () => {
                     <MyCartDrawer />
                     <MyOrderDrawer/>
                     <MyDataDrawer/>
-                    // 弹窗模式（推荐）
                     <RechargeCardSelector
                         modal={true}
                         open={rechargeOpen}

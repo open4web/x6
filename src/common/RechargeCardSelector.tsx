@@ -13,28 +13,36 @@ import {
     CardContent,
     CardActionArea,
     CardMedia,
+    FormControl,
+    FilledInput,
+    InputLabel,
 } from '@mui/material';
 import { toast } from 'react-toastify';
-import {useFetchData} from "./FetchData";
+import { useFetchData } from "./FetchData";
+import {convertToOrderRequest} from "../utils/time";
 
 interface RechargeCard {
     id: string;
     name: string;
-    value: string;           // 面额（如 "100"）
-    sellPrice: string;       // 实际售价
+    value: string;
+    sellPrice: string;
     desc?: string;
     image?: string;
     fullImage?: string;
     gifts?: string[];
-    sales?: number;
-    type?: number;
-    status?: number;
-    // ... 其他字段可继续扩展
+}
+
+interface Member {
+    id: string;
+    name: string;
+    phone: string;
+    balance?: number;
+    status?: number; // 假设后端返回状态
+    statusText?: string;
 }
 
 interface RechargeCardSelectorProps {
-    // fetchData: any;
-    onSuccess?: (selectedCard: RechargeCard) => void;
+    onSuccess?: (data: any) => void;
     onCancel?: () => void;
 
     modal?: boolean;
@@ -49,19 +57,27 @@ export default function RechargeCardSelector({
                                                  open,
                                                  onClose,
                                              }: RechargeCardSelectorProps) {
+    const { fetchData } = useFetchData();
+
+    // 充值卡
     const [cardList, setCardList] = useState<RechargeCard[]>([]);
-    const [loading, setLoading] = useState(false);
     const [selectedCard, setSelectedCard] = useState<RechargeCard | null>(null);
+    const [loadingCards, setLoadingCards] = useState(false);
+
+    // 会员查询
+    const [phone, setPhone] = useState('');
+    const [member, setMember] = useState<Member | null>(null);
+    const [loadingMember, setLoadingMember] = useState(false);
+    const [memberValid, setMemberValid] = useState(false);
+
     const [internalOpen, setInternalOpen] = useState(false);
-    const {fetchData, alertComponent} = useFetchData();
     const isOpen = modal ? (open ?? internalOpen) : true;
 
     // 获取充值卡列表
     const fetchRechargeCards = async () => {
-        setLoading(true);
+        setLoadingCards(true);
         try {
             await fetchData('/v1/hlj/store/charge', (res: any) => {
-                // 适配后端字段
                 const formatted = (res || []).map((item: any) => ({
                     id: item._id || item.id,
                     name: item.name,
@@ -71,102 +87,167 @@ export default function RechargeCardSelector({
                     image: item.image,
                     fullImage: item.full_image,
                     gifts: item.gifts || [],
-                    sales: item.sales,
-                    type: item.type,
-                    status: item.status,
                 }));
                 setCardList(formatted);
             }, "GET");
-        } catch (err) {
-            toast.error("获取充值卡列表失败");
-            setCardList([]);
+        } catch {
+            toast.error("获取充值卡失败");
         } finally {
-            setLoading(false);
+            setLoadingCards(false);
         }
     };
 
-    useEffect(() => {
-        if (isOpen) {
-            fetchRechargeCards();
+    // 查询会员（11位手机号）
+    const fetchMember = async (phoneNumber: string) => {
+        if (phoneNumber.length !== 11) {
+            setMember(null);
+            setMemberValid(false);
+            return;
         }
+
+        setLoadingMember(true);
+        try {
+            await fetchData('/v1/hlj/member/account/search', (res: any) => {
+                const m = res?.[0] || null; // 取第一个匹配的会员
+                setMember(m);
+
+                // 判断账号是否正常（可根据实际字段调整）
+                const isNormal = m && (m.status === 1 || !m.statusText || m.statusText.includes('正常'));
+                setMemberValid(!!isNormal);
+
+                if (!isNormal) {
+                    toast.warning("该账号状态异常，请检查");
+                }
+            }, "GET", { phone: phoneNumber });
+        } catch {
+            toast.error("会员查询失败");
+            setMember(null);
+            setMemberValid(false);
+        } finally {
+            setLoadingMember(false);
+        }
+    };
+
+    // 防抖查询会员
+    useEffect(() => {
+        if (!isOpen) return;
+        const timer = setTimeout(() => fetchMember(phone), 500);
+        return () => clearTimeout(timer);
+    }, [phone, isOpen]);
+
+    // 加载充值卡
+    useEffect(() => {
+        if (isOpen) fetchRechargeCards();
     }, [isOpen]);
 
     const handleClose = () => {
         if (modal) onClose?.();
         else setInternalOpen(false);
+
+        setPhone('');
+        setMember(null);
         setSelectedCard(null);
+        setMemberValid(false);
     };
 
-    const handleConfirmRecharge = async () => {
-        if (!selectedCard) return;
+    const handleConfirmOrder = async () => {
+        if (!selectedCard || !member || !memberValid) return;
+
+        const orderAmount = parseFloat(selectedCard.sellPrice || selectedCard.value);
+
+        const newOrderRequest = {
+            order_type: 2,                    // 假设 2 为充值订单，根据实际调整
+            member_id: member.id,
+            store_id: 1,                      // 根据实际情况传入
+            total_amount: orderAmount,
+            pay_amount: orderAmount,
+            items: [{
+                product_type: "topup",
+                product_id: selectedCard.id,
+                name: selectedCard.name,
+                price: orderAmount,
+                quantity: 1,
+            }],
+            phone: phone,
+            remark: `充值卡：${selectedCard.name}`,
+            at: localStorage.getItem("current_store_id") as string,
+            pick: 4, // 虚拟卡
+            // 可继续补充其他必要字段
+        };
+
+        // 增加 seat 和 phone 等信息
+        // const newOrderRequest = {
+        //     at: localStorage.getItem("current_store_id") as string,
+        //     buckets: convertToOrderRequest(cartItems),
+        //     seat: localStorage.getItem('ticketNumber'),
+        //     phone: localStorage.getItem('phoneNumber'),
+        //     people: localStorage.getItem('peopleNumber'),
+        //     pick: pick,
+        // };
 
         try {
-            await fetchData('/v1/hlj/store/charge/pay', () => {}, "POST", {
-                card_id: selectedCard.id,
-                // 可根据需要增加其他参数
-            });
-
-            toast.success(`已成功购买 ${selectedCard.name} ¥${selectedCard.value}`);
-            onSuccess?.(selectedCard);
-            handleClose();
+            await fetchData('/v1/hlj/order/pos', (response: any) => {
+                toast.success("订单创建成功！");
+                onSuccess?.({ order: response, card: selectedCard, member });
+                handleClose();
+            }, "POST", newOrderRequest);
         } catch {
-            toast.error("充值失败");
+            toast.error("下单失败");
         }
     };
 
     const content = (
         <Box>
-            {loading ? (
-                <Typography sx={{ mt: 4, textAlign: 'center' }}>加载充值卡中...</Typography>
+            {/* ==================== 手机号输入 ==================== */}
+            <FormControl fullWidth variant="filled" sx={{ mb: 3 }}>
+                <InputLabel>手机号（11位）</InputLabel>
+                <FilledInput
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                    placeholder="请输入11位手机号"
+                />
+            </FormControl>
+
+            {/* 会员信息展示 */}
+            {loadingMember && <Typography>查询会员中...</Typography>}
+            {member && (
+                <Box sx={{ mb: 3, p: 2, bgcolor: memberValid ? "#e8f5e9" : "#ffebee", borderRadius: 1 }}>
+                    <Typography>姓名：{member.name}</Typography>
+                    <Typography>手机号：{member.phone}</Typography>
+                    <Typography color={memberValid ? "green" : "red"}>
+                        账号状态：{memberValid ? "正常" : "异常"}
+                    </Typography>
+                </Box>
+            )}
+
+            {/* ==================== 充值卡列表 ==================== */}
+            {loadingCards ? (
+                <Typography>加载充值卡中...</Typography>
             ) : (
-                <Grid container spacing={3} sx={{ mt: 1 }}>
+                <Grid container spacing={3}>
                     {cardList.map((card) => (
                         <Grid item xs={12} sm={6} md={4} key={card.id}>
                             <Card
                                 sx={{
-                                    height: '100%',
-                                    border: selectedCard?.id === card.id ? "2px solid #1976d2" : "1px solid #e0e0e0",
-                                    transition: "all 0.2s",
+                                    border: selectedCard?.id === card.id ? "2px solid #1976d2" : "1px solid #ddd",
                                 }}
                             >
                                 <CardActionArea onClick={() => setSelectedCard(card)}>
-                                    {/* 图片展示 */}
                                     {card.image && (
                                         <CardMedia
                                             component="img"
                                             height="140"
                                             image={card.fullImage || card.image}
                                             alt={card.name}
-                                            sx={{ objectFit: 'contain', p: 1, bgcolor: '#f8f8f8' }}
                                         />
                                     )}
-
                                     <CardContent>
-                                        <Typography variant="h6" fontWeight={600} gutterBottom>
-                                            {card.name}
-                                        </Typography>
-
-                                        <Typography variant="h4" color="primary" sx={{ my: 1 }}>
-                                            ¥{card.value}
-                                        </Typography>
-
+                                        <Typography variant="h6">{card.name}</Typography>
+                                        <Typography variant="h4" color="primary">¥{card.value}</Typography>
                                         {card.sellPrice && card.sellPrice !== card.value && (
-                                            <Typography variant="body2" color="text.secondary">
-                                                售价 ¥{card.sellPrice}
-                                            </Typography>
+                                            <Typography>售价 ¥{card.sellPrice}</Typography>
                                         )}
-
-                                        {card.desc && (
-                                            <Typography variant="body2" sx={{ mt: 1, color: '#666' }}>
-                                                {card.desc}
-                                            </Typography>
-                                        )}
-
-                                        {card.gifts && card.gifts.length > 0 && (
-                                            <Typography variant="caption" color="success.main" sx={{ mt: 1, display: 'block' }}>
-                                                赠品：{card.gifts.join("、")}
-                                            </Typography>
-                                        )}
+                                        {card.desc && <Typography variant="body2">{card.desc}</Typography>}
                                     </CardContent>
                                 </CardActionArea>
                             </Card>
@@ -174,78 +255,35 @@ export default function RechargeCardSelector({
                     ))}
                 </Grid>
             )}
-
-            {!loading && cardList.length === 0 && (
-                <Typography color="text.secondary" sx={{ mt: 4, textAlign: 'center' }}>
-                    暂无可用充值卡
-                </Typography>
-            )}
         </Box>
     );
 
-    // ====================== 弹窗模式 ======================
     if (modal) {
         return (
             <Dialog open={!!isOpen} onClose={handleClose} fullWidth maxWidth="lg">
-                <DialogTitle>选择充值卡</DialogTitle>
+                <DialogTitle>充值下单</DialogTitle>
                 <DialogContent dividers>
                     {content}
                 </DialogContent>
 
-                {/* 确认充值弹窗 */}
-                <Dialog open={!!selectedCard} onClose={() => setSelectedCard(null)} fullWidth maxWidth="sm">
-                    <DialogTitle>确认充值信息</DialogTitle>
-                    <DialogContent>
-                        {selectedCard && (
-                            <Box sx={{ mt: 2 }}>
-                                <Typography><strong>充值卡名称：</strong>{selectedCard.name}</Typography>
-                                <Typography><strong>面额：</strong>¥{selectedCard.value}</Typography>
-                                {selectedCard.sellPrice && selectedCard.sellPrice !== selectedCard.value && (
-                                    <Typography><strong>实际支付：</strong>¥{selectedCard.sellPrice}</Typography>
-                                )}
-                                {selectedCard.desc && <Typography><strong>描述：</strong>{selectedCard.desc}</Typography>}
-                                {selectedCard.gifts && selectedCard.gifts.length > 0 && (
-                                    <Typography><strong>赠送：</strong>{selectedCard.gifts.join("、")}</Typography>
-                                )}
-                            </Box>
-                        )}
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setSelectedCard(null)}>取消</Button>
-                        <Button variant="contained" onClick={handleConfirmRecharge}>
-                            确认充值
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                <DialogActions>
+                    <Button onClick={handleClose}>取消</Button>
+                    <Button
+                        variant="contained"
+                        disabled={!selectedCard || !member || !memberValid}
+                        onClick={handleConfirmOrder}
+                    >
+                        确认下单支付
+                    </Button>
+                </DialogActions>
             </Dialog>
         );
     }
 
-    // ====================== Inline 模式 ======================
     return (
         <>
             {content}
-
-            <Dialog open={!!selectedCard} onClose={() => setSelectedCard(null)} fullWidth>
-                <DialogTitle>确认充值</DialogTitle>
-                <DialogContent>
-                    {selectedCard && (
-                        <Box sx={{ mt: 2 }}>
-                            <Typography><strong>名称：</strong>{selectedCard.name}</Typography>
-                            <Typography><strong>面额：</strong>¥{selectedCard.value}</Typography>
-                            {selectedCard.sellPrice !== selectedCard.value && (
-                                <Typography><strong>支付金额：</strong>¥{selectedCard.sellPrice}</Typography>
-                            )}
-                        </Box>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setSelectedCard(null)}>取消</Button>
-                    <Button variant="contained" onClick={handleConfirmRecharge}>
-                        确认充值
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            {/* Inline 模式下的确认按钮可自行添加 */}
         </>
     );
 }
