@@ -10,10 +10,13 @@ import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 import {CartItem} from "../../common/types";
 import {useEffect, useState} from "react";
 import MyDataDrawer from "./MyDataDrawer";
+import RechargeCardSelector from "../../common/RechargeCardSelector";
+import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
 
 export const MyHome = () => {
     const { cartItems, setCartItems, drawerOpen, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen } = useCartContext();
     const [clearCartSignal, setClearCartSignal] = useState(false);
+    const [rechargeOpen, setRechargeOpen] = useState(false);
 
     const handleClick = (item: CartItem) => {
         setDrawerOpen(true);
@@ -57,6 +60,16 @@ export const MyHome = () => {
                     <MyCartDrawer />
                     <MyOrderDrawer/>
                     <MyDataDrawer/>
+                    // 弹窗模式（推荐）
+                    <RechargeCardSelector
+                        modal={true}
+                        open={rechargeOpen}
+                        onClose={() => setRechargeOpen(false)}
+                        onSuccess={(card) => {
+                            console.log('已选择充值卡:', card);
+                            // 刷新会员余额等
+                        }}
+                    />
                     {/* 仅在 dataDrawerOpen 为 false 时渲染以下部分 */}
                     {!dataDrawerOpen && (
                         <>
@@ -72,9 +85,9 @@ export const MyHome = () => {
                                     right: 16,
                                     zIndex: 1000,
                                 }}
-                                onClick={() => setDrawerOpen(true)}
+                                onClick={() => setRechargeOpen(true)}
                             >
-                                <ShoppingCartIcon fontSize="large" color={'error'} />
+                                <AssuredWorkloadIcon fontSize="large" color={'info'} />
                             </Fab>
                             <Fab
                                 aria-label="Expand"
@@ -88,6 +101,20 @@ export const MyHome = () => {
                                 onClick={() => setOrderDrawerOpen(true)}
                             >
                                 <GradingIcon fontSize="large" color={'warning'} />
+                            </Fab>
+
+                            <Fab
+                                aria-label="Expand"
+                                color="inherit"
+                                sx={{
+                                    position: 'fixed',
+                                    bottom: 144,
+                                    right: 16,
+                                    zIndex: 1000,
+                                }}
+                                onClick={() => setDrawerOpen(true)}
+                            >
+                                <ShoppingCartIcon fontSize="large" color={'error'} />
                             </Fab>
                         </>
                     )}

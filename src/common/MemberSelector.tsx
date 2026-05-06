@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useMemberSearch } from "./useMemberSearch";
+import RechargeCardSelector from './RechargeCardSelector';
 
 interface MemberSelectorProps {
     price: number;
@@ -42,7 +43,6 @@ export default function MemberSelector({
 
     const [selectedMember, setSelectedMember] = useState<any>(null);
     const [internalOpen, setInternalOpen] = useState(false);
-
     const isOpen = modal ? (open ?? internalOpen) : true;
 
     const handleClose = () => {
