@@ -6,8 +6,7 @@ RUN corepack enable && corepack prepare yarn@stable --activate
 
 WORKDIR /app
 COPY package.json yarn.lock ./
-# 临时使用非严格模式，让 yarn 自动修复 lockfile
-RUN yarn install --immutable-cache
+RUN yarn install
 
 
 # ====================== 2. Builder ======================
