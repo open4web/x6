@@ -5,12 +5,8 @@ RUN apk add --no-cache libc6-compat
 RUN corepack enable && corepack prepare yarn@stable --activate
 
 WORKDIR /app
-
-# ❗只复制必要文件
 COPY package.json yarn.lock ./
-
-# ❗关键修改（去掉 --immutable-cache）
-RUN yarn install --immutable
+RUN yarn install --immutable --immutable-cache
 
 
 # ====================== 2. Builder ======================
@@ -19,68 +15,23 @@ FROM node:20-alpine AS builder
 RUN corepack enable && corepack prepare yarn@stable --activate
 
 WORKDIR /app
-
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Install dependencies only when needed
-FROM node:alpine AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-COPY package.json yarn.lock vite.config.ts ./
-
-RUN yarn install --frozen-lockfile
-
-# Rebuild the source code only when needed
-FROM node:alpine AS builder
-WORKDIR /app
-COPY . .
-
-ENV BASE_PATH admin
-
-COPY --from=deps /app/node_modules ./node_modules
-RUN yarn build  && yarn install --production --ignore-scripts --prefer-offline
-
-# Production image, copy all the files and run next
-FROM node:alpine AS runner
-WORKDIR /app
-
-# ENV NODE_ENV production
-ENV BASE_PATH admin
-
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
-
-# You only need to copy next.config.js if you are NOT using the default configuration
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/vite.config.ts ./vite.config.ts
-COPY --from=builder /app/packages ./packages
-
-RUN mkdir -p /app/node_modules/.vite/deps_temp
-
-USER nextjs
-
-EXPOSE 8000
-
-ENV PORT 8000
-
-# Handle Nginx
-FROM nginx
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY ./deployment/docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-
-
 
 ENV BASE_PATH=admin
 
 RUN yarn build
 
 
-# ====================== 3. Runner ======================
+# ====================== 3. Production (Nginx) ======================
 FROM nginx:alpine AS runner
 
+# 复制构建产物
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# 复制 nginx 配置（如果有）
+COPY ./deployment/docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+
 EXPOSE 8000
+
 CMD ["nginx", "-g", "daemon off;"]
