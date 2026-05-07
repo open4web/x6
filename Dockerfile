@@ -18,6 +18,15 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# 关键修复：同时复制 lockfile + 重新 install
+COPY package.json yarn.lock ./
+COPY --from=deps /app/node_modules ./node_modules
+
+# 再次执行 install，确保 lockfile 与当前 package.json 完全一致
+RUN yarn install --immutable-cache
+
+COPY . .
+
 ENV BASE_PATH=admin
 
 RUN yarn build
