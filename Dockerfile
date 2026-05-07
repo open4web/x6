@@ -39,4 +39,7 @@ FROM nginx:alpine AS runner
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 8000
+
+ENV PORT 8000
+
 CMD ["nginx", "-g", "daemon off;"]
