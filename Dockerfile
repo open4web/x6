@@ -23,7 +23,7 @@ COPY package.json yarn.lock ./
 COPY --from=deps /app/node_modules ./node_modules
 
 # 再次执行 install，确保 lockfile 与当前 package.json 完全一致
-RUN yarn install --immutable-cache
+RUN yarn install
 
 COPY . .
 
