@@ -34,12 +34,6 @@ RUN yarn build --debug 2>&1 | tee build.log || (echo "=== BUILD FAILED ===" && c
 
 
 # ====================== 3. Production ======================
-FROM nginx:alpine AS runner
-
+FROM nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-EXPOSE 8000
-
-ENV PORT 8000
-
-CMD ["nginx", "-g", "daemon off;"]
+COPY ./deployment/docker/nginx/default.conf /etc/nginx/conf.d/default.conf

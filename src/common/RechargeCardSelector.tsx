@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useFetchData } from "./FetchData";
-import {convertToOrderRequest} from "../utils/time";
+import PaymentDialog from "./PaymentDialog";   // ← 确保已创建这个组件
 
 interface RechargeCard {
     id: string;
@@ -37,7 +37,7 @@ interface Member {
     name: string;
     phone: string;
     balance?: number;
-    status?: number; // 假设后端返回状态
+    status?: number;
     statusText?: string;
 }
 
@@ -69,6 +69,14 @@ export default function RechargeCardSelector({
     const [member, setMember] = useState<Member | null>(null);
     const [loadingMember, setLoadingMember] = useState(false);
     const [memberValid, setMemberValid] = useState(false);
+
+    // 支付弹窗相关
+    const [openPayment, setOpenPayment] = useState(false);
+    const [orderPrice, setOrderPrice] = useState(0);
+    const [orderID, setOrderID] = useState("");
+    const [orderCount, setOrderCount] = useState(0);
+    const [totalItems, setTotalItems] = useState(0);
+    const [estimatedWait, setEstimatedWait] = useState(0);
 
     const [internalOpen, setInternalOpen] = useState(false);
     const isOpen = modal ? (open ?? internalOpen) : true;
@@ -108,10 +116,9 @@ export default function RechargeCardSelector({
         setLoadingMember(true);
         try {
             await fetchData('/v1/hlj/member/account/search', (res: any) => {
-                const m = res?.[0] || null; // 取第一个匹配的会员
+                const m = res?.[0] || null;
                 setMember(m);
 
-                // 判断账号是否正常（可根据实际字段调整）
                 const isNormal = m && (m.status === 1 || !m.statusText || m.statusText.includes('正常'));
                 setMemberValid(!!isNormal);
 
@@ -148,6 +155,7 @@ export default function RechargeCardSelector({
         setMember(null);
         setSelectedCard(null);
         setMemberValid(false);
+        setOpenPayment(false);
     };
 
     const handleConfirmOrder = async () => {
@@ -156,9 +164,9 @@ export default function RechargeCardSelector({
         const orderAmount = parseFloat(selectedCard.sellPrice || selectedCard.value);
 
         const newOrderRequest = {
-            order_type: 2,                    // 假设 2 为充值订单，根据实际调整
+            order_type: 2,
             member_id: member.id,
-            store_id: 1,                      // 根据实际情况传入
+            store_id: 1,
             total_amount: orderAmount,
             pay_amount: orderAmount,
             items: [{
@@ -171,25 +179,22 @@ export default function RechargeCardSelector({
             phone: phone,
             remark: `充值卡：${selectedCard.name}`,
             at: localStorage.getItem("current_store_id") as string,
-            pick: 4, // 虚拟卡
-            // 可继续补充其他必要字段
+            pick: 4, // 虚拟商品
         };
-
-        // 增加 seat 和 phone 等信息
-        // const newOrderRequest = {
-        //     at: localStorage.getItem("current_store_id") as string,
-        //     buckets: convertToOrderRequest(cartItems),
-        //     seat: localStorage.getItem('ticketNumber'),
-        //     phone: localStorage.getItem('phoneNumber'),
-        //     people: localStorage.getItem('peopleNumber'),
-        //     pick: pick,
-        // };
 
         try {
             await fetchData('/v1/hlj/order/pos', (response: any) => {
+                setOrderPrice(response?.price || orderAmount);
+                setOrderID(response?.identity?.order_no || "");
+                setOrderCount(response?.orderCount || 0);
+                setTotalItems(response?.totalItems || 0);
+                setEstimatedWait(response?.estimatedWait || 0);
+
                 toast.success("订单创建成功！");
-                onSuccess?.({ order: response, card: selectedCard, member });
+                // 先关闭当前的充值选择弹窗
                 handleClose();
+                setOpenPayment(true);        // 打开支付弹窗
+                onSuccess?.({ order: response, card: selectedCard, member });
             }, "POST", newOrderRequest);
         } catch {
             toast.error("下单失败");
@@ -260,30 +265,59 @@ export default function RechargeCardSelector({
 
     if (modal) {
         return (
-            <Dialog open={!!isOpen} onClose={handleClose} fullWidth maxWidth="lg">
-                <DialogTitle>充值下单</DialogTitle>
-                <DialogContent dividers>
-                    {content}
-                </DialogContent>
+            <>
+                <Dialog open={!!isOpen} onClose={handleClose} fullWidth maxWidth="lg">
+                    <DialogTitle>充值下单</DialogTitle>
+                    <DialogContent dividers>
+                        {content}
+                    </DialogContent>
 
-                <DialogActions>
-                    <Button onClick={handleClose}>取消</Button>
-                    <Button
-                        variant="contained"
-                        disabled={!selectedCard || !member || !memberValid}
-                        onClick={handleConfirmOrder}
-                    >
-                        确认下单支付
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                    <DialogActions>
+                        <Button onClick={handleClose}>取消</Button>
+                        <Button
+                            variant="contained"
+                            disabled={!selectedCard || !member || !memberValid}
+                            onClick={handleConfirmOrder}
+                        >
+                            确认下单支付
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* ==================== 支付渠道弹窗 ==================== */}
+                <PaymentDialog
+                    open={openPayment}
+                    onClose={() => setOpenPayment(false)}
+                    price={orderPrice}
+                    orderID={orderID}
+                    orderCount={orderCount}
+                    totalItems={totalItems}
+                    estimatedWait={estimatedWait}
+                    fetchData={fetchData}
+                    onSuccess={() => {
+                        toast.success("充值支付成功！");
+                        handleClose();
+                    }}
+                />
+            </>
         );
     }
 
     return (
         <>
             {content}
-            {/* Inline 模式下的确认按钮可自行添加 */}
+
+            {/* Inline 模式下的支付弹窗 */}
+            <PaymentDialog
+                open={openPayment}
+                onClose={() => setOpenPayment(false)}
+                price={orderPrice}
+                orderID={orderID}
+                orderCount={orderCount}
+                totalItems={totalItems}
+                estimatedWait={estimatedWait}
+                fetchData={fetchData}
+            />
         </>
     );
 }
