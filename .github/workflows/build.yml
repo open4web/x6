@@ -1,5 +1,6 @@
 name: Docker Build and Push
 
+
 on:
   push:
     branches: [ main ]
@@ -7,82 +8,100 @@ on:
     branches: [ main ]
 
 jobs:
+
   build:
     runs-on: ubuntu-latest
-
     steps:
-      # ================== 1. 拉代码 ==================
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      # ================== 2. 启用 Buildx（缓存核心） ==================
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # ================== 3. 登录 DockerHub ==================
-      - name: Login to DockerHub
-        if: github.event_name == 'push'   # ✅ 只在 push 时登录（避免 PR 泄露）
-        uses: docker/login-action@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
         with:
+          go-version: 1.18
+
+      - name: Extract Image Name and Tag
+        id: extract_image_parts
+        run: |
+          IMAGE_NAME="${{ vars.DOCKER_IMAGE_NAME }}"
+          BASE_NAME=$(echo "$IMAGE_NAME" | cut -d':' -f1)
+          TAG=$(echo "$IMAGE_NAME" | cut -d':' -f2)
+          echo "BASE_NAME=$BASE_NAME" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Start Build Timer
+        id: build_start_time
+        run: echo "BUILD_START_TIME=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Build Docker Image
+        id: docker_build
+        uses: mr-smithers-excellent/docker-build-push@v5
+        with:
+          image: ${{ env.BASE_NAME }}
+          tags: ${{ env.TAG }}
+          registry: docker.io
+          dockerfile: Dockerfile
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # ================== 4. 构建 & 推送 ==================
-      - name: Build and Push Docker Image
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
+      - name: End Build Timer
+        id: build_end_time
+        run: echo "BUILD_END_TIME=$(date +%s)" >> $GITHUB_ENV
 
-          # ✅ 只有 push 才 push 镜像
-          push: ${{ github.event_name == 'push' }}
+      - name: Calculate Build Time
+        id: build_time
+        run: echo "BUILD_TIME=$((BUILD_END_TIME - BUILD_START_TIME))" >> $GITHUB_ENV
 
-          # ✅ 镜像标签（推荐双 tag）
-          tags: |
-            ${{ vars.DOCKER_IMAGE_NAME }}
-            ${{ vars.DOCKER_IMAGE_NAME }}:${{ github.sha }}
+      - name: Start Push Timer
+        id: push_start_time
+        run: echo "PUSH_START_TIME=$(date +%s)" >> $GITHUB_ENV
 
-          # 🚀 关键：缓存加速（提升 2~5 倍）
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # ================== 5. 构建时间统计 ==================
-      - name: Record Build Time
+      - name: Push Docker Image
         if: success()
         run: |
-          echo "BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+          docker push ${{ vars.DOCKER_IMAGE_NAME }}
 
-      # ================== 6. Slack 通知 ==================
+      - name: End Push Timer
+        id: push_end_time
+        run: echo "PUSH_END_TIME=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Calculate Push Time
+        id: push_time
+        run: echo "PUSH_TIME=$((PUSH_END_TIME - PUSH_START_TIME))" >> $GITHUB_ENV
+
       - name: Send Slack Notification
-        if: success() && github.event_name == 'push'
+        if: success()
         env:
           SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-          IMAGE: ${{ vars.DOCKER_IMAGE_NAME }}
+          BUILD_TIME: ${{ env.BUILD_TIME }}
+          PUSH_TIME: ${{ env.PUSH_TIME }}
+          DOCKER_IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME }}
+          BASE_NAME: ${{ env.BASE_NAME }}
+          TAG: ${{ env.TAG }}
         run: |
           curl -X POST -H 'Content-type: application/json' \
           --data "{
-            \"text\": \"🚀 *Docker Build Success*\n*Repo:* $GITHUB_REPOSITORY\n*Branch:* $GITHUB_REF_NAME\n*Image:* $IMAGE\n*By:* $GITHUB_ACTOR\",
+            \"text\": \"🛠️ *Build and Push Successful*\n*Repository:* $GITHUB_REPOSITORY\n*Branch/Tag:* $GITHUB_REF_NAME\n*Image:* $DOCKER_IMAGE_NAME\n*Base Image:* $BASE_NAME\n*Tag:* $TAG\n*Deployed by:* $GITHUB_ACTOR\",
             \"attachments\": [
               {
                 \"title\": \"Details\",
                 \"fields\": [
                   {\"title\": \"Branch\", \"value\": \"$GITHUB_REF_NAME\", \"short\": true},
-                  {\"title\": \"Actor\", \"value\": \"$GITHUB_ACTOR\", \"short\": true},
-                  {\"title\": \"Commit\", \"value\": \"$COMMIT_MESSAGE\", \"short\": false},
-                  {\"title\": \"Run\", \"value\": \"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\", \"short\": false}
+                  {\"title\": \"Deployed by\", \"value\": \"$GITHUB_ACTOR\", \"short\": true},
+                  {\"title\": \"Commit Message\", \"value\": \"$COMMIT_MESSAGE\", \"short\": false},
+                  {\"title\": \"Build Time\", \"value\": \"${BUILD_TIME}s\", \"short\": true},
+                  {\"title\": \"Push Time\", \"value\": \"${PUSH_TIME}s\", \"short\": true},
+                  {\"title\": \"Workflow Run\", \"value\": \"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\", \"short\": false}
                 ]
               }
             ]
           }" $SLACK_WEBHOOK_URL
-
-      # ================== 7. 记录到 PullBot ==================
       - name: Record Result to PullBot Repo
-        if: success() && github.event_name == 'push'
+        if: success()
         env:
           PULLBOT_TOKEN: ${{ secrets.PULLBOT_TOKEN }}
           TARGET_REPO: "share2024/pullbot"
