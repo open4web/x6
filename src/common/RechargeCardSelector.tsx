@@ -16,6 +16,9 @@ import {
     FormControl,
     FilledInput,
     InputLabel,
+    RadioGroup,
+    FormControlLabel,
+    Radio,
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useFetchData } from "./FetchData";
@@ -70,6 +73,11 @@ export default function RechargeCardSelector({
     const [loadingMember, setLoadingMember] = useState(false);
     const [memberValid, setMemberValid] = useState(false);
 
+    // 新增：快速添加会员相关状态
+    const [showCreateForm, setShowCreateForm] = useState(false);
+    const [newMemberName, setNewMemberName] = useState('');
+    const [newMemberGender, setNewMemberGender] = useState<'男' | '女' | '其他'>('男');
+
     // 支付弹窗相关
     const [openPayment, setOpenPayment] = useState(false);
     const [orderPrice, setOrderPrice] = useState(0);
@@ -110,6 +118,7 @@ export default function RechargeCardSelector({
         if (phoneNumber.length !== 11) {
             setMember(null);
             setMemberValid(false);
+            setShowCreateForm(false)
             return;
         }
 
@@ -119,17 +128,22 @@ export default function RechargeCardSelector({
                 const m = res?.[0] || null;
                 setMember(m);
 
-                const isNormal = m && (m.status === 1 || !m.statusText || m.statusText.includes('正常'));
-                setMemberValid(!!isNormal);
-
-                if (!isNormal) {
-                    toast.warning("该账号状态异常，请检查");
+                if (m) {
+                    const isNormal = m.status === 1 || !m.statusText || m.statusText.includes('正常');
+                    setMemberValid(!!isNormal);
+                    setShowCreateForm(false);
+                } else {
+                    setMemberValid(false);
+                    setShowCreateForm(true);        // ← 查不到时显示创建表单
+                    setNewMemberName('');
                 }
-            }, "GET", { phone: phoneNumber });
+
+            }, "GET", { phone_hex: phoneNumber });
         } catch {
             toast.error("会员查询失败");
             setMember(null);
             setMemberValid(false);
+            setShowCreateForm(true);
         } finally {
             setLoadingMember(false);
         }
@@ -156,6 +170,30 @@ export default function RechargeCardSelector({
         setSelectedCard(null);
         setMemberValid(false);
         setOpenPayment(false);
+    };
+
+    // ==================== 快速创建会员 ====================
+    const handleCreateMember = async () => {
+        if (!newMemberName.trim()) {
+            toast.warning("请输入姓名");
+            return;
+        }
+
+        try {
+            await fetchData('/v1/hlj/member/account', (res: any) => {
+                toast.success("会员创建成功！");
+                setMember(res);
+                setMemberValid(true);
+                setShowCreateForm(false);
+            }, "POST", {
+                phone: phone,
+                name: newMemberName.trim(),
+                gender: newMemberGender,
+                // 可根据后端需求增加更多字段
+            });
+        } catch {
+            toast.error("创建会员失败");
+        }
     };
 
     const handleConfirmOrder = async () => {
@@ -233,13 +271,52 @@ export default function RechargeCardSelector({
             {loadingMember && <Typography>查询会员中...</Typography>}
             {member && (
                 <Box sx={{ mb: 3, p: 2, bgcolor: memberValid ? "#e8f5e9" : "#ffebee", borderRadius: 1 }}>
-                    <Typography>姓名：{member.name}</Typography>
-                    <Typography>手机号：{member.phone}</Typography>
+                    <Typography color={"green"}>姓名：{member.name}</Typography>
+                    <Typography color={"green"}>手机号：{member.phone}</Typography>
                     <Typography color={memberValid ? "green" : "red"}>
                         账号状态：{memberValid ? "正常" : "异常"}
                     </Typography>
                 </Box>
             )}
+
+            {/* ==================== 快速添加会员表单 ==================== */}
+            {showCreateForm && !member && (
+                <Box sx={{ mb: 3, p: 3, border: '1px solid #ddd', borderRadius: 2, bgcolor: 'inherit' }}>
+                    <Typography variant="h6" gutterBottom>未找到会员，请新建</Typography>
+
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                        <InputLabel>姓名</InputLabel>
+                        <FilledInput
+                            value={newMemberName}
+                            onChange={(e) => setNewMemberName(e.target.value)}
+                            placeholder="请输入会员姓名"
+                        />
+                    </FormControl>
+
+                    <FormControl fullWidth sx={{ mb: 3 }}>
+                        <Typography variant="body2" sx={{ mb: 1 }}>性别</Typography>
+                        <RadioGroup
+                            row
+                            value={newMemberGender}
+                            onChange={(e) => setNewMemberGender(e.target.value as '男' | '女' | '其他')}
+                        >
+                            <FormControlLabel value="男" control={<Radio />} label="男" />
+                            <FormControlLabel value="女" control={<Radio />} label="女" />
+                            <FormControlLabel value="其他" control={<Radio />} label="其他" />
+                        </RadioGroup>
+                    </FormControl>
+
+                    <Button
+                        variant="contained"
+                        fullWidth
+                        onClick={handleCreateMember}
+                        disabled={!newMemberName.trim()}
+                    >
+                        快速创建会员
+                    </Button>
+                </Box>
+            )}
+
 
             {/* ==================== 充值卡列表 ==================== */}
             {loadingCards ? (
