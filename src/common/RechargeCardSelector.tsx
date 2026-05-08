@@ -162,20 +162,33 @@ export default function RechargeCardSelector({
         if (!selectedCard || !member || !memberValid) return;
 
         const orderAmount = parseFloat(selectedCard.sellPrice || selectedCard.value);
+        const cardValue = parseFloat(selectedCard.value);   // ← 新增
+
+        // ==================== 新增：构造 buckets ====================
+        const rechargeBucket = {
+            id: selectedCard.id,
+            name: selectedCard.name,
+            price: orderAmount,
+            number: 1,                    // quantity → number（后端常用字段）
+            desc: selectedCard.desc || "充值卡",
+            kindName: "虚拟产品",         // 关键标识
+            combName: "",
+            combID: "",
+            combPrice: 0,
+            propsOptions: [],
+            spiceOptions: [],
+            product_type: "topup",        // 可选：标识为充值类型
+        };
 
         const newOrderRequest = {
-            order_type: 2,
+            order_type: 2,                    // 充值订单
             member_id: member.id,
             store_id: 1,
             total_amount: orderAmount,
             pay_amount: orderAmount,
-            items: [{
-                product_type: "topup",
-                product_id: selectedCard.id,
-                name: selectedCard.name,
-                price: orderAmount,
-                quantity: 1,
-            }],
+            value: cardValue,
+            // ==================== 重点添加 buckets ====================
+            buckets: [rechargeBucket],
             phone: phone,
             remark: `充值卡：${selectedCard.name}`,
             at: localStorage.getItem("current_store_id") as string,
@@ -191,9 +204,12 @@ export default function RechargeCardSelector({
                 setEstimatedWait(response?.estimatedWait || 0);
 
                 toast.success("订单创建成功！");
-                // 先关闭当前的充值选择弹窗
+
+                // 先关闭充值选择弹窗
                 handleClose();
-                setOpenPayment(true);        // 打开支付弹窗
+                // 再打开支付弹窗
+                setOpenPayment(true);
+
                 onSuccess?.({ order: response, card: selectedCard, member });
             }, "POST", newOrderRequest);
         } catch {

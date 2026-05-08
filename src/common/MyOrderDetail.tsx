@@ -146,7 +146,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
 
     // 检查是否有可退款的商品
     const hasRefundableItems = (): boolean => {
-        return orderData.buckets.some(item => item.status !== 1);
+        return orderData?.buckets?.some(item => item.status !== 1);
     };
 
     // 检查是否有退款记录
@@ -338,7 +338,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                             <span>小计</span>
                             <span>状态</span>
                         </div>
-                        {orderData.buckets.map((bucket) => (
+                        {orderData?.buckets?.map((bucket) => (
                             <div className={`item ${bucket.status === 1 ? 'refunded' : ''}`} key={bucket.id}>
                                 <span>{bucket.name}</span>
                                 <span>¥{bucket.price.toFixed(2)}</span>
@@ -372,7 +372,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 <Card variant="outlined" sx={{marginBottom: 2}}>
                     <CardContent>
                         <List>
-                            {orderData.buckets.map((bucket) => {
+                            {orderData && orderData?.buckets && orderData?.buckets.map((bucket) => {
                                 const isRefunded = bucket.status === 1;
                                 return (
                                     <React.Fragment key={bucket.id}>

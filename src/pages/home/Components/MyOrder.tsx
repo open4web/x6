@@ -85,7 +85,7 @@ function generateQueryParams({ orderNo, status, startDate, endDate, source , onl
 
 // 计算订单中所有商品的总数量
 function calculateTotalItems(buckets: any[]): number {
-    return buckets.reduce((total, bucket) => total + bucket.number, 0);
+    return buckets?.reduce((total, bucket) => total + bucket.number, 0);
 }
 
 function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onlyMyOrder, setTotalRecord , saleStatus}: MyOrderProps) {
