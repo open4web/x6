@@ -112,6 +112,10 @@ export default function RechargeCardSelector({
     const [internalOpen, setInternalOpen] = useState(false);
     const isOpen = modal ? (open ?? internalOpen) : true;
 
+
+    // 新增类型定义（推荐放在 types.ts 中）
+    type UserGender = 0 | 1 | 2;   // 0=男, 1=女, 2=其他
+
     // 获取充值卡列表
     const fetchRechargeCards = async () => {
         setLoadingCards(true);
@@ -211,7 +215,7 @@ export default function RechargeCardSelector({
             }, "POST", {
                 phone: phone,
                 name: newMemberName.trim(),
-                gender: newMemberGender,
+                gender: newMemberGender,        // ← 传递数字 0,1,2
                 // 可根据后端需求增加更多字段
             });
         } catch {
@@ -224,7 +228,6 @@ export default function RechargeCardSelector({
 
         const orderAmount = parseFloat(selectedCard.sellPrice || selectedCard.value);
         const cardValue = parseFloat(selectedCard.value);   // ← 新增
-
         // ==================== 新增：构造 buckets ====================
         const rechargeBucket = {
             id: selectedCard.id,
@@ -278,6 +281,7 @@ export default function RechargeCardSelector({
         }
     };
 
+    // @ts-ignore
     const content = (
         <Box>
             {/* ==================== 手机号输入 ==================== */}
@@ -382,11 +386,25 @@ export default function RechargeCardSelector({
                         <RadioGroup
                             row
                             value={newMemberGender}
-                            onChange={(e) => setNewMemberGender(e.target.value as '男' | '女' | '其他')}
+                            onChange={
+                            // @ts-ignore
+                            (e) => setNewMemberGender(Number(e.target.value) as UserGender)}
                         >
-                            <FormControlLabel value="男" control={<Radio />} label="男" />
-                            <FormControlLabel value="女" control={<Radio />} label="女" />
-                            <FormControlLabel value="其他" control={<Radio />} label="其他" />
+                            <FormControlLabel
+                                value={0}
+                                control={<Radio />}
+                                label="男"
+                            />
+                            <FormControlLabel
+                                value={1}
+                                control={<Radio />}
+                                label="女"
+                            />
+                            <FormControlLabel
+                                value={2}
+                                control={<Radio />}
+                                label="其他"
+                            />
                         </RadioGroup>
                     </FormControl>
 
