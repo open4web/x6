@@ -36,12 +36,35 @@ interface RechargeCard {
 }
 
 interface Member {
-    id: string;
-    name: string;
-    phone: string;
-    balance?: number;
-    status?: number;
-    statusText?: string;
+    id: string;                    // 会员ID
+    name: string;                  // 姓名
+    phone: string;                 // 手机号（可能为加密或完整手机号）
+
+    // 基础信息
+    balance?: number;              // 余额
+    gender?: '男' | '女' | '其他' | string;   // 性别
+    birthday?: string;             // 生日
+    level?: string;                // 会员等级（如：普通会员、银卡、金卡等）
+    registerTime?: string;         // 注册时间
+
+    // 状态相关
+    status?: number;               // 状态码（1=正常，0=异常等）
+    statusText?: string;           // 状态描述
+
+    // 扩展信息（常用）
+    memberNo?: string;             // 会员卡号
+    avatar?: string;               // 头像
+    points?: number;               // 积分
+    nickname?: string;             // 昵称
+    email?: string;                // 邮箱
+    address?: string;              // 地址
+
+    // 时间戳
+    createdAt?: string;            // 创建时间
+    updatedAt?: string;            // 更新时间
+
+    // 其他可能字段
+    [key: string]: any;            // 允许后端返回其他未知字段
 }
 
 interface RechargeCardSelectorProps {
@@ -270,12 +293,73 @@ export default function RechargeCardSelector({
             {/* 会员信息展示 */}
             {loadingMember && <Typography>查询会员中...</Typography>}
             {member && (
-                <Box sx={{ mb: 3, p: 2, bgcolor: memberValid ? "#e8f5e9" : "#ffebee", borderRadius: 1 }}>
-                    <Typography color={"green"}>姓名：{member.name}</Typography>
-                    <Typography color={"green"}>手机号：{member.phone}</Typography>
-                    <Typography color={memberValid ? "green" : "red"}>
-                        账号状态：{memberValid ? "正常" : "异常"}
+                <Box sx={{
+                    mb: 3,
+                    p: 3,
+                    borderRadius: 2,
+                    border: memberValid ? "1px solid #81c784" : "1px solid #e57373"
+                }}>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                        会员信息
                     </Typography>
+
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                        <Box>
+                            <Typography variant="body2" color="text.secondary">姓名</Typography>
+                            <Typography variant="body1" fontWeight={600}>{member.name || '未填写'}</Typography>
+                        </Box>
+
+                        <Box>
+                            <Typography variant="body2" color="text.secondary">手机号</Typography>
+                            <Typography variant="body1" fontWeight={600}>
+                                {member.phone ? member.phone.slice(-4).padStart(11, '*') : '无'}
+                            </Typography>
+                        </Box>
+
+                        <Box>
+                            <Typography variant="body2" color="text.secondary">余额</Typography>
+                            <Typography
+                                variant="body1"
+                                fontWeight={600}
+                                color={member.balance && member.balance > 0 ? "success.main" : "error.main"}
+                            >
+                                ¥{member.balance?.toFixed(2) || '0.00'}
+                            </Typography>
+                        </Box>
+
+                        <Box>
+                            <Typography variant="body2" color="text.secondary">性别</Typography>
+                            <Typography variant="body1">{member.gender || '未填写'}</Typography>
+                        </Box>
+
+                        <Box>
+                            <Typography variant="body2" color="text.secondary">会员等级</Typography>
+                            <Typography variant="body1">
+                                {member.level || '普通会员'}
+                            </Typography>
+                        </Box>
+
+                        <Box>
+                            <Typography variant="body2" color="text.secondary">注册时间</Typography>
+                            <Typography variant="body1">
+                                {member.registerTime ? new Date(member.registerTime).toLocaleDateString() : '未知'}
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* 账号状态 */}
+                    <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed #ddd' }}>
+                        <Typography color={memberValid ? "success.main" : "error.main"} fontWeight={600}>
+                            账号状态：{memberValid ? "✅ 正常" : "❌ 异常"}
+                        </Typography>
+                    </Box>
+
+                    {/* 显示会员ID（可选） */}
+                    {member.id && (
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                            ID: {member.id}
+                        </Typography>
+                    )}
                 </Box>
             )}
 
