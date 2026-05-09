@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useFetchData } from "./FetchData";
-import PaymentDialog from "./PaymentDialog";   // ← 确保已创建这个组件
+import PaymentDialog from "./PaymentDialog";
 
 interface RechargeCard {
     id: string;
@@ -36,35 +36,16 @@ interface RechargeCard {
 }
 
 interface Member {
-    id: string;                    // 会员ID
-    name: string;                  // 姓名
-    phone: string;                 // 手机号（可能为加密或完整手机号）
-
-    // 基础信息
-    balance?: number;              // 余额
-    gender?: '男' | '女' | '其他' | string;   // 性别
-    birthday?: string;             // 生日
-    level?: string;                // 会员等级（如：普通会员、银卡、金卡等）
-    registerTime?: string;         // 注册时间
-
-    // 状态相关
-    status?: number;               // 状态码（1=正常，0=异常等）
-    statusText?: string;           // 状态描述
-
-    // 扩展信息（常用）
-    memberNo?: string;             // 会员卡号
-    avatar?: string;               // 头像
-    points?: number;               // 积分
-    nickname?: string;             // 昵称
-    email?: string;                // 邮箱
-    address?: string;              // 地址
-
-    // 时间戳
-    createdAt?: string;            // 创建时间
-    updatedAt?: string;            // 更新时间
-
-    // 其他可能字段
-    [key: string]: any;            // 允许后端返回其他未知字段
+    id: string;
+    name: string;
+    phone: string;
+    balance?: number;
+    gender?: string;
+    level?: string;
+    registerTime?: string;
+    status?: number;
+    statusText?: string;
+    [key: string]: any;
 }
 
 interface RechargeCardSelectorProps {
@@ -76,6 +57,8 @@ interface RechargeCardSelectorProps {
     onClose?: () => void;
 }
 
+type UserGender = 0 | 1 | 2;
+
 export default function RechargeCardSelector({
                                                  onSuccess,
                                                  onCancel,
@@ -85,23 +68,19 @@ export default function RechargeCardSelector({
                                              }: RechargeCardSelectorProps) {
     const { fetchData } = useFetchData();
 
-    // 充值卡
     const [cardList, setCardList] = useState<RechargeCard[]>([]);
     const [selectedCard, setSelectedCard] = useState<RechargeCard | null>(null);
     const [loadingCards, setLoadingCards] = useState(false);
 
-    // 会员查询
     const [phone, setPhone] = useState('');
     const [member, setMember] = useState<Member | null>(null);
     const [loadingMember, setLoadingMember] = useState(false);
     const [memberValid, setMemberValid] = useState(false);
 
-    // 新增：快速添加会员相关状态
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [newMemberName, setNewMemberName] = useState('');
-    const [newMemberGender, setNewMemberGender] = useState<'男' | '女' | '其他'>('男');
+    const [newMemberGender, setNewMemberGender] = useState<UserGender>(0);
 
-    // 支付弹窗相关
     const [openPayment, setOpenPayment] = useState(false);
     const [orderPrice, setOrderPrice] = useState(0);
     const [orderID, setOrderID] = useState("");
@@ -112,11 +91,7 @@ export default function RechargeCardSelector({
     const [internalOpen, setInternalOpen] = useState(false);
     const isOpen = modal ? (open ?? internalOpen) : true;
 
-
-    // 新增类型定义（推荐放在 types.ts 中）
-    type UserGender = 0 | 1 | 2;   // 0=男, 1=女, 2=其他
-
-    // 获取充值卡列表
+    // 获取充值卡
     const fetchRechargeCards = async () => {
         setLoadingCards(true);
         try {
@@ -140,12 +115,12 @@ export default function RechargeCardSelector({
         }
     };
 
-    // 查询会员（11位手机号）
+    // 查询会员
     const fetchMember = async (phoneNumber: string) => {
         if (phoneNumber.length !== 11) {
             setMember(null);
             setMemberValid(false);
-            setShowCreateForm(false)
+            setShowCreateForm(false);
             return;
         }
 
@@ -158,32 +133,27 @@ export default function RechargeCardSelector({
                 if (m) {
                     const isNormal = m.status === 1 || !m.statusText || m.statusText.includes('正常');
                     setMemberValid(!!isNormal);
-                    setShowCreateForm(false);
+                    setShowCreateForm(false);   // 强制隐藏
                 } else {
                     setMemberValid(false);
-                    setShowCreateForm(true);        // ← 查不到时显示创建表单
+                    setShowCreateForm(true);
                     setNewMemberName('');
                 }
-
             }, "GET", { phone_hex: phoneNumber });
         } catch {
             toast.error("会员查询失败");
-            setMember(null);
-            setMemberValid(false);
             setShowCreateForm(true);
         } finally {
             setLoadingMember(false);
         }
     };
 
-    // 防抖查询会员
     useEffect(() => {
         if (!isOpen) return;
         const timer = setTimeout(() => fetchMember(phone), 500);
         return () => clearTimeout(timer);
     }, [phone, isOpen]);
 
-    // 加载充值卡
     useEffect(() => {
         if (isOpen) fetchRechargeCards();
     }, [isOpen]);
@@ -196,6 +166,8 @@ export default function RechargeCardSelector({
         setMember(null);
         setSelectedCard(null);
         setMemberValid(false);
+        setShowCreateForm(false);
+        setNewMemberName('');
         setOpenPayment(false);
     };
 
@@ -208,15 +180,23 @@ export default function RechargeCardSelector({
 
         try {
             await fetchData('/v1/hlj/member/account', (res: any) => {
-                toast.success("会员创建成功！");
-                setMember(res);
-                setMemberValid(true);
+                toast.success("✅ 会员创建成功！");
+
+                // 关键修复：强制隐藏表单
                 setShowCreateForm(false);
+                setNewMemberName('');
+
+                // 重新查询最新会员信息
+                setTimeout(() => {
+                    if (phone && phone.length === 11) {
+                        fetchMember(phone);
+                    }
+                }, 600);
+
             }, "POST", {
                 phone: phone,
                 name: newMemberName.trim(),
-                gender: newMemberGender,        // ← 传递数字 0,1,2
-                // 可根据后端需求增加更多字段
+                gender: newMemberGender,
             });
         } catch {
             toast.error("创建会员失败");
@@ -227,36 +207,35 @@ export default function RechargeCardSelector({
         if (!selectedCard || !member || !memberValid) return;
 
         const orderAmount = parseFloat(selectedCard.sellPrice || selectedCard.value);
-        const cardValue = parseFloat(selectedCard.value);   // ← 新增
-        // ==================== 新增：构造 buckets ====================
+        const cardValue = parseFloat(selectedCard.value);
+
         const rechargeBucket = {
             id: selectedCard.id,
             name: selectedCard.name,
             price: orderAmount,
-            number: 1,                    // quantity → number（后端常用字段）
+            number: 1,
             desc: selectedCard.desc || "充值卡",
-            kindName: "虚拟产品",         // 关键标识
+            kindName: "虚拟产品",
             combName: "",
             combID: "",
             combPrice: 0,
             propsOptions: [],
             spiceOptions: [],
-            product_type: "topup",        // 可选：标识为充值类型
+            product_type: "topup",
         };
 
         const newOrderRequest = {
-            order_type: 2,                    // 充值订单
+            order_type: 2,
             member_id: member.id,
             store_id: 1,
             total_amount: orderAmount,
             pay_amount: orderAmount,
             value: cardValue,
-            // ==================== 重点添加 buckets ====================
             buckets: [rechargeBucket],
             phone: phone,
             remark: `充值卡：${selectedCard.name}`,
             at: localStorage.getItem("current_store_id") as string,
-            pick: 4, // 虚拟商品
+            pick: 4,
         };
 
         try {
@@ -269,9 +248,7 @@ export default function RechargeCardSelector({
 
                 toast.success("订单创建成功！");
 
-                // 先关闭充值选择弹窗
                 handleClose();
-                // 再打开支付弹窗
                 setOpenPayment(true);
 
                 onSuccess?.({ order: response, card: selectedCard, member });
@@ -281,10 +258,8 @@ export default function RechargeCardSelector({
         }
     };
 
-    // @ts-ignore
     const content = (
         <Box>
-            {/* ==================== 手机号输入 ==================== */}
             <FormControl fullWidth variant="filled" sx={{ mb: 3 }}>
                 <InputLabel>手机号（11位）</InputLabel>
                 <FilledInput
@@ -294,8 +269,8 @@ export default function RechargeCardSelector({
                 />
             </FormControl>
 
-            {/* 会员信息展示 */}
             {loadingMember && <Typography>查询会员中...</Typography>}
+
             {member && (
                 <Box sx={{
                     mb: 3,
@@ -312,37 +287,26 @@ export default function RechargeCardSelector({
                             <Typography variant="body2" color="text.secondary">姓名</Typography>
                             <Typography variant="body1" fontWeight={600}>{member.name || '未填写'}</Typography>
                         </Box>
-
                         <Box>
                             <Typography variant="body2" color="text.secondary">手机号</Typography>
                             <Typography variant="body1" fontWeight={600}>
                                 {member.phone ? member.phone.slice(-4).padStart(11, '*') : '无'}
                             </Typography>
                         </Box>
-
                         <Box>
                             <Typography variant="body2" color="text.secondary">余额</Typography>
-                            <Typography
-                                variant="body1"
-                                fontWeight={600}
-                                color={member.balance && member.balance > 0 ? "success.main" : "error.main"}
-                            >
+                            <Typography variant="body1" fontWeight={600} color="success.main">
                                 ¥{member.balance?.toFixed(2) || '0.00'}
                             </Typography>
                         </Box>
-
                         <Box>
                             <Typography variant="body2" color="text.secondary">性别</Typography>
                             <Typography variant="body1">{member.gender || '未填写'}</Typography>
                         </Box>
-
                         <Box>
                             <Typography variant="body2" color="text.secondary">会员等级</Typography>
-                            <Typography variant="body1">
-                                {member.level || '普通会员'}
-                            </Typography>
+                            <Typography variant="body1">{member.level || '普通会员'}</Typography>
                         </Box>
-
                         <Box>
                             <Typography variant="body2" color="text.secondary">注册时间</Typography>
                             <Typography variant="body1">
@@ -351,25 +315,17 @@ export default function RechargeCardSelector({
                         </Box>
                     </Box>
 
-                    {/* 账号状态 */}
                     <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed #ddd' }}>
                         <Typography color={memberValid ? "success.main" : "error.main"} fontWeight={600}>
                             账号状态：{memberValid ? "✅ 正常" : "❌ 异常"}
                         </Typography>
                     </Box>
-
-                    {/* 显示会员ID（可选） */}
-                    {member.id && (
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                            ID: {member.id}
-                        </Typography>
-                    )}
                 </Box>
             )}
 
-            {/* ==================== 快速添加会员表单 ==================== */}
+            {/* 快速添加会员表单 */}
             {showCreateForm && !member && (
-                <Box sx={{ mb: 3, p: 3, border: '1px solid #ddd', borderRadius: 2, bgcolor: 'inherit' }}>
+                <Box sx={{ mb: 3, p: 3, border: '1px solid #ddd', borderRadius: 2 }}>
                     <Typography variant="h6" gutterBottom>未找到会员，请新建</Typography>
 
                     <FormControl fullWidth sx={{ mb: 2 }}>
@@ -386,25 +342,11 @@ export default function RechargeCardSelector({
                         <RadioGroup
                             row
                             value={newMemberGender}
-                            onChange={
-                            // @ts-ignore
-                            (e) => setNewMemberGender(Number(e.target.value) as UserGender)}
+                            onChange={(e) => setNewMemberGender(Number(e.target.value) as UserGender)}
                         >
-                            <FormControlLabel
-                                value={0}
-                                control={<Radio />}
-                                label="男"
-                            />
-                            <FormControlLabel
-                                value={1}
-                                control={<Radio />}
-                                label="女"
-                            />
-                            <FormControlLabel
-                                value={2}
-                                control={<Radio />}
-                                label="其他"
-                            />
+                            <FormControlLabel value={0} control={<Radio />} label="男" />
+                            <FormControlLabel value={1} control={<Radio />} label="女" />
+                            <FormControlLabel value={2} control={<Radio />} label="其他" />
                         </RadioGroup>
                     </FormControl>
 
@@ -419,8 +361,7 @@ export default function RechargeCardSelector({
                 </Box>
             )}
 
-
-            {/* ==================== 充值卡列表 ==================== */}
+            {/* 充值卡列表 */}
             {loadingCards ? (
                 <Typography>加载充值卡中...</Typography>
             ) : (
@@ -479,7 +420,6 @@ export default function RechargeCardSelector({
                     </DialogActions>
                 </Dialog>
 
-                {/* ==================== 支付渠道弹窗 ==================== */}
                 <PaymentDialog
                     open={openPayment}
                     onClose={() => setOpenPayment(false)}
@@ -501,8 +441,6 @@ export default function RechargeCardSelector({
     return (
         <>
             {content}
-
-            {/* Inline 模式下的支付弹窗 */}
             <PaymentDialog
                 open={openPayment}
                 onClose={() => setOpenPayment(false)}

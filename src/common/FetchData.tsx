@@ -42,7 +42,7 @@ export const useFetchData = () => {
 
                 const response = await axios(config);
 
-                if (response.status === 200) {
+                if (response.status === 200 || response.status === 201) {
                     console.log(`Data fetched from ${path}:`, response.data);
                     setResponse(response.data);
                     showAlert('请求成功！', 'success'); // 成功提示

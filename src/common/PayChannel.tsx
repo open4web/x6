@@ -96,9 +96,9 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
     };
 
     useEffect(() => {
-        if (isWeChatTab) {
+        if (isWeChatTab && price > 0) {
             const handleScannerInput = (event: KeyboardEvent) => {
-                console.log("code ===>", code)
+                console.log("event.key ===>", event.key)
                 // 不同的支付渠道支付码长度不一样
                 if (code.length === 18) {
                     submitPay(code);
@@ -133,7 +133,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
                 }
             };
         }
-    }, [isWeChatTab, code]);
+    }, [isWeChatTab, code, price]);
 
     const handlePayByCash = async (value: string) => {
         const amount = parseFloat(value);
