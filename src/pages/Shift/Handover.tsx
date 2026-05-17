@@ -85,11 +85,7 @@ const HandoverPageDrawer: React.FC = () => {
         setSubmitting(true);
         try {
             const res = await doHandover(values);
-            // Modal.success({
-            //     title: '交接班成功',
-            //     content: `现金差异：¥${res?.data?.cash_difference.toFixed(2)}`,
-            //     onOk: loadCurrentShift,
-            // });
+
         } catch (error) {
             Modal.error({ title: '交接失败', content: '请稍后重试' });
         }
@@ -126,8 +122,15 @@ const HandoverPageDrawer: React.FC = () => {
                     <Descriptions.Item label="开始时间">{dayjs(currentShift.start_time).format('MM-DD HH:mm')}</Descriptions.Item>
                     <Descriptions.Item label="总订单数">{currentShift.total_orders} 单</Descriptions.Item>
 
-                    <Descriptions.Item label="总销售额" span={3}>
+                    <Descriptions.Item label="销售额" span={1}>
                         <strong>¥{currentShift.total_sales_amount.toFixed(2)}</strong>
+                    </Descriptions.Item>
+
+                    <Descriptions.Item label="总收款" span={1}>
+                        <strong>¥{currentShift.total_paid_amount.toFixed(2)}</strong>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="总退款" span={1}>
+                        <strong>¥{currentShift.total_refund_amount.toFixed(2)}</strong>
                     </Descriptions.Item>
                 </Descriptions>
 

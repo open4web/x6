@@ -28,6 +28,7 @@ export interface ShiftHandover {
     total_orders: number;
     total_sales_amount: number;
     total_paid_amount: number;
+    total_refund_amount: number;
 
     opening_cash: number;
     closing_cash: number;
