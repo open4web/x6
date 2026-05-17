@@ -28,7 +28,6 @@ import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import {Alert, FormControl, FormControlLabel, LinearProgress, Radio, RadioGroup} from "@mui/material";
-import {storeOrderTimestamp} from "../../../utils/expireStore";
 import {ComboGroup, ComboMatchResult, MatchedCombo} from "../types";
 import {convertToOrderRequest, FormatNanoseconds} from "../../../utils/time";
 
@@ -241,7 +240,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             setOpenPayChannel(true);
 
             // 设置当前订单作为最新订单
-            storeOrderTimestamp(response?.identity?.order_no);
+            // storeOrderTimestamp(response?.identity?.order_no);
 
             // 设置订单预计排队信息
             setOrderCount(response?.orderCount || 0);

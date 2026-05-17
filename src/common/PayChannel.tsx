@@ -11,8 +11,6 @@ import PayCodeDisplay from "./PayCodeInput";
 import {useOrderPolling} from "./OrderPulling";
 import MemberBalancePay from './MemberBalancePay';
 
-// const payingRef = useRef(false);
-
 interface TabPanelProps {
     children?: React.ReactNode;
     index: number;
@@ -56,7 +54,76 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
     const [phoneSuffix, setPhoneSuffix] = useState('');
     const [memberList, setMemberList] = useState<any[]>([]);
     const [loadingMember, setLoadingMember] = useState(false);
-    const {pollOrder} = useOrderPolling(fetchData, setOrderDrawerOpen);
+
+    // ==================== WebSocket 监听支付结果 ====================
+    const wsRef = useRef<WebSocket | null>(null);
+
+    const connectPaymentWS = () => {
+        if (wsRef.current) return;
+
+        const ws = new WebSocket('/v1/hlj/order/ws');   // 或你的支付专用 ws 地址
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+            console.log('支付监听 WebSocket 已连接');
+            // 可选：订阅当前订单
+            ws.send(JSON.stringify({
+                type: 'subscribe',
+                order_id: orderID
+            }));
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                console.log('支付 WS 消息:', msg);
+                setOrderDrawerOpen(true);
+                // 清空当前已完成的订单的购物车
+                setCart([]);
+                // 关闭购物车框
+                setOpen(false);
+                if (msg.order_id === orderID &&
+                    (msg.status === 1 || msg.type === 'payment_success' || msg.pay_status === 'success')) {
+
+                    // playSuccess();
+
+                    toast.success("支付成功！", {
+                        position: "top-center",
+                        autoClose: 2000,
+                    });
+
+                    setCart([]);
+                    setOpen(false);
+                    setOrderDrawerOpen(true);   // 打开订单详情抽屉
+
+                    // 可选：关闭当前支付弹窗
+                    // setOpen(false);
+                }
+            } catch (err) {
+                console.error('支付 WS 解析失败', err);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('支付 WebSocket 断开');
+            wsRef.current = null;
+            // 可自动重连
+            setTimeout(connectPaymentWS, 3000);
+        };
+
+        ws.onerror = (err) => console.error('支付 WebSocket 错误', err);
+    };
+
+    // 组件加载时连接 WS
+    useEffect(() => {
+        connectPaymentWS();
+
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
+        };
+    }, [orderID]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -86,7 +153,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
             setOpen(false);
 
             // ✅ 核心：统一调用
-            await pollOrder(orderID);
+            // await pollOrder(orderID);
 
         } catch {
             toast.error("支付失败");
@@ -163,7 +230,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
 
             // ✅ 统一轮询
 
-            await pollOrder(orderID);
+            // await pollOrder(orderID);
 
         } catch (error) {
             toast.error("现金支付失败", {position: "top-center"});

@@ -12,6 +12,8 @@ import Switch from "@mui/material/Switch";
 import MyPrinter from "../common/MyPrinter";
 import MyDataAppBar from "../common/MyData";
 import {FormatCurrentTime} from "../utils/time";
+import HandoverPage from "../pages/Shift/Handover";
+import MyShiftAppBar from "../common/MyShift";
 
 const MyAppBar = (props: any) => {
     const { setShowProductImage, showProductImage } = useCartContext();
@@ -48,7 +50,10 @@ const MyAppBar = (props: any) => {
                 }}
             >
                 <MerchantSelect />
+
                 <Switch {...label} defaultChecked color={"error"} onClick={handleSwitchClick} />
+
+
                 <Box
                     sx={{
                         marginLeft: 1,
@@ -71,6 +76,17 @@ const MyAppBar = (props: any) => {
             >
                 <MyDataAppBar />
             </Box>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    marginRight: "5px"
+                }}
+            >
+                <MyShiftAppBar />
+            </Box>
+
             <Box
                 sx={{
                     display: 'flex',

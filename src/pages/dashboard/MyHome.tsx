@@ -12,6 +12,7 @@ import {useEffect, useState} from "react";
 import MyDataDrawer from "./MyDataDrawer";
 import RechargeCardSelector from "../../common/RechargeCardSelector";
 import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
+import HandoverPageDrawer from "../Shift/Handover";
 
 export const MyHome = () => {
     const { cartItems, setCartItems, drawerOpen, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen } = useCartContext();
@@ -60,6 +61,7 @@ export const MyHome = () => {
                     <MyCartDrawer />
                     <MyOrderDrawer/>
                     <MyDataDrawer/>
+                    <HandoverPageDrawer/>
                     <RechargeCardSelector
                         modal={true}
                         open={rechargeOpen}
