@@ -206,7 +206,10 @@ const HandoverPageDrawer: React.FC = () => {
     if (!currentShift) return <Card loading>加载中...</Card>;
 
     return (
-        <Drawer open={shiftOpen} onClose={toggleDrawer(false)} elevation={2} anchor="top">
+        <Drawer open={shiftOpen} onClose={toggleDrawer(false)}
+                elevation={2} anchor="top"
+                PaperProps={{ sx: { height: '96vh', overflow: 'auto', zIndex: 1300 } }}
+        >
         <div style={{ padding: 24 }}>
             <Card title="交接班管理" loading={loading}>
                 <Descriptions bordered column={3}>
@@ -268,6 +271,7 @@ const HandoverPageDrawer: React.FC = () => {
                 onCancel={() => setShowOpenOrders(false)}
                 width={800}
                 footer={null}
+                zIndex={1500}           // ← 关键修复：提高层级
             >
                 <Table columns={openOrderColumns} dataSource={currentShift.open_orders} rowKey="order_id" pagination={false} />
             </Modal>
