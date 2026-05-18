@@ -45,7 +45,7 @@ const HandoverPageDrawer: React.FC = () => {
                 setCurrentShift(res.data);
                 form.setFieldsValue({
                     next_cashier: '',
-                    closing_cash: res.data.opening_cash + (res.data.payment_summary.cash || 0),
+                    closing_cash: res.data.closing_cash,
                     supervisor: '',
                     special_notes: res.data.special_notes,
                 });
@@ -57,9 +57,18 @@ const HandoverPageDrawer: React.FC = () => {
         setLoading(false);
     };
 
-    const doHandover =  async (payload: any) => {
+    const doHandover = async (values: any) => {
         setLoading(true);
         try {
+
+            const postData = {
+                current: currentShift,           // 可根据后端需求决定是否需要传整个对象
+                remark: values.special_notes || '',   // ← 关键：从表单取 special_notes
+                next_cashier: values.next_cashier,
+                closing_cash: values.closing_cash,
+                supervisor: values.supervisor || '',
+            };
+
             await fetchData('/v1/hlj/finance/shift', (res: any) => {
                 const m = res?.[0] || null;
                 setCurrentShift(res.data);
@@ -69,7 +78,9 @@ const HandoverPageDrawer: React.FC = () => {
                     supervisor: '',
                     special_notes: res.data.special_notes,
                 });
-            }, "POST", {});
+
+
+            }, "POST", postData);
         } catch {
             toast.error("会员查询失败");
         } finally {
