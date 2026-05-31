@@ -30,7 +30,7 @@ const HandoverPageDrawer: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [showOpenOrders, setShowOpenOrders] = useState(false);
-    const { shiftOpen, setShiftOpen } = useCartContext();
+    const { shiftOpen, setShiftOpen, merchantId } = useCartContext();
     const { fetchData } = useFetchData();
 
     const toggleDrawer = (newOpen: boolean) => () => {
@@ -39,8 +39,9 @@ const HandoverPageDrawer: React.FC = () => {
 
     const loadCurrentShift = async () => {
         setLoading(true);
+
         try {
-            await fetchData('/v1/hlj/finance/shift', (res: any) => {
+            await fetchData('/v1/hlj/finance/shift/' + merchantId, (res: any) => {
                 const m = res?.[0] || null;
                 setCurrentShift(res.data);
                 form.setFieldsValue({
@@ -70,15 +71,12 @@ const HandoverPageDrawer: React.FC = () => {
             };
 
             await fetchData('/v1/hlj/finance/shift', (res: any) => {
-                const m = res?.[0] || null;
-                setCurrentShift(res.data);
                 form.setFieldsValue({
                     next_cashier: '',
                     closing_cash: res.data.opening_cash + (res.data.payment_summary.cash || 0),
                     supervisor: '',
                     special_notes: res.data.special_notes,
                 });
-
 
             }, "POST", postData);
         } catch {
