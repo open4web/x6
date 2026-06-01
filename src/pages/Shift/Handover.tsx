@@ -21,6 +21,7 @@ import {useCartContext} from "../../dataProvider/MyCartProvider";
 import {toast} from "react-toastify";
 import {useFetchData} from "../../common/FetchData";
 import {Order, ShiftHandover} from "./types";
+import {statusInfoMap} from "./orderStatus";
 
 
 // ==================== 交接班页面 ====================
@@ -108,12 +109,15 @@ const HandoverPageDrawer: React.FC = () => {
         {
             title: '状态',
             dataIndex: 'status',
-            render: (status: string) => <Tag color={status === 'cooking' ? 'orange' : 'blue'}>{status}</Tag>
+            render: (status: number) => {
+                const info = statusInfoMap[status] || { text: `未知(${status})`, color: 'default' };
+                return <Tag color={info.color}>{info.text}</Tag>;
+            }
         },
         {
             title: '创建时间',
             dataIndex: 'create_time',
-            render: (v) => dayjs(v).format('HH:mm')
+            render: (v) => dayjs(v).format('YY-MM-DD HH:mm')
         },
     ];
 

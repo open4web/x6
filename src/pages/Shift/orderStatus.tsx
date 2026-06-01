@@ -1,0 +1,21 @@
+// statusInfoMap.ts
+export const statusInfoMap: Record<number, { text: string; color: string }> = {
+    0: { text: "待支付", color: "default" },
+    1: { text: "已支付", color: "orange" },
+    2: { text: "制作中", color: "processing" },
+    3: { text: "制作完成", color: "cyan" },
+    4: { text: "已完成", color: "success" },
+    5: { text: "拒绝取消", color: "red" },
+    6: { text: "已取消", color: "red" },
+    7: { text: "取消已同意", color: "volcano" },
+    8: { text: "已取消(已退款)", color: "red" },
+    9: { text: "外卖待接单", color: "gold" },
+    10: { text: "外卖已接单", color: "orange" },
+    11: { text: "外卖已拒单", color: "red" },
+    12: { text: "外卖已取货", color: "blue" },
+    13: { text: "外卖已送达", color: "success" },
+    14: { text: "已评价", color: "purple" },
+    15: { text: "已关闭", color: "default" },
+    16: { text: "退款申请中", color: "warning" },
+    17: { text: "已退款", color: "red" },
+};

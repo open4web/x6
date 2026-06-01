@@ -10,7 +10,7 @@ export interface Order {
     order_id: string;
     table_id?: string;
     items: MenuItem[];
-    status: string;
+    status: number;
     total_amount: number;
     paid_amount: number;
     payment_method: string;
