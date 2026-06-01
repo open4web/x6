@@ -34,6 +34,7 @@ const HandoverPageDrawer: React.FC = () => {
     const { shiftOpen, setShiftOpen, merchantId } = useCartContext();
     const { fetchData } = useFetchData();
 
+
     const toggleDrawer = (newOpen: boolean) => () => {
         setShiftOpen(newOpen);
     };
@@ -123,6 +124,7 @@ const HandoverPageDrawer: React.FC = () => {
 
     if (!currentShift) return <Card loading>加载中...</Card>;
 
+    // @ts-ignore
     return (
         <Drawer open={shiftOpen} onClose={toggleDrawer(false)}
                 elevation={2} anchor="top"
