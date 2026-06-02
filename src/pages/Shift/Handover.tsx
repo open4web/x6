@@ -70,9 +70,10 @@ const HandoverPageDrawer: React.FC = () => {
                 next_cashier: values.next_cashier,
                 closing_cash: values.closing_cash,
                 supervisor: values.supervisor || '',
+                special_notes: values.special_notes || '',
             };
 
-            await fetchData('/v1/hlj/finance/shift', (res: any) => {
+            await fetchData('/v1/hlj/finance/shift/' + merchantId, (res: any) => {
                 form.setFieldsValue({
                     next_cashier: '',
                     closing_cash: res.data.opening_cash + (res.data.payment_summary.cash || 0),
