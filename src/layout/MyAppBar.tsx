@@ -4,7 +4,6 @@ import {
     Box,
     useMediaQuery,
     Theme,
-    Badge,
     Typography,
 } from '@mui/material';
 import MerchantSelect from "../common/MerchantSelect";
@@ -14,7 +13,7 @@ import MyPrinter from "../common/MyPrinter";
 import MyDataAppBar from "../common/MyData";
 import { FormatCurrentTime } from "../utils/time";
 import MyShiftAppBar from "../common/MyShift";
-import {useFetchData} from "../common/FetchData";
+import { useFetchData } from "../common/FetchData";
 
 const MyAppBar = (props: any) => {
     const {
@@ -22,10 +21,9 @@ const MyAppBar = (props: any) => {
         showProductImage,
         ready,
         setReady,
-        // 如果你的 Context 里已经有了 shiftStartTime，可以直接从这里拿
-        // shiftStartTime, setShiftStartTime
         merchantId,
     } = useCartContext();
+
     const { fetchData } = useFetchData();
 
     const isLargeEnough = useMediaQuery<Theme>(theme =>
@@ -36,12 +34,11 @@ const MyAppBar = (props: any) => {
         setShowProductImage(!showProductImage);
     };
 
-    // ==================== 新增：Shift Ready 计时逻辑 ====================
-    const [elapsedTime, setElapsedTime] = React.useState<number>(0); // 秒数
+    // ==================== Shift Ready 计时逻辑 ====================
+    const [elapsedTime, setElapsedTime] = React.useState<number>(0);
     const [isRunning, setIsRunning] = React.useState<boolean>(false);
     const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
-    // 格式化成 “0时0分30秒”
     const formatShiftTime = (seconds: number): string => {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
@@ -49,16 +46,14 @@ const MyAppBar = (props: any) => {
         return `${hours}时${minutes}分${secs}秒`;
     };
 
-    // 启动/暂停计时器
+    // 计时器
     React.useEffect(() => {
         if (ready && !isRunning) {
-            // 开始或恢复计时
             setIsRunning(true);
             intervalRef.current = setInterval(() => {
                 setElapsedTime(prev => prev + 1);
             }, 1000);
         } else if (!ready && isRunning) {
-            // 暂停计时
             setIsRunning(false);
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
@@ -67,30 +62,42 @@ const MyAppBar = (props: any) => {
         }
 
         return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
+            if (intervalRef.current) clearInterval(intervalRef.current);
         };
-    }, [ready, isRunning]);
+    }, [ready]);
 
-    // 首次点击 ready = true 时，向后端发送开始请求
+    // 处理 Ready 开关
     const handleReadyClick = async () => {
         const newReady = !ready;
 
         if (newReady && elapsedTime === 0) {
-            // 首次开启班次
+            // 首次启动班次
             try {
-                // 示例 fetch 调用（根据你的项目风格调整）
-                await fetchData('/v1/hlj/finance/shift/start/' + merchantId, (res: any) => {
-                    console.log('Shift started on backend:', res.data);
-                    // 如果后端返回了开始时间戳，可以据此初始化 elapsedTime
-                    const serverStartTime = new Date(res.start).getTime();
-                    setElapsedTime(Math.floor((Date.now() - serverStartTime) / 1000));
+                await fetchData(
+                    `/v1/hlj/finance/shift/start/${merchantId}`,
+                    (res: any) => {
+                        console.log('Shift started:', res);
 
-                }, "POST", {});
+                        // ==================== 关键修复 ====================
+                        let serverStartMs: number;
+
+                        if (typeof res.start === 'string') {
+                            serverStartMs = new Date(res.start).getTime();
+                        } else if (typeof res.start === 'number') {
+                            // 后端大概率返回秒级时间戳 → 转成毫秒
+                            serverStartMs = res.start * 1000;
+                        } else {
+                            serverStartMs = Date.now(); // fallback
+                        }
+
+                        const secondsElapsed = Math.floor((Date.now() - serverStartMs) / 1000);
+                        setElapsedTime(Math.max(0, secondsElapsed)); // 防止负数
+                    },
+                    "POST",
+                    {}
+                );
             } catch (err) {
                 console.error('Failed to start shift:', err);
-                // 可根据需要回滚 setReady
                 return; // 失败不切换状态
             }
         }
@@ -98,36 +105,29 @@ const MyAppBar = (props: any) => {
         setReady(newReady);
     };
 
-    // 当前时间显示（原有逻辑）
+    // 当前时间
     const [currentTime, setCurrentTime] = React.useState<string>(() => FormatCurrentTime());
 
     React.useEffect(() => {
         const intervalId = setInterval(() => {
             setCurrentTime(FormatCurrentTime());
         }, 1000);
-
         return () => clearInterval(intervalId);
     }, []);
 
     return (
         <AppBar {...props} color="primary">
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                }}
-            >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <MerchantSelect />
 
-                <Switch {...label} defaultChecked color="error" onClick={handleSwitchClick} />
+                {/*<Switch {...label} defaultChecked color="error" onClick={handleSwitchClick} />*/}
 
-                {/* Ready 开关 + 时间统计 */}
+                {/* Ready 开关 + 计时显示 */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Switch
                         {...label}
                         checked={ready}
-                        color="warning"
+                        color="error"
                         onClick={handleReadyClick}
                     />
                     {ready && (
@@ -137,7 +137,7 @@ const MyAppBar = (props: any) => {
                                 color: 'white',
                                 fontWeight: 'bold',
                                 whiteSpace: 'nowrap',
-                                minWidth: '120px',
+                                minWidth: '130px',
                             }}
                         >
                             {formatShiftTime(elapsedTime)}
@@ -145,14 +145,7 @@ const MyAppBar = (props: any) => {
                     )}
                 </Box>
 
-                <Box
-                    sx={{
-                        marginLeft: 1,
-                        color: 'white',
-                        fontSize: '1rem',
-                        whiteSpace: 'nowrap',
-                    }}
-                >
+                <Box sx={{ marginLeft: 1, color: 'white', fontSize: '1rem', whiteSpace: 'nowrap' }}>
                     {currentTime}
                 </Box>
             </Box>
@@ -162,7 +155,6 @@ const MyAppBar = (props: any) => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, marginRight: "5px" }}>
                 <MyDataAppBar />
             </Box>
-
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, marginRight: "5px" }}>
                 <MyShiftAppBar />
             </Box>
