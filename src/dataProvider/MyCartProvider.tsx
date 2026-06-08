@@ -25,6 +25,8 @@ type CartContextType = {
     // 是否开始工作统计
     ready: boolean;
     setReady: React.Dispatch<React.SetStateAction<boolean>>;
+    startReady: number;
+    setStartReady: React.Dispatch<React.SetStateAction<number>>;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -46,7 +48,15 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
     const [dataDrawerOpen, setDataDrawerOpen] = useState(false);
     const [loginStep, setLoginStep] = useState<string>('password')
     const [shiftOpen, setShiftOpen] = useState(false);
-    const [ready, setReady] = useState(false); // 开始工作
+    // ==================== ready 本地存储初始化 ====================
+    const [ready, setReady] = useState<boolean>(() => {
+        const savedReady = localStorage.getItem("shiftReady:" + merchantId); // key 必须是与门店绑定
+        return savedReady !== null ? JSON.parse(savedReady) : false;
+    });
+    const [startReady, setStartReady] = useState<number>(() => {
+        const savedReady = localStorage.getItem("shiftReadyTime:" + merchantId); // key 必须是与门店绑定
+        return savedReady !== null ? JSON.parse(savedReady) : false;
+    });
 
     // 从 localStorage 初始化 holdOrders 列表
     const [holdOrders, setHoldOrders] = useState<CartItemHolder[]>(
@@ -68,7 +78,9 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
             setShiftOpen,
             shiftOpen,
             ready,
-            setReady
+            setReady,
+            startReady,
+            setStartReady,
         }}>
             {children}
         </CartContext.Provider>
