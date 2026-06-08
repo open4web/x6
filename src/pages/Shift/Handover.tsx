@@ -44,7 +44,6 @@ const HandoverPageDrawer: React.FC = () => {
 
         try {
             await fetchData('/v1/hlj/finance/shift/' + merchantId, (res: any) => {
-                const m = res?.[0] || null;
                 setCurrentShift(res.data);
                 form.setFieldsValue({
                     next_cashier: '',
@@ -91,7 +90,7 @@ const HandoverPageDrawer: React.FC = () => {
 
     useEffect(() => {
         loadCurrentShift();
-    }, []);
+    }, [shiftOpen]);
 
     const handleSubmit = async (values: any) => {
         setSubmitting(true);

@@ -16,13 +16,17 @@ import HandoverPage from "../pages/Shift/Handover";
 import MyShiftAppBar from "../common/MyShift";
 
 const MyAppBar = (props: any) => {
-    const { setShowProductImage, showProductImage } = useCartContext();
+    const { setShowProductImage, showProductImage, ready, setReady } = useCartContext();
     const isLargeEnough = useMediaQuery<Theme>(theme =>
         theme.breakpoints.up('sm')
     );
 
     const handleSwitchClick = () => {
         setShowProductImage(!showProductImage);
+    };
+
+    const handleReadyClick = () => {
+        setReady(!ready);
     };
 
     // State to hold current time and date
@@ -52,6 +56,7 @@ const MyAppBar = (props: any) => {
                 <MerchantSelect />
 
                 <Switch {...label} defaultChecked color={"error"} onClick={handleSwitchClick} />
+                <Switch {...label} defaultChecked color={"warning"} onClick={handleReadyClick} />
 
 
                 <Box

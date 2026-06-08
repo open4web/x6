@@ -22,6 +22,9 @@ type CartContextType = {
     // 交接班
     shiftOpen: boolean;
     setShiftOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    // 是否开始工作统计
+    ready: boolean;
+    setReady: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -43,6 +46,7 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
     const [dataDrawerOpen, setDataDrawerOpen] = useState(false);
     const [loginStep, setLoginStep] = useState<string>('password')
     const [shiftOpen, setShiftOpen] = useState(false);
+    const [ready, setReady] = useState(false); // 开始工作
 
     // 从 localStorage 初始化 holdOrders 列表
     const [holdOrders, setHoldOrders] = useState<CartItemHolder[]>(
@@ -63,6 +67,8 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
             setLoginStep,
             setShiftOpen,
             shiftOpen,
+            ready,
+            setReady
         }}>
             {children}
         </CartContext.Provider>
