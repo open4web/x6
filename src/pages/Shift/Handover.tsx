@@ -31,7 +31,7 @@ const HandoverPageDrawer: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [showOpenOrders, setShowOpenOrders] = useState(false);
-    const { shiftOpen, setShiftOpen, merchantId } = useCartContext();
+    const { shiftOpen, setShiftOpen, merchantId, setReady } = useCartContext();
     const { fetchData } = useFetchData();
 
 
@@ -72,6 +72,10 @@ const HandoverPageDrawer: React.FC = () => {
                 special_notes: values.special_notes || '',
             };
 
+            // 清空本地状态缓存
+            localStorage.removeItem("shiftReadyTime:" + merchantId)
+            localStorage.removeItem("shiftReady:" + merchantId)
+
             await fetchData('/v1/hlj/finance/shift/' + merchantId, (res: any) => {
                 form.setFieldsValue({
                     next_cashier: '',
@@ -79,7 +83,6 @@ const HandoverPageDrawer: React.FC = () => {
                     supervisor: '',
                     special_notes: res.data.special_notes,
                 });
-
             }, "POST", postData);
         } catch {
             toast.error("会员查询失败");
@@ -101,6 +104,7 @@ const HandoverPageDrawer: React.FC = () => {
             Modal.error({ title: '交接失败', content: '请稍后重试' });
         }
         setSubmitting(false);
+        setReady(false)
     };
 
     const openOrderColumns: ColumnsType<Order> = [
