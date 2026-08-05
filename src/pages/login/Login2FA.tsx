@@ -1,10 +1,10 @@
 import { useNotify, useRedirect, useTranslate } from 'react-admin';
 import LockIcon from '@mui/icons-material/Lock';
 import OtpInput from 'react-otp-input';
-import { Avatar, Box, Button, Card, CardActions, CircularProgress, Grid, Typography } from '@mui/material';
+import { Avatar, Box, Button, Card, CardActions, CircularProgress, Typography } from '@mui/material';
 import { authApi } from '../../utils/axios';
-import React, { useState } from 'react';
-import Countdown from "react-countdown";
+import React, { useRef, useState } from 'react';
+import Countdown from 'react-countdown';
 
 interface Login2FACardProps {
     loading: boolean;
@@ -12,29 +12,45 @@ interface Login2FACardProps {
 }
 
 const generateRandomAvatar = () => {
-    const randomHash = Math.random().toString(16).substring(2); // 生成随机哈希值
-    const avatarUrl = `https://www.gravatar.com/avatar/${randomHash}?d=identicon`; // Gravatar URL，使用 identicon 作为默认头像
-    return avatarUrl;
+    const randomHash = Math.random().toString(16).substring(2);
+    return `https://www.gravatar.com/avatar/${randomHash}?d=identicon`;
 };
 
 const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
-
     const translate = useTranslate();
     const notify = useNotify();
     const redirect = useRedirect();
     const [otp, setOtp] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const submittingRef = useRef(false); // 防止重复提交
 
-    const verifyOtp = async () => {
+    const verifyOtp = async (code: string) => {
+        if (submittingRef.current) return;
+        if (code.length !== 6) return;
+
+        submittingRef.current = true;
+        setSubmitting(true);
+
         try {
             const loginId = localStorage.getItem('login_id') || '';
-            const { data: { token, roles, tool_bar, user_id, username, avatar } } = await authApi.post('/user/otp/validate', {
-                code: otp,
+            const {
+                data: { token, roles, tool_bar, user_id, username, avatar },
+            } = await authApi.post('/user/otp/validate', {
+                code,
                 login_id: loginId,
             });
 
             notify('msg.verify_success', { type: 'success' });
 
-            const keysToRemove = ['verified_otp', 'user_id', 'code', 'otp_url', 'step', 'mfa_expire', 'login_id'];
+            const keysToRemove = [
+                'verified_otp',
+                'user_id',
+                'code',
+                'otp_url',
+                'step',
+                'mfa_expire',
+                'login_id',
+            ];
             keysToRemove.forEach((key) => localStorage.removeItem(key));
 
             localStorage.setItem('token', token);
@@ -42,54 +58,64 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
             localStorage.setItem('toolbar', tool_bar);
             localStorage.setItem('user_id', user_id);
             localStorage.setItem('username', username);
-            // 如果没有设置avatar则随机生成一个
             localStorage.setItem('avatar', avatar ? avatar : generateRandomAvatar());
             redirect('/');
-        } catch (error) {
-            notify('msg.verify_error', { type: 'error' });
+        } catch (error: any) {
+            const status = error?.response?.status;
+
+            if (status === 502) {
+                // 502：清空输入，等待重新输入
+                setOtp('');
+                notify('服务暂时不可用，请重新输入验证码', { type: 'warning' });
+            } else {
+                setOtp(''); // 验证失败也清空，方便重新输入
+                notify('msg.verify_error', { type: 'error' });
+            }
+        } finally {
+            submittingRef.current = false;
+            setSubmitting(false);
+        }
+    };
+
+    const handleOtpChange = (value: string) => {
+        // 只保留数字
+        const next = value.replace(/\D/g, '').slice(0, 6);
+        setOtp(next);
+
+        // 输满 6 位自动提交
+        if (next.length === 6) {
+            verifyOtp(next);
         }
     };
 
     const handleSubmit = () => {
-        verifyOtp().then(() => {
-            notify('msg.verify_processing', { type: 'info' });
-        });
+        verifyOtp(otp);
     };
 
     const cleanCache = () => {
-        const keysToRemove = ['verified_otp', 'user_id', 'code', 'otp_url', 'step'];
+        const keysToRemove = ['verified_otp', 'user_id', 'code', 'otp_url', 'step', 'mfa_expire', 'login_id'];
         keysToRemove.forEach((key) => localStorage.removeItem(key));
         redirect('/#/login');
     };
 
-    // 获取 user_id
     const userId = localStorage.getItem('user_id') || 'Unknown User';
+    const isLoading = loading || submitting;
 
-    // @ts-ignore
     return (
         <Card sx={{ minWidth: 400, padding: 3 }}>
-            {/* 图标和用户ID */}
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 2 }}>
                 <Avatar sx={{ width: 50, height: 50 }}>
-                    <LockIcon fontSize="large" color={"success"} />
+                    <LockIcon fontSize="large" color="success" />
                 </Avatar>
-                <Typography
-                    variant="h6"
-                    sx={{ marginLeft: 2, color: "text.primary", fontWeight: "bold" }}
-                >
+                <Typography variant="h6" sx={{ marginLeft: 2, color: 'text.primary', fontWeight: 'bold' }}>
                     {userId}
                 </Typography>
             </Box>
 
-            {/* 倒计时 */}
             <Box sx={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
-                <Typography
-                    variant="body1"
-                    sx={{ color: "error.main", fontSize: "1.2rem", fontWeight: "bold" }}
-                >
-                    {/*@ts-ignore*/}
+                <Typography variant="body1" sx={{ color: 'error.main', fontSize: '1.2rem', fontWeight: 'bold' }}>
                     <Countdown
-                        date={Date.now() + 1000 * parseInt(localStorage.getItem("mfa_expire") || '0', 10)}
+                        date={Date.now() + 1000 * parseInt(localStorage.getItem('mfa_expire') || '0', 10)}
                         intervalDelay={1000}
                         precision={1000}
                         onComplete={cleanCache}
@@ -98,7 +124,6 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                 </Typography>
             </Box>
 
-            {/* OTP 输入框 */}
             <Box sx={{ display: 'flex', justifyContent: 'center', marginBottom: 3 }}>
                 <OtpInput
                     inputStyle={{
@@ -111,24 +136,24 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                         margin: '0 5px',
                     }}
                     value={otp}
-                    onChange={setOtp}
+                    onChange={handleOtpChange}
                     numInputs={6}
                     renderSeparator={<span>-</span>}
-                    renderInput={(props) => <input {...props} />}
+                    renderInput={(props) => <input {...props} disabled={isLoading} />}
+                    shouldAutoFocus
                 />
             </Box>
 
-            {/* 按钮 */}
             <CardActions sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Button
                     variant="contained"
                     color="success"
                     size="large"
                     onClick={handleSubmit}
-                    disabled={loading}
+                    disabled={isLoading || otp.length !== 6}
                     sx={{ width: '100%' }}
                 >
-                    {loading && <CircularProgress size={25} thickness={2} sx={{ marginRight: 2 }} />}
+                    {isLoading && <CircularProgress size={25} thickness={2} sx={{ marginRight: 2 }} />}
                     {translate('pos.auth.validate') || '验证 MFA'}
                 </Button>
             </CardActions>
