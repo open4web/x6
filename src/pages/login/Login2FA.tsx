@@ -114,6 +114,7 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
 
             <Box sx={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
                 <Typography variant="body1" sx={{ color: 'error.main', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                    {/* @ts-expect-error react-countdown 与项目 @types/react 版本冲突 */}
                     <Countdown
                         date={Date.now() + 1000 * parseInt(localStorage.getItem('mfa_expire') || '0', 10)}
                         intervalDelay={1000}
