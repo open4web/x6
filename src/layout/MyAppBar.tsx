@@ -15,6 +15,7 @@ import { FormatCurrentTime } from "../utils/time";
 import MyShiftAppBar from "../common/MyShift";
 import { useFetchData } from "../common/FetchData";
 import MyShiftSwitch from "../common/MyShiftSwitch";
+import Version from "../common/Version"
 
 const MyAppBar = (props: any) => {
     const {
@@ -75,6 +76,9 @@ const MyAppBar = (props: any) => {
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <MyPrinter />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Version />
             </Box>
         </AppBar>
     );
