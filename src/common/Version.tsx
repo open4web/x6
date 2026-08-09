@@ -13,10 +13,7 @@ export default function AppVersion() {
     useEffect(() => {
         // BASE_URL 可能是 '/'、'/admin/'、'./'
         // 相对路径请求，始终同源，不会出现 tech. 这种跨域
-        let base = import.meta.env.BASE_URL || '/';
-        if (base === './') base = '/';
-        if (!base.endsWith('/')) base += '/';
-
+        let base =  '/';
         const url = `${base}version.json?t=${Date.now()}`;
         console.log('[AppVersion] fetch', url);
 
