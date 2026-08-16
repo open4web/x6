@@ -105,6 +105,7 @@ export interface PropsOptions  {
     id: string;
     spiceOptions: SpiceOptions[];
     multipleSelection: boolean;
+    icon?: string;
 }
 
 export interface SpiceOptions  {

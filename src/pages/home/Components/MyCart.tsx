@@ -87,7 +87,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     const [estimatedWait, setEstimatedWait] = React.useState(0);
     const {fetchData, alertComponent} = useFetchData();
 
-    const [pick, setPick] = React.useState(1); // 默认为堂食 (1)
+    const [pick, setPick] = React.useState(2); // 默认为堂食 (2)
 
 
     // 初始化一个空的 Map<string, number>

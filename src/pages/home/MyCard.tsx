@@ -13,6 +13,7 @@ import Box from "@mui/material/Box";
 import {ProductItem} from "./Components/Type";
 import {Badge, Fade, Modal} from '@mui/material';
 import {useCartContext} from "../../dataProvider/MyCartProvider";
+import {PropertyIconView} from "./Components/PropertyIcons";
 
 interface ExpandMoreProps extends IconButtonProps {
     expand: boolean;
@@ -293,14 +294,35 @@ const MyCard = (props: Props) => {
                     }}
                 >
                     {item.spiceOptions?.length > 0 && (
-                        <ExpandMore
-                            expand={expanded2}
-                            onClick={handleExpandClick2}
-                            aria-expanded={expanded2}
-                            aria-label="show more"
-                        >
-                            <ExpandMoreIcon/>
-                        </ExpandMore>
+                        <>
+                            <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, pl: 1}}>
+                                {item.spiceOptions.map((option) => (
+                                    <Box
+                                        key={option.id}
+                                        title={option.name}
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: 28,
+                                            height: 28,
+                                            borderRadius: 1,
+                                            bgcolor: 'rgba(255,255,255,0.12)',
+                                        }}
+                                    >
+                                        <PropertyIconView icon={option.icon} size={18} />
+                                    </Box>
+                                ))}
+                            </Box>
+                            <ExpandMore
+                                expand={expanded2}
+                                onClick={handleExpandClick2}
+                                aria-expanded={expanded2}
+                                aria-label="show more"
+                            >
+                                <ExpandMoreIcon/>
+                            </ExpandMore>
+                        </>
                     )}
                 </CardActions>
             </Card>

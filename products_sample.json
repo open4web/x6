@@ -1,0 +1,45 @@
+[
+  {
+    "id": "6a809e594e04099f3ed47ab5",
+    "img": "/v1/system/fs/client/image/27549406b00c14ce7edd0583c29ebfd2",
+    "name": "螺蛳粉",
+    "quantity": 1,
+    "price": 0,
+    "combPrice": 12,
+    "kind": "6a80980d0ebcdd7322e263b1",
+    "menu": [
+      "6a80a8094e04099f3ed47ab6",
+      "6a80980d0ebcdd7322e263b1"
+    ],
+    "desc": "份量",
+    "spiceOptions": [
+      {
+        "name": "份量",
+        "id": "6a80988d0ebcdd7322e263b2",
+        "spiceOptions": [
+          {
+            "id": "6448768",
+            "name": "大份",
+            "price": 1
+          },
+          {
+            "id": "6448769",
+            "name": "中份",
+            "price": 0
+          },
+          {
+            "id": "6448770",
+            "name": "小份",
+            "price": 0
+          }
+        ],
+        "multipleSelection": false,
+        "icon": "addon"
+      }
+    ],
+    "stock": 0,
+    "CombID": "6a80a8094e04099f3ed47ab6",
+    "maxLimit": 1,
+    "combIndex": 0
+  }
+]

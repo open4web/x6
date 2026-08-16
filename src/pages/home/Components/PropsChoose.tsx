@@ -5,6 +5,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import PropToggleButton from "./Prop";
 import { PropsOptions } from "./Type";
+import { PropertyIconView } from "./PropertyIcons";
 
 interface Props {
     uniqueId: number;
@@ -76,8 +77,25 @@ export default function PropsChoose(props: Props) {
                                 color: '#FFFFFF', // 保持白色文字
                                 textAlign: 'left', // 居中对齐
                                 letterSpacing: '0.5px', // 增加字母间距，提升视觉效果
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
                             }}
                         >
+                            <Box
+                                sx={{
+                                    width: 36,
+                                    height: 36,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: 1,
+                                    bgcolor: 'rgba(255,255,255,0.12)',
+                                    flexShrink: 0,
+                                }}
+                            >
+                                <PropertyIconView icon={option.icon} size={26} />
+                            </Box>
                             {option.name} {/* 属性名称，例如：糖分 */}
                             {option.multipleSelection && (
                                 <Typography

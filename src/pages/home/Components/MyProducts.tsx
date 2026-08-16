@@ -6,6 +6,8 @@ import {useFetchData} from "../../../common/FetchData";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {GenerateColorFromId} from "../../../utils/randColor";
 import MyCardWithScroll from "./MyCardWithScroll";
+import {MenuIconView} from "./MenuIconView";
+import {resolveMenuIconUrl} from "./Icons";
 
 
 function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
@@ -120,12 +122,45 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     return (
         <Box>
             {alertComponent}
-            <Box sx={{display: 'flex', gap: 1, overflowX: 'auto', mb: 2}}>
+            <Box sx={{display: 'flex', gap: 1.5, overflowX: 'auto', mb: 2, pt: 1.75, px: 0.75}}>
                 {categories.map(category => (
                     <Chip
                         key={category.id}
-                        label={category.name}
+                        label={
+                            <Box sx={{position: 'relative', display: 'inline-block', pr: 1}}>
+                                {category.name}
+                                {resolveMenuIconUrl(category.icon) && (
+                                    <Box
+                                        sx={{
+                                            position: 'absolute',
+                                            top: -12,
+                                            right: -14,
+                                            width: 22,
+                                            height: 22,
+                                            lineHeight: 0,
+                                            pointerEvents: 'none',
+                                        }}
+                                    >
+                                        <MenuIconView icon={category.icon} name={category.name} size={22} />
+                                    </Box>
+                                )}
+                            </Box>
+                        }
                         clickable
+                        sx={{
+                            height: 44,
+                            fontSize: '1.05rem',
+                            fontWeight: 600,
+                            overflow: 'visible',
+                            '& .MuiChip-label': {
+                                overflow: 'visible',
+                                px: 1.75,
+                            },
+                            '& .MuiChip-icon': {
+                                fontSize: '1.1rem',
+                                ml: 1,
+                            },
+                        }}
                         style={{
                             backgroundColor: categoryColorMap[category.id] || '#e0e0e0',
                             color: '#fff',

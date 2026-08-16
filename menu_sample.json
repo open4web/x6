@@ -1,0 +1,48 @@
+[
+  {
+    "_": {
+      "meta": {
+        "namespace": "hlj",
+        "old_merchant_id": "",
+        "merchant_id": "6182912",
+        "founder": "AC2088636784937275392",
+        "updater": "AC2088636784937275392",
+        "account_id": "6a807a360223dfd4c69f9b19",
+        "created_at": "2026-08-16 01:55:21",
+        "updated_at": "2026-08-16 01:55:49",
+        "created_time": 1786816521,
+        "updated_time": 1786816549,
+        "status": false,
+        "deleted": false,
+        "access_level": 0
+      },
+      "context": {}
+    },
+    "id": "6a80a8094e04099f3ed47ab6",
+    "name": "热门",
+    "is_show_backstage": 0,
+    "sort": 0,
+    "goods_type": 0,
+    "is_sell": true,
+    "icon": "2",
+    "products": [
+      "6a809e594e04099f3ed47ab5"
+    ],
+    "goods_list": null,
+    "stores": null,
+    "update_type": 0,
+    "combo": [
+      {
+        "combName": "主食",
+        "price": 0,
+        "quantity": 1,
+        "requires": 1,
+        "products": [
+          "6a809e594e04099f3ed47ab5"
+        ]
+      }
+    ],
+    "isComboMode": true,
+    "price": 12
+  }
+]

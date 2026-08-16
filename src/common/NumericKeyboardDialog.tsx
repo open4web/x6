@@ -211,7 +211,8 @@ export default function NumericKeyboardDialog(props: Props) {
                     <Button onClick={handleCancel}>取消</Button>
                     <Button
                         onClick={handleSave}
-                        color="primary"
+                        color="success"
+                        variant="contained"
                         disabled={error || inputValue === ""}
                     >
                         {confirmText}
@@ -221,6 +222,7 @@ export default function NumericKeyboardDialog(props: Props) {
         </Box>
     );
 
+    // 内部窗口展示
     if (inline) {
         return (
             <Box sx={{ p: 2 }}>
@@ -230,6 +232,7 @@ export default function NumericKeyboardDialog(props: Props) {
                     <Button
                         onClick={handleSave}
                         variant="contained"
+                        color="secondary"
                         disabled={error || inputValue === ""}
                     >
                         {confirmText}
