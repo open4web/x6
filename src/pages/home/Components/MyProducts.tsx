@@ -1,25 +1,62 @@
-import React, {useEffect, useState} from 'react';
-import {Box, Chip, Grid} from '@mui/material';
+import React, {useEffect, useMemo, useState} from 'react';
+import {Avatar, Box, Chip, Grid} from '@mui/material';
 import MyCard from "../MyCard";
 import {CombSelectInfo, DetailsProps, MenuData, ProductItem} from "./Type";
 import {useFetchData} from "../../../common/FetchData";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {GenerateColorFromId} from "../../../utils/randColor";
 import MyCardWithScroll from "./MyCardWithScroll";
-import {MenuIconView} from "./MenuIconView";
 import {resolveMenuIconUrl} from "./Icons";
+import {
+    applyStock,
+    readMenus,
+    readProducts,
+    useCatalogTick,
+    writeMenus,
+    writeProducts,
+} from "../../../utils/catalogCache";
 
+function mapsFromMenus(menus: MenuData[]) {
+    const nameMap = menus.reduce((acc: Record<string, MenuData>, item: MenuData) => {
+        acc[item.id] = item;
+        return acc;
+    }, {});
+    const colorMap = menus.reduce((acc: Record<string, string>, item: { id: string }) => {
+        acc[item.id] = GenerateColorFromId(item.id);
+        return acc;
+    }, {});
+    return {nameMap, colorMap};
+}
 
 function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
-    const {setShowProductImage, showProductImage, cartItems} = useCartContext();
-    const [data, setData] = useState<ProductItem[]>([]);
-    const [categories, setCategories] = useState<MenuData[]>([]);
+    const {showProductImage, merchantId} = useCartContext();
+    const catalogTick = useCatalogTick();
     const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
+    const [rawData, setRawData] = useState<ProductItem[]>(() => {
+        const menuId = localStorage.getItem("current_category") || '';
+        return readProducts(merchantId, menuId)?.data ?? [];
+    });
+    const [categories, setCategories] = useState<MenuData[]>(() => readMenus(merchantId)?.data ?? []);
     const [query, setQuery] = useState("");
-    const [categoryMap, setCategoryMap] = useState<Record<string, MenuData>>({});
-    const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>({});
-    const {merchantId} = useCartContext();
+    const [categoryMap, setCategoryMap] = useState<Record<string, MenuData>>(
+        () => mapsFromMenus(readMenus(merchantId)?.data ?? []).nameMap,
+    );
+    const [categoryColorMap, setCategoryColorMap] = useState<Record<string, string>>(
+        () => mapsFromMenus(readMenus(merchantId)?.data ?? []).colorMap,
+    );
     const {fetchData, alertComponent} = useFetchData();
+
+    const applyMenus = (menus: MenuData[]) => {
+        const {nameMap, colorMap} = mapsFromMenus(menus);
+        setCategories(menus);
+        setCategoryMap(nameMap);
+        setCategoryColorMap(colorMap);
+    };
+
+    const data = useMemo(
+        () => applyStock(merchantId, rawData),
+        [merchantId, rawData, catalogTick],
+    );
 
     // 通过 id 获取 isComboMode
     const getIsComboModeById = (id: string): boolean | undefined => {
@@ -57,38 +94,76 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     };
 
     useEffect(() => {
-        const payload = {
-            "merchantId": merchantId,
+        if (!merchantId) {
+            return;
         }
 
-        // 获取菜谱列表
+        const cached = readMenus(merchantId);
+        if (cached) {
+            applyMenus(cached.data);
+        } else {
+            applyMenus([]);
+        }
+        if (cached?.fresh) {
+            return;
+        }
+
+        let cancelled = false;
         fetchData('/v1/hlj/product/pos/menu', (response) => {
-            const cm = response || [];
-            setCategories(cm);
-            // 创建 nameMap, colorMap
-            const nameMap = cm.reduce((acc: Record<string, MenuData>, item: MenuData) => {
-                acc[item.id] = item; // 将整个 item（即 MenuData 对象）赋值给 acc[item.id]
-                return acc;
-            }, {});
-            const colorMap = cm.reduce((acc: Record<string, string>, item: { id: string }) => {
-                acc[item.id] = GenerateColorFromId(item.id); // 使用 id 生成颜色
-                return acc;
-            }, {});
-            // 更新状态
-            setCategoryMap(nameMap);
-            setCategoryColorMap(colorMap);
-        }, "POST", payload);
+            const menus = response || [];
+            writeMenus(merchantId, menus);
+            if (!cancelled) {
+                applyMenus(menus);
+            }
+        }, "POST", {merchantId});
 
+        return () => {
+            cancelled = true;
+        };
+    }, [merchantId, fetchData]);
 
-        // 获取商品列表
+    useEffect(() => {
+        if (categories.length === 0) {
+            return;
+        }
+        const exists = categories.some(category => category.id === activeTab);
+        if (!exists) {
+            setActiveTab(categories[0].id);
+            localStorage.setItem("current_category", categories[0].id);
+        }
+    }, [categories, activeTab]);
+
+    useEffect(() => {
+        if (!merchantId || !activeTab) {
+            return;
+        }
+
+        const cached = readProducts(merchantId, activeTab);
+        if (cached) {
+            setRawData(cached.data);
+        } else {
+            setRawData([]);
+        }
+        if (cached?.fresh) {
+            return;
+        }
+
+        let cancelled = false;
         fetchData('/v1/hlj/product/pos/products', (response) => {
             const products = response || [];
-            setData(products);
+            writeProducts(merchantId, activeTab, products);
+            if (!cancelled) {
+                setRawData(products);
+            }
         }, "POST", {
-            "merchantId": merchantId,
-            "menuId": activeTab,
+            merchantId,
+            menuId: activeTab,
         });
-    }, [activeTab, merchantId, cartItems]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [activeTab, merchantId, fetchData]);
 
     const handleChipClick = (categoryId: string) => {
         setActiveTab(categoryId);
@@ -122,56 +197,60 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     return (
         <Box>
             {alertComponent}
-            <Box sx={{display: 'flex', gap: 1.5, overflowX: 'auto', mb: 2, pt: 1.75, px: 0.75}}>
-                {categories.map(category => (
-                    <Chip
-                        key={category.id}
-                        label={
-                            <Box sx={{position: 'relative', display: 'inline-block', pr: 1}}>
-                                {category.name}
-                                {resolveMenuIconUrl(category.icon) && (
-                                    <Box
-                                        sx={{
-                                            position: 'absolute',
-                                            top: -12,
-                                            right: -14,
-                                            width: 22,
-                                            height: 22,
-                                            lineHeight: 0,
-                                            pointerEvents: 'none',
-                                        }}
-                                    >
-                                        <MenuIconView icon={category.icon} name={category.name} size={22} />
-                                    </Box>
-                                )}
-                            </Box>
-                        }
-                        clickable
-                        sx={{
-                            height: 44,
-                            fontSize: '1.05rem',
-                            fontWeight: 600,
-                            overflow: 'visible',
-                            '& .MuiChip-label': {
-                                overflow: 'visible',
-                                px: 1.75,
-                            },
-                            '& .MuiChip-icon': {
-                                fontSize: '1.1rem',
-                                ml: 1,
-                            },
-                        }}
-                        style={{
-                            backgroundColor: categoryColorMap[category.id] || '#e0e0e0',
-                            color: '#fff',
-                            border: activeTab === category.id ? '2px solid #1976d2' : '1px solid #e0e0e0',
-                            boxShadow: activeTab === category.id ? '0 0 10px rgba(25, 118, 210, 0.5)' : 'none',
-                        }}
-                        icon={activeTab === category.id ?
-                            <span style={{fontWeight: 'bold', color: '#fff'}}>✔</span> : undefined}
-                        onClick={() => handleChipClick(category.id)}
-                    />
-                ))}
+            <Box sx={{display: 'flex', alignItems: 'center', gap: 1.75, overflowX: 'auto', mb: 2, py: 1.5, px: 1}}>
+                {categories.map(category => {
+                    const iconUrl = resolveMenuIconUrl(category.icon);
+                    const selected = activeTab === category.id;
+                    return (
+                        <Chip
+                            key={category.id}
+                            avatar={iconUrl ? (
+                                <Avatar
+                                    src={iconUrl}
+                                    alt={category.name}
+                                    sx={{
+                                        bgcolor: '#fff',
+                                        width: selected ? 32 : 28,
+                                        height: selected ? 32 : 28,
+                                        '& img': {
+                                            objectFit: 'contain',
+                                            padding: '3px',
+                                        },
+                                    }}
+                                />
+                            ) : undefined}
+                            label={category.name}
+                            clickable
+                            sx={{
+                                height: selected ? 48 : 40,
+                                fontSize: selected ? '1.16rem' : '1.02rem',
+                                fontWeight: selected ? 700 : 600,
+                                transform: selected ? 'scale(1.12)' : 'scale(1)',
+                                transformOrigin: 'center center',
+                                transition: 'transform 180ms ease, box-shadow 180ms ease, height 180ms ease, font-size 180ms ease',
+                                zIndex: selected ? 2 : 1,
+                                color: '#fff',
+                                backgroundColor: categoryColorMap[category.id] || '#e0e0e0',
+                                border: selected ? '2px solid #fff' : '1px solid rgba(255,255,255,0.28)',
+                                boxShadow: selected
+                                    ? '0 6px 18px rgba(0,0,0,0.28), 0 0 0 2px rgba(255,255,255,0.35)'
+                                    : 'none',
+                                '&:hover': {
+                                    backgroundColor: categoryColorMap[category.id] || '#e0e0e0',
+                                },
+                                '& .MuiChip-avatar': {
+                                    width: selected ? 32 : 28,
+                                    height: selected ? 32 : 28,
+                                    marginLeft: '8px',
+                                },
+                                '& .MuiChip-label': {
+                                    px: 1.5,
+                                },
+                            }}
+                            onClick={() => handleChipClick(category.id)}
+                        />
+                    );
+                })}
             </Box>
 
             {/* Product Grid */}

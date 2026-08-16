@@ -164,43 +164,28 @@ const MyCard = (props: Props) => {
                     cursor: showProductImage ? 'default' : 'pointer', // 设置鼠标样式
                     backgroundColor: backgroundColor || 'inherit', // 默认背景色为浅灰色
                 }}
-            > {/* 销售状态标签 */}
-                {item.stock === 0 ? (
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            bottom: 10,
-                            left: 10,
-                            backgroundColor: '#d32f2f', // 已售罄颜色
-                            color: 'white',
-                            padding: '2px 8px',
-                            borderRadius: 1,
-                            fontSize: '0.8rem',
-                            fontWeight: 'bold',
-                            zIndex: 1,
-                        }}
-                    >
-                        已售罄
-                    </Box>
-                ) : (
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            bottom: 10,
-                            left: 10,
-                            backgroundColor: '#fbc02d', // 剩余数量颜色
-                            color: 'black',
-                            padding: '2px 8px',
-                            borderRadius: 1,
-                            fontSize: '0.8rem',
-                            fontWeight: 'bold',
-                            zIndex: 1,
-                        }}
-                    >
-                        剩余 {item.stock}
-                    </Box>
-                )}
+            >
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        backgroundColor: item.stock === 0 ? '#d32f2f' : '#fbc02d',
+                        color: item.stock === 0 ? '#fff' : '#000',
+                        px: 0.75,
+                        py: 0.25,
+                        borderRadius: '4px 0 4px 0',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        lineHeight: 1.4,
+                        zIndex: 2,
+                        pointerEvents: 'none',
+                    }}
+                >
+                    {item.stock === 0 ? '已售罄' : `剩余 ${item.stock}`}
+                </Box>
                 <CardHeader
+                    sx={{pt: 3.5}}
                     avatar=
                         {
                             showProductImage ? (
