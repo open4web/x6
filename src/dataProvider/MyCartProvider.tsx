@@ -1,5 +1,15 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, {createContext, useCallback, useContext, useRef, useState, ReactNode} from 'react';
+import {toast} from 'react-toastify';
 import {CartItem, CartItemHolder} from "../common/types";
+
+export type OrderSyncStatus = 'idle' | 'syncing' | 'ready';
+
+export type OrderFlyEvent = {
+    id: number;
+    orderNo: string;
+    startX: number;
+    startY: number;
+};
 
 type CartContextType = {
     cartItems: CartItem[];
@@ -27,6 +37,20 @@ type CartContextType = {
     setReady: React.Dispatch<React.SetStateAction<boolean>>;
     startReady: number;
     setStartReady: React.Dispatch<React.SetStateAction<number>>;
+    watchingOrderNo: string;
+    highlightOrderNo: string;
+    setHighlightOrderNo: React.Dispatch<React.SetStateAction<string>>;
+    startPaymentWatch: (orderNo: string) => void;
+    notifyOrderPaid: (orderNo: string) => void;
+    orderFlyEvent: OrderFlyEvent | null;
+    triggerOrderFly: (orderNo: string, start?: {x: number; y: number}) => void;
+    orderSyncStatus: OrderSyncStatus;
+    orderSyncProgress: number;
+    setOrderSyncProgress: React.Dispatch<React.SetStateAction<number>>;
+    syncingOrderNo: string;
+    startOrderListSync: (orderNo: string) => void;
+    markOrderListReady: (orderNo: string) => void;
+    resetOrderSync: () => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -62,6 +86,68 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
     const [holdOrders, setHoldOrders] = useState<CartItemHolder[]>(
         JSON.parse(localStorage.getItem("holdOrders") || "[]")
     );
+    const [watchingOrderNo, setWatchingOrderNo] = useState('');
+    const [highlightOrderNo, setHighlightOrderNo] = useState('');
+    const lastPaidRef = useRef('');
+
+    const startPaymentWatch = useCallback((orderNo: string) => {
+        if (!orderNo || lastPaidRef.current === orderNo) {
+            return;
+        }
+        setWatchingOrderNo(orderNo);
+    }, []);
+
+    const [orderFlyEvent, setOrderFlyEvent] = useState<OrderFlyEvent | null>(null);
+
+    const triggerOrderFly = useCallback((orderNo: string, start?: {x: number; y: number}) => {
+        setOrderFlyEvent({
+            id: Date.now(),
+            orderNo,
+            startX: start?.x ?? window.innerWidth - 220,
+            startY: start?.y ?? window.innerHeight / 2,
+        });
+    }, []);
+
+    const [orderSyncStatus, setOrderSyncStatus] = useState<OrderSyncStatus>('idle');
+    const [orderSyncProgress, setOrderSyncProgress] = useState(0);
+    const [syncingOrderNo, setSyncingOrderNo] = useState('');
+
+    const notifyOrderPaid = useCallback((orderNo: string) => {
+        if (!orderNo || lastPaidRef.current === orderNo) {
+            return;
+        }
+        lastPaidRef.current = orderNo;
+        toast.success("支付成功", {position: "top-center", autoClose: 2000});
+        setWatchingOrderNo('');
+        setDrawerOpen(false);
+        triggerOrderFly(orderNo, {
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+        });
+    }, [triggerOrderFly]);
+
+    const startOrderListSync = useCallback((orderNo: string) => {
+        if (!orderNo) {
+            return;
+        }
+        setSyncingOrderNo(orderNo);
+        setOrderSyncStatus('syncing');
+        setOrderSyncProgress(0);
+    }, []);
+
+    const markOrderListReady = useCallback((orderNo: string) => {
+        setHighlightOrderNo(orderNo);
+        setSyncingOrderNo('');
+        setOrderSyncStatus('ready');
+        setOrderSyncProgress(100);
+    }, []);
+
+    const resetOrderSync = useCallback(() => {
+        setOrderSyncStatus('idle');
+        setOrderSyncProgress(0);
+        setSyncingOrderNo('');
+    }, []);
+
     return (
         <CartContext.Provider value={{ cartItems, setCartItems,
             drawerOpen, setDrawerOpen,
@@ -81,6 +167,20 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
             setReady,
             startReady,
             setStartReady,
+            watchingOrderNo,
+            highlightOrderNo,
+            setHighlightOrderNo,
+            startPaymentWatch,
+            notifyOrderPaid,
+            orderFlyEvent,
+            triggerOrderFly,
+            orderSyncStatus,
+            orderSyncProgress,
+            setOrderSyncProgress,
+            syncingOrderNo,
+            startOrderListSync,
+            markOrderListReady,
+            resetOrderSync,
         }}>
             {children}
         </CartContext.Provider>

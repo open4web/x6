@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Fab, Grid } from '@mui/material';
+import {Badge, Box, CircularProgress, Fab, Grid} from '@mui/material';
+import CheckIcon from '@mui/icons-material/Check';
 import MyProducts from "../home/Components/MyProducts";
 import { toast } from "react-toastify";
 import MyCartDrawer from "../home/Components/MyCartDrawer";
@@ -8,16 +9,25 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import GradingIcon from '@mui/icons-material/Grading';
 import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 import {CartItem} from "../../common/types";
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import MyDataDrawer from "./MyDataDrawer";
 import RechargeCardSelector from "../../common/RechargeCardSelector";
 import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
 import HandoverPageDrawer from "../Shift/Handover";
+import {OrderListWatcher, PaymentWatcher} from "../../common/OrderPulling";
+import OrderFlyOverlay from "../home/Components/OrderFlyOverlay";
 
 export const MyHome = () => {
-    const { cartItems, setCartItems, drawerOpen, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen } = useCartContext();
+    const {
+        cartItems, setCartItems, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen,
+        orderFlyEvent, orderDrawerOpen, startOrderListSync, orderSyncStatus, orderSyncProgress,
+        resetOrderSync,
+    } = useCartContext();
     const [clearCartSignal, setClearCartSignal] = useState(false);
     const [rechargeOpen, setRechargeOpen] = useState(false);
+    const [inboundOrders, setInboundOrders] = useState(0);
+    const [fabPulse, setFabPulse] = useState(false);
+    const orderFabRef = useRef<HTMLButtonElement>(null);
 
     const handleClick = (item: CartItem) => {
         setDrawerOpen(true);
@@ -54,10 +64,30 @@ export const MyHome = () => {
             setClearCartSignal(false); // 重置信号
         }
     }, [cartItems]);
+
+    useEffect(() => {
+        if (orderDrawerOpen) {
+            setInboundOrders(0);
+            if (orderSyncStatus === 'ready') {
+                const timer = window.setTimeout(() => resetOrderSync(), 400);
+                return () => window.clearTimeout(timer);
+            }
+        }
+    }, [orderDrawerOpen, orderSyncStatus, resetOrderSync]);
+
+    const handleOrderArrived = useCallback((orderNo: string) => {
+        setInboundOrders(count => count + 1);
+        setFabPulse(true);
+        window.setTimeout(() => setFabPulse(false), 700);
+        startOrderListSync(orderNo);
+    }, [startOrderListSync]);
+
     return (
         <Grid container spacing={2} mt={1}>
             <Grid item xs={12} md={12}>
                 <React.Fragment>
+                    <PaymentWatcher />
+                    <OrderListWatcher />
                     <MyCartDrawer />
                     <MyOrderDrawer/>
                     <MyDataDrawer/>
@@ -90,19 +120,74 @@ export const MyHome = () => {
                             >
                                 <AssuredWorkloadIcon fontSize="large" color={'info'} />
                             </Fab>
-                            <Fab
-                                aria-label="Expand"
-                                color="inherit"
+                            <Box
                                 sx={{
                                     position: 'fixed',
                                     bottom: 80,
                                     right: 16,
                                     zIndex: 1000,
+                                    width: 56,
+                                    height: 56,
                                 }}
-                                onClick={() => setOrderDrawerOpen(true)}
                             >
-                                <GradingIcon fontSize="large" color={'warning'} />
-                            </Fab>
+                                {orderSyncStatus !== 'idle' && (
+                                    <>
+                                        <CircularProgress
+                                            variant="determinate"
+                                            value={100}
+                                            size={56}
+                                            thickness={2}
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                color: 'rgba(0,0,0,0.12)',
+                                                pointerEvents: 'none',
+                                            }}
+                                        />
+                                        <CircularProgress
+                                            variant="determinate"
+                                            value={orderSyncStatus === 'ready' ? 100 : orderSyncProgress}
+                                            size={56}
+                                            thickness={2}
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                color: orderSyncStatus === 'ready' ? '#2e7d32' : '#fb8c00',
+                                                pointerEvents: 'none',
+                                                '& .MuiCircularProgress-circle': {
+                                                    transition: 'stroke-dashoffset 0.4s linear',
+                                                },
+                                            }}
+                                        />
+                                    </>
+                                )}
+                                <Fab
+                                    ref={orderFabRef}
+                                    aria-label="查看订单"
+                                    color="inherit"
+                                    sx={{
+                                        width: 56,
+                                        height: 56,
+                                        boxShadow: fabPulse ? '0 0 0 8px rgba(255,152,0,0.22)' : undefined,
+                                    }}
+                                    onClick={() => setOrderDrawerOpen(true)}
+                                >
+                                    {orderSyncStatus === 'ready' ? (
+                                        <CheckIcon sx={{fontSize: 32, color: '#2e7d32'}} />
+                                    ) : (
+                                        <Badge badgeContent={orderSyncStatus === 'idle' ? inboundOrders : 0} color="error">
+                                            <GradingIcon fontSize="large" color={'warning'} />
+                                        </Badge>
+                                    )}
+                                </Fab>
+                            </Box>
+                            <OrderFlyOverlay
+                                event={orderFlyEvent}
+                                targetEl={orderFabRef.current}
+                                onArrived={handleOrderArrived}
+                            />
 
                             <Fab
                                 aria-label="Expand"

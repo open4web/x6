@@ -2,6 +2,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import MemberSelector from './MemberSelector';
+import {useCartContext} from '../dataProvider/MyCartProvider';
 
 interface Props {
     value: number;
@@ -32,6 +33,7 @@ export default function MemberBalancePay({
                                              setOpen,
                                              setOrderDrawerOpen,
                                          }: Props) {
+    const {startPaymentWatch} = useCartContext();
     return (
         <CustomTabPanel value={value} index={index}>
             <MemberSelector
@@ -39,9 +41,11 @@ export default function MemberBalancePay({
                 orderID={orderID}
                 fetchData={fetchData}
                 onSuccess={() => {
-                    setCart([]);
+                    if (setCart) {
+                        setCart([]);
+                    }
                     setOpen(false);
-                    setOrderDrawerOpen(true);
+                    startPaymentWatch(orderID);
                 }}
             />
         </CustomTabPanel>

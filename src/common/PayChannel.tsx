@@ -8,7 +8,6 @@ import {useCartContext} from "../dataProvider/MyCartProvider";
 import {ChannelType} from "./types";
 import NumericKeyboardDialog from "./NumericKeyboardDialog";
 import PayCodeDisplay from "./PayCodeInput";
-import {useOrderPolling} from "./OrderPulling";
 import MemberBalancePay from './MemberBalancePay';
 
 interface TabPanelProps {
@@ -46,7 +45,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
     const [cash, setCash] = React.useState(false);
-    const {setDrawerOpen, setOrderDrawerOpen} = useCartContext();
+    const {setDrawerOpen, setOrderDrawerOpen, startPaymentWatch, notifyOrderPaid} = useCartContext();
     const [isScanning, setIsScanning] = React.useState(true);
     const [isWeChatTab, setIsWeChatTab] = useState(true); // 是否启用扫码枪逻辑
     const {fetchData, alertComponent} = useFetchData();
@@ -77,28 +76,16 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
             try {
                 const msg = JSON.parse(event.data);
                 console.log('支付 WS 消息:', msg);
-                setOrderDrawerOpen(true);
-                // 清空当前已完成的订单的购物车
-                setCart([]);
-                // 关闭购物车框
-                setOpen(false);
-                if (msg.order_id === orderID &&
-                    (msg.status === 1 || msg.type === 'payment_success' || msg.pay_status === 'success')) {
-
-                    // playSuccess();
-
-                    toast.success("支付成功！", {
-                        position: "top-center",
-                        autoClose: 2000,
-                    });
-
-                    setCart([]);
-                    setOpen(false);
-                    setOrderDrawerOpen(true);   // 打开订单详情抽屉
-
-                    // 可选：关闭当前支付弹窗
-                    // setOpen(false);
+                const paid = msg.order_id === orderID &&
+                    (msg.status === 1 || msg.type === 'payment_success' || msg.pay_status === 'success');
+                if (!paid) {
+                    return;
                 }
+                if (setCart) {
+                    setCart([]);
+                }
+                setOpen(false);
+                notifyOrderPaid(orderID);
             } catch (err) {
                 console.error('支付 WS 解析失败', err);
             }
@@ -114,8 +101,10 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
         ws.onerror = (err) => console.error('支付 WebSocket 错误', err);
     };
 
-    // 组件加载时连接 WS
     useEffect(() => {
+        if (orderID) {
+            startPaymentWatch(orderID);
+        }
         connectPaymentWS();
 
         return () => {
@@ -149,11 +138,11 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
                 code: scannedCode,
             });
 
-            setCart([]);
+            if (setCart) {
+                setCart([]);
+            }
             setOpen(false);
-
-            // ✅ 核心：统一调用
-            // await pollOrder(orderID);
+            startPaymentWatch(orderID);
 
         } catch {
             toast.error("支付失败");
@@ -226,11 +215,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
             // 关闭支付弹窗
             setOpen(false);
 
-            toast.success("支付成功", {position: "top-center", autoClose: 2000});
-
-            // ✅ 统一轮询
-
-            // await pollOrder(orderID);
+            startPaymentWatch(orderID);
 
         } catch (error) {
             toast.error("现金支付失败", {position: "top-center"});

@@ -50,7 +50,7 @@ export default function MyCartDrawer() {
 
     return (
         <div>
-            <Drawer open={drawerOpen} onClose={toggleDrawer(false)} elevation={2} anchor="right">
+            <Drawer open={drawerOpen} onClose={toggleDrawer(false)} elevation={2} anchor="right" keepMounted>
                 <MyCart cartItems={cartItems} setCartItems={setCartItems} comboGroup={comboGroups} />
             </Drawer>
         </div>

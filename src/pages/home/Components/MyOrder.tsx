@@ -31,6 +31,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import {isOrderExpired} from "../../../utils/expireStore";
 import {MyOrderSkeleton} from "../../../common/MyOrderSkeleton";
 import { orderStatusMap } from '../../../common/orderStatus';
+import {useCartContext} from "../../../dataProvider/MyCartProvider";
 
 const statusColors = ['#ffe0b2', '#c5e1a5']; // OrderInit, OrderPaid
 
@@ -71,12 +72,12 @@ function generateQueryParams({ orderNo, status, startDate, endDate, source , onl
     }
 
     // 除了订单号精准查询，其他都可以增加日期
-    if (orderNo?.length == 0) {
+    if (!orderNo) {
         if (startDate) {
-            queryParams.start_gte = startDate; // 添加开始时间
+            queryParams.start_gte = startDate;
         }
         if (endDate) {
-            queryParams.end_lte = endDate; // 添加结束时间
+            queryParams.end_lte = endDate;
         }
     }
 
@@ -99,6 +100,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
     const [detailOrder, setDetailOrder] = useState<Order | null>(null); // 当前详情订单
     const [highlightOrderId, setHighlightOrderId] = useState(''); // 高亮订单 ID
     const { fetchData, alertComponent } = useFetchData();
+    const { highlightOrderNo, setHighlightOrderNo } = useCartContext();
 
     useEffect(() => {
         // 每次请求都先设定加载骨架
@@ -116,20 +118,22 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
         fetchData(
             '/v1/hlj/order/pos',
             (response) => {
-                setOrders(response);
-                // 高亮最新订单
-                if (response?.length > 0) {
-                    const newestOrder = response[0];
+                const list = response || [];
+                setOrders(list);
+                setLoading(false);
+                setTotalRecord(list.length);
+
+                if (highlightOrderNo) {
+                    setHighlightOrderId(highlightOrderNo);
+                    return;
+                }
+                if (list.length > 0) {
+                    const newestOrder = list[0];
                     if (!isOrderExpired(newestOrder.identity.order_no, 10000)) {
                         setHighlightOrderId(newestOrder.identity.order_no);
-                        setTimeout(() => setHighlightOrderId(''), 2000); // 2 秒后清除高亮
+                        setTimeout(() => setHighlightOrderId(''), 2000);
                     }
-
-                    setLoading(false); // 加载完成
                 }
-
-                // 将查询到的数据记录数量写入
-                setTotalRecord(response?.length)
             },
             'GET',
             queryParams,
@@ -138,6 +142,28 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
             setLoading(false); // 加载失败
         });
     }, [status, startDate, endDate, orderNo, source, onlyMyOrder, saleStatus]);
+
+    useEffect(() => {
+        if (!highlightOrderNo) {
+            return;
+        }
+        setHighlightOrderId(highlightOrderNo);
+    }, [highlightOrderNo]);
+
+    useEffect(() => {
+        if (!highlightOrderId) {
+            return;
+        }
+        const exists = orders.some(order => order?.identity?.order_no === highlightOrderId);
+        if (!exists) {
+            return;
+        }
+        const timer = setTimeout(() => {
+            setHighlightOrderNo('');
+            setHighlightOrderId('');
+        }, 1100);
+        return () => clearTimeout(timer);
+    }, [highlightOrderId, orders, setHighlightOrderNo]);
 
     const handleClosePayChannel = () => {
         setOpenPayChannel(false);
@@ -184,7 +210,8 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                                     padding: 0,
                                     borderRadius: 1,
                                     border: highlightOrderId === order?.identity?.order_no ? '3px solid #FF5722' : '1px solid transparent',
-                                    animation: highlightOrderId === order?.identity?.order_no ? 'flash 0.5s ease-in-out 4' : 'none',
+                                    animation: highlightOrderId === order?.identity?.order_no ? 'orderShake 0.28s ease-in-out 2' : 'none',
+                                    transformOrigin: 'center center',
                                 }}
                             >
                                 <CardContent>
@@ -349,6 +376,13 @@ const styles = `
     0% { border-color: #FF5722; }
     50% { border-color: transparent; }
     100% { border-color: #FF5722; }
+}
+@keyframes orderShake {
+    0%, 100% { transform: translateX(0) scale(1); }
+    20% { transform: translateX(-10px) scale(1.03); }
+    40% { transform: translateX(10px) scale(1.03); }
+    60% { transform: translateX(-7px) scale(1.02); }
+    80% { transform: translateX(7px) scale(1.01); }
 }
 `;
 

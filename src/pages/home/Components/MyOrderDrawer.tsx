@@ -15,18 +15,10 @@ import GradingIcon from '@mui/icons-material/Grading';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 
 export default function MyOrderDrawer() {
-    const { orderDrawerOpen, setOrderDrawerOpen } = useCartContext();
+    const { orderDrawerOpen, setOrderDrawerOpen, highlightOrderNo } = useCartContext();
 
     // 用于触发 MyOrder 重新加载的 key
     const [refreshTrigger, setRefreshTrigger] = React.useState(0);
-
-    // 当抽屉打开时，自动刷新最近一天的订单
-    React.useEffect(() => {
-        if (orderDrawerOpen) {
-            console.log("📌 订单抽屉已打开 → 自动刷新最近一天订单");
-            setRefreshTrigger(prev => prev + 1);
-        }
-    }, [orderDrawerOpen]);
 
     // ==================== 时间处理 ====================
     const getShanghaiTime = () => {
@@ -43,21 +35,42 @@ export default function MyOrderDrawer() {
         const day = String(date.getDate()).padStart(2, "0");
         const hours = String(date.getHours()).padStart(2, "0");
         const minutes = String(date.getMinutes()).padStart(2, "0");
-        return `${year}-${month}-${day} ${hours}:${minutes}:00`;
+        const seconds = String(date.getSeconds()).padStart(2, "0");
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     };
 
-    const now = getShanghaiTime();
-    const today = formatDateTime(new Date(now.setHours(0, 0, 0, 0)));
-    const formattedNow = formatDateTime(getShanghaiTime());
+    const getTodayRange = () => {
+        const now = getShanghaiTime();
+        const start = formatDateTime(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0));
+        const end = formatDateTime(getShanghaiTime());
+        return {start, end};
+    };
+
+    const todayRange = getTodayRange();
 
     const [onlyMyOrder, setOnlyMyOrder] = React.useState<boolean>(true);
-    const [status, setStatus] = React.useState<number>(1);
-    const [saleStatus, setSaleStatus] = React.useState<number>(1);
-    const [source, setSource] = React.useState<number>(4);
+    const [status, setStatus] = React.useState<number>(-1);
+    const [saleStatus, setSaleStatus] = React.useState<number>(0);
+    const [source, setSource] = React.useState<number>(-1);
     const [totalRecord, setTotalRecord] = React.useState<number>(4);
-    const [startDate, setStartDate] = React.useState<string>(today);
-    const [endDate, setEndDate] = React.useState<string>(formattedNow);
+    const [startDate, setStartDate] = React.useState<string>(todayRange.start);
+    const [endDate, setEndDate] = React.useState<string>(todayRange.end);
     const [orderNo, setOrderNo] = React.useState<string>('');
+
+    // 每次打开订单图标：查当天最新订单
+    React.useEffect(() => {
+        if (!orderDrawerOpen) {
+            return;
+        }
+        const {start, end} = getTodayRange();
+        setStartDate(start);
+        setEndDate(end);
+        setOrderNo('');
+        setSaleStatus(0);
+        setStatus(-1);
+        setSource(-1);
+        setRefreshTrigger(prev => prev + 1);
+    }, [orderDrawerOpen]);
 
     const toggleDrawer = (newOpen: boolean) => () => {
         setOrderDrawerOpen(newOpen);
@@ -95,6 +108,12 @@ export default function MyOrderDrawer() {
     };
 
     const handleQuickFilter = (days: number) => () => {
+        if (days === 0) {
+            const {start, end} = getTodayRange();
+            setStartDate(start);
+            setEndDate(end);
+            return;
+        }
         const now = getShanghaiTime();
         const pastDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
         setStartDate(formatDateTime(pastDate));
@@ -256,6 +275,7 @@ export default function MyOrderDrawer() {
                     </Box>
 
                     <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
+                        <Button variant="contained" color="primary" size="small" onClick={handleQuickFilter(0)}>今天</Button>
                         <Button variant="contained" color="secondary" size="small" onClick={handleQuickFilter(3)}>近3天</Button>
                         <Button variant="contained" color="success" size="small" onClick={handleQuickFilter(7)}>近7天</Button>
                         <Button variant="contained" color="warning" size="small" onClick={handleQuickFilter(15)}>近15天</Button>

@@ -12,6 +12,7 @@ import {
 import { toast } from "react-toastify";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import NumericKeyboardDialog from "../common/NumericKeyboardDialog"; // 按你项目实际路径调整
+import {useCartContext} from "../dataProvider/MyCartProvider";
 
 interface Props {
     value: number;
@@ -42,6 +43,7 @@ export default function MemberBalancePayOld({
                                                 setOpen,
                                                 setOrderDrawerOpen,
                                             }: Props) {
+    const {startPaymentWatch} = useCartContext();
     const [phoneSuffix, setPhoneSuffix] = useState("");
     const [memberList, setMemberList] = useState<any[]>([]);
     const [selectedMember, setSelectedMember] = useState<any>(null);
@@ -268,8 +270,7 @@ export default function MemberBalancePayOld({
                                 setOpen(false);
                                 setMemberOpen(false);
 
-                                toast.success("支付成功");
-                                setOrderDrawerOpen(true);
+                                startPaymentWatch(orderID);
                             } catch {
                                 toast.error("支付失败");
                             }

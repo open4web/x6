@@ -74,7 +74,7 @@ export const pickTypes = [
 ];
 
 export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProps) {
-    const {holdOrders, setHoldOrders} = useCartContext();
+    const {holdOrders, setHoldOrders, startPaymentWatch} = useCartContext();
     const [price, setPrice] = React.useState(0);
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const [orderID, setOrderID] = React.useState("");
@@ -235,12 +235,11 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
         // 执行下单请求
         await fetchData('/v1/hlj/order/pos', (response) => {
+            const createdOrderNo = response?.identity?.order_no || "";
             setPrice(response?.price || 0);
-            setOrderID(response?.identity?.order_no || "");
+            setOrderID(createdOrderNo);
             setOpenPayChannel(true);
-
-            // 设置当前订单作为最新订单
-            // storeOrderTimestamp(response?.identity?.order_no);
+            startPaymentWatch(createdOrderNo);
 
             // 设置订单预计排队信息
             setOrderCount(response?.orderCount || 0);
