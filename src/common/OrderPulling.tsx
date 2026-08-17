@@ -32,14 +32,11 @@ async function fetchOrderSilent(orderID: string) {
     return unwrapOrder(response.data);
 }
 
-function isPaid(order: any, orderID: string) {
-    if (!order) {
+function isPaid(order: any, _orderID: string) {
+    if (!order || typeof order.status !== 'number') {
         return false;
     }
-    if (typeof order.status === 'number') {
-        return order.status >= 1 && order.status < 6;
-    }
-    return Boolean(order.identity?.order_no || order.id === orderID);
+    return order.status >= 1 && order.status < 6;
 }
 
 const LIST_POLL_INTERVAL_MS = 1000;

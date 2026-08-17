@@ -51,7 +51,7 @@ export const pickTypes = [
 
 export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProps) {
     const translate = useTranslate();
-    const {holdOrders, setHoldOrders, startPaymentWatch, ready} = useCartContext();
+    const {holdOrders, setHoldOrders, ready} = useCartContext();
     const [price, setPrice] = React.useState(0);
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const [orderID, setOrderID] = React.useState("");
@@ -219,7 +219,6 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             setPrice(response?.price || 0);
             setOrderID(createdOrderNo);
             setOpenPayChannel(true);
-            startPaymentWatch(createdOrderNo);
 
             // 设置订单预计排队信息
             setOrderCount(response?.orderCount || 0);

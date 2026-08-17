@@ -104,9 +104,6 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
     };
 
     useEffect(() => {
-        if (orderID) {
-            startPaymentWatch(orderID);
-        }
         connectPaymentWS();
 
         return () => {
