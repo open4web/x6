@@ -1,35 +1,13 @@
 import * as React from 'react';
 import {useEffect} from 'react';
-import {styled} from '@mui/material/styles';
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import CardActions from '@mui/material/CardActions';
-import Avatar from '@mui/material/Avatar';
-import IconButton, {IconButtonProps} from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PropsChoose from "./Components/PropsChoose";
 import Box from "@mui/material/Box";
 import {ProductItem} from "./Components/Type";
-import {Badge, Fade, Modal} from '@mui/material';
+import {Fade, Modal} from '@mui/material';
 import {useCartContext} from "../../dataProvider/MyCartProvider";
 import {useTranslate} from 'react-admin';
-import {PropertyIconView} from "./Components/PropertyIcons";
-
-interface ExpandMoreProps extends IconButtonProps {
-    expand: boolean;
-}
-
-const ExpandMore = styled((props: ExpandMoreProps) => {
-    const {expand, ...other} = props;
-    return <IconButton {...other} />;
-})(({theme, expand}) => ({
-    transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
-    marginLeft: 'auto',
-    transition: theme.transitions.create('transform', {
-        duration: theme.transitions.duration.shortest,
-    }),
-}));
+import {ProductCardFace} from "./Components/ProductCardLayouts";
+import {useProductCardStyle} from "../../layout/productCardStyle";
 
 interface Props {
     item: ProductItem;
@@ -47,6 +25,7 @@ interface Props {
 const MyCard = (props: Props) => {
     const translate = useTranslate();
     const {cartItems, showProductImage} = useCartContext();
+    const [cardStyle] = useProductCardStyle();
     const {item, handleClick, kindName, kindColor, clearCartSignal, backgroundColor, combID} = props;
     // const [expanded, setExpanded] = React.useState(false);
     const [expanded2, setExpanded2] = React.useState(false);
@@ -155,165 +134,27 @@ const MyCard = (props: Props) => {
         setCartCount(getItemCountInCart());
     }, [cartItems,clearCartSignal]);
 
-    // @ts-ignore
+    const soldOut = item.stock === 0;
+    const stockLabel = soldOut
+        ? translate('pos.product.sold_out')
+        : translate('pos.product.remaining', {stock: item.stock});
+
     return (
         <>
-            <Card
-                sx={{
-                    maxWidth: 200,
-                    margin: 1,
-                    position: 'relative', // 设置 Card 为相对定位
-                    cursor: showProductImage ? 'default' : 'pointer', // 设置鼠标样式
-                    backgroundColor: backgroundColor || 'inherit', // 默认背景色为浅灰色
-                }}
-            >
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        backgroundColor: item.stock === 0 ? '#d32f2f' : '#fbc02d',
-                        color: item.stock === 0 ? '#fff' : '#000',
-                        px: 0.75,
-                        py: 0.25,
-                        borderRadius: '4px 0 4px 0',
-                        fontSize: '0.7rem',
-                        fontWeight: 700,
-                        lineHeight: 1.4,
-                        whiteSpace: 'nowrap',
-                        zIndex: 2,
-                        pointerEvents: 'none',
-                    }}
-                >
-                    {item.stock === 0 ? translate('pos.product.sold_out') : translate('pos.product.remaining', {stock: item.stock})}
-                </Box>
-                <CardHeader
-                    sx={{pt: 3.5}}
-                    avatar=
-                        {
-                            showProductImage ? (
-                                    <Avatar sx={{bgcolor: kindColor}} aria-label="recipe">
-                                        {kindName}
-                                    </Avatar>)
-                                :
-                                (<Avatar sx={{bgcolor: kindColor}} aria-label="recipe" src={item.img}/>
-                                )
-                        }
-                    title={
-                        <Typography
-                            sx={{
-                                fontSize: showProductImage ? '1rem' : '1.2rem',
-                                fontWeight: showProductImage ? 'normal' : 'bold',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                lineHeight: '1.5rem',
-                                height: '3rem', // 确保布局一致
-                            }}
-                        >
-                            {item?.name}
-                        </Typography>
-                    }
-                    subheader={
-                        item.combPrice !== 0 ? (
-                            // 套餐价格（显示原价和现价）
-                            <div>
-                                {/* 原价（带删除线，默认0） */}
-                                <Typography
-                                    sx={{
-                                        fontSize: '0.8rem',
-                                        textDecoration: 'line-through', // 删除线效果
-                                        color: 'text.secondary',
-                                    }}
-                                >
-                                    ¥{item?.price || 0} {/* 如果 originalPrice 不存在，默认显示 0 */}
-                                </Typography>
-                                {/* 现价（突出显示） */}
-                                <Typography
-                                    sx={{
-                                        fontSize: '1.2rem',
-                                        fontWeight: 'bold',
-                                        color: 'darkorange',
-                                    }}
-                                >
-                                    ¥{item?.combPrice}
-                                </Typography>
-                            </div>
-                        ) : (
-                            // 非套餐（仅显示现价）
-                            <Typography
-                                sx={{
-                                    fontSize: '1.2rem',
-                                    fontWeight: 'bold',
-                                    color: 'darkorange',
-                                }}
-                            >
-                                ¥{item?.price}
-                            </Typography>
-                        )
-                    }
-
-                    onClick={!showProductImage ? () => handleAddToCart(true) : undefined} // 整个卡片可点击
-
-                />
-                {!showProductImage && (
-                    <Badge
-                        badgeContent={cartCount}
-                        color="error"
-                        sx={{
-                            position: 'absolute', // 绝对定位
-                            top: 13, // 距离顶部
-                            right: 13, // 距离右侧
-                            '.MuiBadge-badge': {
-                                fontSize: '0.8rem',
-                                height: 20,
-                                minWidth: 20,
-                            },
-                        }}
-                    />
-                )}
-
-                <CardActions
-                    disableSpacing
-                    sx={{
-                        height: item.spiceOptions?.length > 0 ? 'auto' : 53, // 固定高度，确保没有内容时占位
-                    }}
-                >
-                    {item.spiceOptions?.length > 0 && (
-                        <>
-                            <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, pl: 1}}>
-                                {item.spiceOptions.map((option) => (
-                                    <Box
-                                        key={option.id}
-                                        title={option.name}
-                                        sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            width: 28,
-                                            height: 28,
-                                            borderRadius: 1,
-                                            bgcolor: 'rgba(255,255,255,0.12)',
-                                        }}
-                                    >
-                                        <PropertyIconView icon={option.icon} size={18} />
-                                    </Box>
-                                ))}
-                            </Box>
-                            <ExpandMore
-                                expand={expanded2}
-                                onClick={handleExpandClick2}
-                                aria-expanded={expanded2}
-                                aria-label="show more"
-                            >
-                                <ExpandMoreIcon/>
-                            </ExpandMore>
-                        </>
-                    )}
-                </CardActions>
-            </Card>
+            <ProductCardFace
+                styleName={cardStyle}
+                item={item}
+                kindName={kindName}
+                kindColor={kindColor}
+                backgroundColor={backgroundColor}
+                showProductImage={showProductImage}
+                cartCount={showProductImage ? 0 : cartCount}
+                stockLabel={stockLabel}
+                soldOut={soldOut}
+                onAdd={() => handleAddToCart(true)}
+                onExpand={handleExpandClick2}
+                expanded={expanded2}
+            />
 
             <Modal
                 open={expanded2}

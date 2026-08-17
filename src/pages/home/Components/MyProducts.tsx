@@ -15,6 +15,7 @@ import {
     writeMenus,
     writeProducts,
 } from "../../../utils/catalogCache";
+import {productCardGridXs, useProductCardStyle} from "../../../layout/productCardStyle";
 
 function mapsFromMenus(menus: MenuData[]) {
     const nameMap = menus.reduce((acc: Record<string, MenuData>, item: MenuData) => {
@@ -30,6 +31,7 @@ function mapsFromMenus(menus: MenuData[]) {
 
 function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     const {showProductImage, merchantId} = useCartContext();
+    const [cardStyle] = useProductCardStyle();
     const catalogTick = useCatalogTick();
     const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
     const [rawData, setRawData] = useState<ProductItem[]>(() => {
@@ -269,7 +271,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                         {!getIsComboModeById(activeTab) && groupItems && groupItems?.map((item) => (
                             <Grid
                                 item
-                                xs={showProductImage ? 2.4 : 1.714} // 动态调整宽度，7 个项目一行
+                                xs={productCardGridXs(cardStyle, showProductImage)}
                                 key={item.id}
                             >
                                 <MyCard
