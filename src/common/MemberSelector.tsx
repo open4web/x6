@@ -13,6 +13,7 @@ import {
     Typography,
 } from '@mui/material';
 import { toast } from 'react-toastify';
+import {tPos} from '../i18n/t';
 import { useMemberSearch } from "./useMemberSearch";
 import CheckoutOfferBar from "./checkout/CheckoutOfferBar";
 import { CheckoutOffers } from "./checkout/useCheckoutOffers";
@@ -84,15 +85,15 @@ export default function MemberSelector({
                 order_id: orderID,
                 account_id: selectedMember.id,
                 amount: price,
-                remark: offers?.ticketId ? '余额+优惠券' : (offers?.campaignId ? '余额+活动满减' : '余额支付'),
+                remark: offers?.ticketId ? tPos('pay.remark_coupon') : (offers?.campaignId ? tPos('pay.remark_campaign') : tPos('pay.remark_balance')),
             });
             await offers?.redeem?.(orderID);
 
-            toast.success('支付成功');
+            toast.success(tPos('pay.success'));
             onSuccess?.();
             handleClose();
         } catch {
-            toast.error('支付失败');
+            toast.error(tPos('pay.failed'));
         }
     };
 
@@ -100,7 +101,7 @@ export default function MemberSelector({
         <>
             {/* 查询输入框 */}
             <FormControl fullWidth variant="filled">
-                <InputLabel>手机号后4位</InputLabel>
+                <InputLabel>{tPos('member.suffix')}</InputLabel>
                 <FilledInput
                     value={phoneSuffix}
                     onChange={(e) => {
@@ -111,7 +112,7 @@ export default function MemberSelector({
             </FormControl>
 
             {/* Loading */}
-            {loading && <Typography sx={{ mt: 2 }}>查询中...</Typography>}
+            {loading && <Typography sx={{ mt: 2 }}>{tPos('member.querying')}</Typography>}
 
             {/* 会员列表 */}
             <Box sx={{ mt: 1 }}>
@@ -136,15 +137,15 @@ export default function MemberSelector({
                             "&:hover": { background: "blue" }
                         }}
                     >
-                        <Typography>手机尾号：****{m.phone?.slice(-4)}</Typography>
-                        <Typography>姓名：{m.name}</Typography>
-                        <Typography>余额：¥{m.balance}</Typography>
+                        <Typography>{tPos('member.phone_tail')}：****{m.phone?.slice(-4)}</Typography>
+                        <Typography>{tPos('member.name')}：{m.name}</Typography>
+                        <Typography>{tPos('member.balance')}：¥{m.balance}</Typography>
                     </Box>
                 ))}
 
                 {memberList.length === 0 && phoneSuffix.length === 4 && !loading && (
                     <Typography color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
-                        未找到匹配会员
+                        {tPos('member.not_found')}
                     </Typography>
                 )}
             </Box>
@@ -155,7 +156,7 @@ export default function MemberSelector({
     if (modal) {
         return (
             <Dialog open={!!isOpen} onClose={handleClose} fullWidth>
-                <DialogTitle>会员余额查询</DialogTitle>
+                <DialogTitle>{tPos('member.query_title')}</DialogTitle>
                 <DialogContent>
                     {content}
 
@@ -165,24 +166,24 @@ export default function MemberSelector({
                         onClose={() => setSelectedMember(null)}
                         fullWidth
                     >
-                        <DialogTitle>会员详情</DialogTitle>
+                        <DialogTitle>{tPos('member.detail')}</DialogTitle>
                         <DialogContent>
                             {selectedMember && (
                                 <>
-                                    <Typography>姓名：{selectedMember.name}</Typography>
-                                    <Typography>手机号：{selectedMember.phone}</Typography>
-                                    <Typography>余额：¥{selectedMember.balance}</Typography>
-                                    {selectedMember.id && <Typography>会员卡号：{selectedMember.id}</Typography>}
-                                    {selectedMember.level && <Typography>会员等级：{selectedMember.level}</Typography>}
-                                    {selectedMember.birthday && <Typography>生日：{selectedMember.birthday}</Typography>}
-                                    {selectedMember.gender && <Typography>性别：{selectedMember.gender}</Typography>}
-                                    {selectedMember.registerTime && <Typography>注册时间：{selectedMember.registerTime}</Typography>}
+                                    <Typography>{tPos('member.name')}：{selectedMember.name}</Typography>
+                                    <Typography>{tPos('member.phone')}：{selectedMember.phone}</Typography>
+                                    <Typography>{tPos('member.balance')}：¥{selectedMember.balance}</Typography>
+                                    {selectedMember.id && <Typography>{tPos('member.card')}：{selectedMember.id}</Typography>}
+                                    {selectedMember.level && <Typography>{tPos('member.level')}：{selectedMember.level}</Typography>}
+                                    {selectedMember.birthday && <Typography>{tPos('member.birthday')}：{selectedMember.birthday}</Typography>}
+                                    {selectedMember.gender && <Typography>{tPos('member.gender')}：{selectedMember.gender}</Typography>}
+                                    {selectedMember.registerTime && <Typography>{tPos('member.register')}：{selectedMember.registerTime}</Typography>}
                                 </>
                             )}
                         </DialogContent>
 
                         <DialogActions>
-                            <Button onClick={() => setSelectedMember(null)}>关闭</Button>
+                            <Button onClick={() => setSelectedMember(null)}>{tPos('member.close')}</Button>
                         </DialogActions>
                     </Dialog>
                 </DialogContent>
@@ -197,13 +198,13 @@ export default function MemberSelector({
 
             {/* 详情弹窗 - 保持原有逻辑（有余额比较） */}
             <Dialog open={!!selectedMember} onClose={() => setSelectedMember(null)} fullWidth>
-                <DialogTitle>余额支付 · 选择优惠</DialogTitle>
+                <DialogTitle>{tPos('member.offer_title')}</DialogTitle>
                 <DialogContent>
                     {selectedMember && (
                         <>
-                            <Typography>姓名：{selectedMember.name}</Typography>
-                            <Typography>手机号：{selectedMember.phone}</Typography>
-                            <Typography>余额：¥{selectedMember.balance}</Typography>
+                            <Typography>{tPos('member.name')}：{selectedMember.name}</Typography>
+                            <Typography>{tPos('member.phone')}：{selectedMember.phone}</Typography>
+                            <Typography>{tPos('member.balance')}：¥{selectedMember.balance}</Typography>
 
                             {offers && (
                                 <Box sx={{ mt: 2, p: 1.5, border: '1px dashed', borderColor: 'secondary.light', borderRadius: 1 }}>
@@ -219,11 +220,11 @@ export default function MemberSelector({
                             }}>
                                 {originalPrice && originalPrice > price ? (
                                     <Typography color={"red"}>
-                                        原价 ¥{originalPrice.toFixed(2)}，实付 ¥{price.toFixed(2)}
+                                        {tPos('member.original_pay', {origin: originalPrice.toFixed(2), pay: price.toFixed(2)})}
                                     </Typography>
                                 ) : (
                                     <Typography color={"red"}>
-                                        订单金额：¥{price}
+                                        {tPos('member.order_amount')}：¥{price}
                                     </Typography>
                                 )}
 
@@ -247,7 +248,7 @@ export default function MemberSelector({
                                                 : "#d32f2f",
                                     }}
                                 >
-                                    {selectedMember.balance >= price ? "✔ 余额充足" : "✖ 余额不足"}
+                                    {selectedMember.balance >= price ? `✔ ${tPos('member.enough')}` : `✖ ${tPos('member.short')}`}
                                 </Box>
                             </Box>
                         </>
@@ -255,13 +256,13 @@ export default function MemberSelector({
                 </DialogContent>
 
                 <DialogActions>
-                    <Button onClick={() => setSelectedMember(null)}>取消</Button>
+                    <Button onClick={() => setSelectedMember(null)}>{tPos('member.cancel')}</Button>
                     <Button
                         variant="contained"
                         disabled={!selectedMember || selectedMember.balance < price}
                         onClick={handlePay}
                     >
-                        确认余额支付
+                        {tPos('pay.confirm_balance')}
                     </Button>
                 </DialogActions>
             </Dialog>

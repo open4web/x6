@@ -38,7 +38,7 @@ const LoginCard: React.FC<LoginCardProps> = ({ loading, color }) => {
                     color: (theme) => theme.palette.grey[500],
                 }}
             >
-                {"pos terminal"}
+                {translate('pos.login.title')}
             </Box>
             <Box sx={{padding: "0 1em 1em 1em"}}>
                 <Box sx={{marginTop: "1em"}}>

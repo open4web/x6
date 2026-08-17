@@ -1,6 +1,7 @@
 // hooks/useMemberSearch.ts
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
+import {tPos} from '../i18n/t';
 
 interface MemberProps {
     id: string;
@@ -27,7 +28,7 @@ export function useMemberSearch(fetchData: any) {
                 setMemberList(res || []);
             }, 'GET', { suffix });
         } catch (err) {
-            toast.error('会员查询失败');
+            toast.error(tPos('member.query_failed'));
             setMemberList([]);
         } finally {
             setLoading(false);

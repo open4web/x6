@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import {useTranslate} from 'react-admin';
 
 interface Props {
     value: string;
@@ -22,14 +23,16 @@ export default function PayCodeDisplay({
                                            value,
                                            verified,
                                            onReset,
-                                           label = "支付授权码（扫码输入）",
+                                           label,
                                        }: Props) {
+    const translate = useTranslate();
+    const fieldLabel = label || translate('pos.pay.auth_code');
     return (
         <Box sx={{ m: 2 }}>
 
             <FormControl fullWidth variant="filled">
 
-                <InputLabel>{label}</InputLabel>
+                <InputLabel>{fieldLabel}</InputLabel>
 
                 <FilledInput
                     value={value}
@@ -56,7 +59,7 @@ export default function PayCodeDisplay({
                                     fontWeight: 600,
                                     mr: 1
                                 }}>
-                                    ✔ 已识别
+                                    ✔ {translate('pos.pay.recognized')}
                                 </Box>
                             ) : (
                                 <Box sx={{
@@ -66,7 +69,7 @@ export default function PayCodeDisplay({
                                     fontSize: 12,
                                     mr: 1
                                 }}>
-                                    等待扫码
+                                    {translate('pos.pay.waiting')}
                                 </Box>
                             )}
 
@@ -99,8 +102,8 @@ export default function PayCodeDisplay({
                     color={verified ? "success.main" : "text.secondary"}
                 >
                     {verified
-                        ? "扫码成功，可以进行支付"
-                        : "请使用扫码枪扫描支付二维码"
+                        ? translate('pos.pay.scan_ok')
+                        : translate('pos.pay.scan_hint')
                     }
                 </Typography>
             </Box>

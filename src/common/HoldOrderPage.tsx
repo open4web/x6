@@ -2,12 +2,14 @@ import React from 'react';
 import {Box, Button, Divider, ListItemButton, ListItemText, Paper, Typography} from '@mui/material';
 import {useCartContext} from "../dataProvider/MyCartProvider";
 import {CartItemHolder} from "./types";
+import {useTranslate} from 'react-admin';
 
 type HoldOrderPageProps = {
     open: boolean;
 };
 
 export default function HoldOrderPage({ open }: HoldOrderPageProps) {
+    const translate = useTranslate();
     // 指定 cartItems 的类型为 CartItem[]
     const { setCartItems, setDrawerOpen,holdOrders, setHoldOrders } = useCartContext();
 
@@ -118,7 +120,7 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                                     }}
                                     onClick={() => handleDeleteOrder(order.id)} // 点击时调用删除函数
                                 >
-                                    删除
+                                    {translate('pos.keypad.delete')}
                                 </Button>
                                 <Button
                                     variant="contained"
@@ -130,7 +132,7 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                                     }}
                                     onClick={() => handleContinueOrder(order)}
                                 >
-                                    继续
+                                    {translate('pos.cart.resume')}
                                 </Button>
                             </Box>
                         </>

@@ -30,26 +30,50 @@ export const FormatTimestampAsTime = (timestamp: string | number): string => {
     return date.toLocaleTimeString('zh-CN', { hour12: false });
 };
 
-export function FormatCurrentTime() {
+const clockLocales: Record<string, string> = {
+    zh: 'zh-CN',
+    'zh-TW': 'zh-TW',
+    en: 'en-US',
+    fr: 'fr-FR',
+    ja: 'ja-JP',
+    ko: 'ko-KR',
+    th: 'th-TH',
+    vi: 'vi-VN',
+    id: 'id-ID',
+    es: 'es-ES',
+};
+
+export function FormatCurrentTime(locale = 'zh') {
+    const intlLocale = clockLocales[locale] || locale || 'zh-CN';
     const now = new Date();
+    const parts = new Intl.DateTimeFormat(intlLocale, {
+        weekday: 'short',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        hourCycle: 'h23',
+    }).formatToParts(now);
 
-    // Get weekday in Chinese
-    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-    const weekday = weekdays[now.getDay()];
+    const get = (type: Intl.DateTimeFormatPartTypes) =>
+        parts.find((part) => part.type === type)?.value || '';
 
-    // Determine morning or evening
-    const hours = now.getHours();
-    const timeOfDay = hours < 12 ? '早上' : hours < 18 ? '下午' : '晚上';
+    const year = get('year');
+    const month = get('month');
+    const day = get('day');
+    const time = `${get('hour')}:${get('minute')}:${get('second')}`;
+    const weekday = get('weekday');
 
-    // Format date and time
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Add leading zero
-    const date = String(now.getDate()).padStart(2, '0');
-    const hour = String(hours).padStart(2, '0');
-    const minute = String(now.getMinutes()).padStart(2, '0');
-    const second = String(now.getSeconds()).padStart(2, '0');
-
-    return `${year}年${month}月${date}日 ${hour}:${minute}:${second} ${timeOfDay} ${weekday}`;
+    if (intlLocale.startsWith('zh') || intlLocale.startsWith('ja')) {
+        return `${year}年${month}月${day}日 ${time} ${weekday}`;
+    }
+    if (intlLocale.startsWith('ko')) {
+        return `${year}년 ${month}월 ${day}일 ${time} ${weekday}`;
+    }
+    return `${weekday} ${year}-${month}-${day} ${time}`;
 }
 
 /**
@@ -57,30 +81,32 @@ export function FormatCurrentTime() {
  * @param nanoseconds Time duration in nanoseconds
  * @returns Formatted time string with appropriate unit
  */
-export function FormatNanoseconds(nanoseconds: number): string {
-    // Convert nanoseconds to seconds
+export function FormatNanoseconds(
+    nanoseconds: number,
+    units: {sec?: string; min?: string; hour?: string; day?: string} = {},
+): string {
+    const sec = units.sec ?? 's';
+    const min = units.min ?? 'min';
+    const hour = units.hour ?? 'h';
+    const day = units.day ?? 'd';
     const seconds = nanoseconds / 1e9;
 
     if (seconds < 60) {
-        // Less than 1 minute - show in seconds
-        return `${seconds.toFixed(2)}秒`;
+        return `${seconds.toFixed(2)}${sec}`;
     }
 
     const minutes = seconds / 60;
     if (minutes < 60) {
-        // Less than 1 hour - show in minutes
-        return `${minutes.toFixed(2)}分钟`;
+        return `${minutes.toFixed(2)}${min}`;
     }
 
     const hours = minutes / 60;
     if (hours < 24) {
-        // Less than 1 day - show in hours
-        return `${hours.toFixed(2)}小时`;
+        return `${hours.toFixed(2)}${hour}`;
     }
 
-    // 1 day or more - show in days
     const days = hours / 24;
-    return `${days.toFixed(2)}天`;
+    return `${days.toFixed(2)}${day}`;
 }
 
 

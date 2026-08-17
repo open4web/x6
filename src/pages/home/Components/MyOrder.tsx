@@ -32,6 +32,7 @@ import {isOrderExpired} from "../../../utils/expireStore";
 import {MyOrderSkeleton} from "../../../common/MyOrderSkeleton";
 import { orderStatusMap } from '../../../common/orderStatus';
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
+import {useTranslate} from 'react-admin';
 
 const statusColors = ['#ffe0b2', '#c5e1a5']; // OrderInit, OrderPaid
 
@@ -101,6 +102,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
     const [highlightOrderId, setHighlightOrderId] = useState(''); // 高亮订单 ID
     const { fetchData, alertComponent } = useFetchData();
     const { highlightOrderNo, setHighlightOrderNo } = useCartContext();
+    const translate = useTranslate();
 
     useEffect(() => {
         // 每次请求都先设定加载骨架
@@ -244,9 +246,9 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                                     </Typography>
 
                                     {/* 显示订单总金额和商品总数 */}
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                        <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
-                                            总计: ¥{order.price?.pay_price?.toFixed(2)}
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, gap: 0.5, flexWrap: 'nowrap' }}>
+                                        <Typography variant="body2" noWrap sx={{ fontWeight: 'bold', color: '#d32f2f', flexShrink: 0 }}>
+                                            {translate('pos.cart.total')}: ¥{order.price?.pay_price?.toFixed(2)}
                                         </Typography>
 
                                         {/* 添加状态展示 */}
@@ -255,12 +257,15 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                                             if (statusInfo) {
                                                 return (
                                                     <Chip
-                                                        label={statusInfo.name}
+                                                        label={translate(`pos.status.${order.status}`, {_: statusInfo.name})}
                                                         size="small"
                                                         sx={{
                                                             backgroundColor: 'darkgray',
                                                             color: `${statusInfo.color}`,
-                                                            fontWeight: 'bold'
+                                                            fontWeight: 'bold',
+                                                            flexShrink: 0,
+                                                            height: 22,
+                                                            '& .MuiChip-label': {whiteSpace: 'nowrap', px: 0.75},
                                                         }}
                                                     />
                                                 );
@@ -268,8 +273,8 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                                             return null;
                                         })()}
 
-                                        <Typography variant="body2" sx={{ color: '#6d4c41' }}>
-                                            共{calculateTotalItems(order.buckets)}件商品
+                                        <Typography variant="body2" noWrap sx={{ color: '#6d4c41', flexShrink: 0 }}>
+                                            {translate('pos.list.items', {count: calculateTotalItems(order.buckets)})}
                                         </Typography>
                                     </Box>
 
@@ -302,7 +307,7 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                                     </Typography>
                                     {order?.status === 0 && (
                                         <Button size="large" color="info" onClick={() => handleContinuePay(order)}>
-                                            支付
+                                            {translate('pos.list.pay')}
                                         </Button>
                                     )}
                                     {order?.status === 1 && (

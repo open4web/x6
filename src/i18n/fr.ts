@@ -1,11 +1,15 @@
 import { TranslationMessages } from 'react-admin';
 import frenchMessages from 'ra-language-french';
 import {posExtra} from './posCatalog';
+import {extraUi} from './extraUi';
 
 const customFrenchMessages: TranslationMessages = {
     ...frenchMessages,
     pos: {
         ...posExtra.fr,
+        ...extraUi.fr,
+        cart: {...posExtra.fr.cart, ...extraUi.fr.cart},
+        handover: {...posExtra.fr.handover, ...extraUi.fr.handover},
         search: 'Rechercher',
         configuration: 'Configuration',
         language: 'Langue',

@@ -8,6 +8,7 @@ import { TransitionProps } from "@mui/material/transitions";
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import { DialogContentText } from '@mui/material';
+import {useTranslate} from 'react-admin';
 
 const Transition = React.forwardRef(function Transition(
     props: TransitionProps & {
@@ -24,6 +25,7 @@ type MerchantSeatsProps = {
 };
 
 export default function MerchantSeats({ open, setOpen }: MerchantSeatsProps) {
+    const translate = useTranslate();
     const [scroll, setScroll] = React.useState<DialogProps['scroll']>('paper');
     const [isSeatSelected, setIsSeatSelected] = React.useState<boolean>(false);
     const storeId = localStorage.getItem('current_store_id') || '';
@@ -63,7 +65,7 @@ export default function MerchantSeats({ open, setOpen }: MerchantSeatsProps) {
                 onClose={handleClose}
                 TransitionComponent={Transition}
             >
-                <DialogTitle id="scroll-dialog-title">选择座位</DialogTitle>
+                <DialogTitle id="scroll-dialog-title">{translate('pos.cart.pick_seat')}</DialogTitle>
                 <DialogContent dividers={scroll === 'paper'}>
                     <DialogContentText
                         id="scroll-dialog-description"
@@ -100,7 +102,7 @@ export default function MerchantSeats({ open, setOpen }: MerchantSeatsProps) {
                             color="error"
                             sx={{ flex: 1, maxWidth: '48%' }}
                         >
-                            取消
+                            {translate('pos.keypad.cancel')}
                         </Button>
                         <Button
                             onClick={handleConfirm}
@@ -109,7 +111,7 @@ export default function MerchantSeats({ open, setOpen }: MerchantSeatsProps) {
                             disabled={!isSeatSelected} // 使用状态来禁用按钮
                             sx={{ flex: 1, maxWidth: '48%' }}
                         >
-                            选定
+                            {translate('pos.cart.confirm_seat')}
                         </Button>
                     </Box>
                 </Box>

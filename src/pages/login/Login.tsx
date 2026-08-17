@@ -12,6 +12,7 @@ import Box from "@mui/material/Box";
 import LoginTabs from './LoginTabs';
 import {LoginInput} from "./types";
 import {useCartContext} from "../../dataProvider/MyCartProvider";
+import AppearanceMenu from "../../layout/AppearanceMenu";
 
 const Login = () => {
     const [loading, setLoading] = useState(false);
@@ -61,6 +62,7 @@ const Login = () => {
         <Form onSubmit={handleSubmit} noValidate>
             <Box
                 sx={{
+                    position: "relative",
                     display: "flex",
                     flexDirection: "column",
                     minHeight: "100vh",
@@ -70,6 +72,15 @@ const Login = () => {
                     backgroundRepeat: "no-repeat",
                     backgroundSize: "cover",
                 }}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    bgcolor: 'rgba(0,0,0,0.45)',
+                    borderRadius: 2,
+                }}>
+                    <AppearanceMenu />
+                </Box>
                 <LoginTabs loading={loading}/>
             </Box>
         </Form>

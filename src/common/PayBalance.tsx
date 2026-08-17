@@ -10,6 +10,7 @@ import {
     IconButton,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import {tPos} from "../i18n/t";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import NumericKeyboardDialog from "../common/NumericKeyboardDialog"; // 按你项目实际路径调整
 import {useCartContext} from "../dataProvider/MyCartProvider";
@@ -66,7 +67,7 @@ export default function MemberBalancePayOld({
                 { suffix }
             );
         } catch {
-            toast.error("会员查询失败");
+            toast.error(tPos('member.query_failed'));
         } finally {
             setLoadingMember(false);
         }
@@ -118,7 +119,7 @@ export default function MemberBalancePayOld({
                 </IconButton>
                 <Box sx={{ flex: 1 }}>
                     <Typography variant="caption" color="text.secondary">
-                        手机号后4位
+                        {tPos('member.suffix')}
                     </Typography>
                     <Typography
                         variant="h6"
@@ -128,7 +129,7 @@ export default function MemberBalancePayOld({
                     </Typography>
                 </Box>
                 <Button size="small" variant="outlined">
-                    输入
+                    {tPos('pay.input')}
                 </Button>
                 {/* 数字键盘弹窗 */}
                 <NumericKeyboardDialog
@@ -136,20 +137,20 @@ export default function MemberBalancePayOld({
                     open={openPhoneKeyboard}
                     setOpen={setOpenPhoneKeyboard}
                     onSave={handleSavePhoneSuffix}
-                    title="请输入手机号后4位"
+                    title={tPos('pay.phone_suffix')}
                     min={0}
                     max={9999}
                     requiredLength={4}
                     defaultValue={phoneSuffix || ""}
-                    confirmText="确认"
-                    clearText="清空"
+                    confirmText={tPos('pay.confirm')}
+                    clearText={tPos('keypad.clear')}
                     type="number"
                 />
 
             </Box>
             {/* loading */}
             {loadingMember && (
-                <Typography sx={{ mt: 2 }}>查询中...</Typography>
+                <Typography sx={{ mt: 2 }}>{tPos('member.querying')}</Typography>
             )}
 
             {/* 会员列表 */}
@@ -173,10 +174,10 @@ export default function MemberBalancePayOld({
                         }}
                     >
                         <Typography>
-                            手机尾号：****{m.phone?.slice(-4)}
+                            {tPos('member.phone_tail')}：****{m.phone?.slice(-4)}
                         </Typography>
-                        <Typography>姓名：{m.name}</Typography>
-                        <Typography>余额：¥{m.balance}</Typography>
+                        <Typography>{tPos('member.name')}：{m.name}</Typography>
+                        <Typography>{tPos('member.balance')}：¥{m.balance}</Typography>
                     </Box>
                 ))}
             </Box>
@@ -187,17 +188,17 @@ export default function MemberBalancePayOld({
                 onClose={() => setMemberOpen(false)}
                 fullWidth
             >
-                <DialogTitle>会员详情</DialogTitle>
+                <DialogTitle>{tPos('member.detail')}</DialogTitle>
 
                 <DialogContent>
                     {selectedMember && (
                         <>
-                            <Typography>姓名：{selectedMember.name}</Typography>
+                            <Typography>{tPos('member.name')}：{selectedMember.name}</Typography>
                             <Typography>
-                                手机号：{selectedMember.phone}
+                                {tPos('member.phone')}：{selectedMember.phone}
                             </Typography>
                             <Typography>
-                                余额：¥{selectedMember.balance}
+                                {tPos('member.balance')}：¥{selectedMember.balance}
                             </Typography>
 
                             <Box
@@ -212,7 +213,7 @@ export default function MemberBalancePayOld({
                                 }}
                             >
                                 <Typography color="error">
-                                    订单金额：¥{price}
+                                    {tPos('member.order_amount')}：¥{price}
                                 </Typography>
 
                                 <Box
@@ -236,8 +237,8 @@ export default function MemberBalancePayOld({
                                     }}
                                 >
                                     {selectedMember.balance >= price
-                                        ? "✔ 余额充足"
-                                        : "✖ 余额不足"}
+                                        ? `✔ ${tPos('member.enough')}`
+                                        : `✖ ${tPos('member.short')}`}
                                 </Box>
                             </Box>
                         </>
@@ -245,7 +246,7 @@ export default function MemberBalancePayOld({
                 </DialogContent>
 
                 <DialogActions>
-                    <Button onClick={() => setMemberOpen(false)}>取消</Button>
+                    <Button onClick={() => setMemberOpen(false)}>{tPos('member.cancel')}</Button>
 
                     <Button
                         variant="contained"
@@ -262,7 +263,7 @@ export default function MemberBalancePayOld({
                                         order_id: orderID,
                                         account_id: selectedMember.id,
                                         amount: price,
-                                        remark: "余额支付",
+                                        remark: tPos('pay.remark_balance'),
                                     }
                                 );
 
@@ -272,11 +273,11 @@ export default function MemberBalancePayOld({
 
                                 startPaymentWatch(orderID);
                             } catch {
-                                toast.error("支付失败");
+                                toast.error(tPos('pay.failed'));
                             }
                         }}
                     >
-                        余额支付
+                        {tPos('member.pay')}
                     </Button>
                 </DialogActions>
             </Dialog>

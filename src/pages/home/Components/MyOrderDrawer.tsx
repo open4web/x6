@@ -13,9 +13,11 @@ import FormGroup from "@mui/material/FormGroup";
 import Switch from "@mui/material/Switch";
 import GradingIcon from '@mui/icons-material/Grading';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
+import {useTranslate} from 'react-admin';
 
 export default function MyOrderDrawer() {
     const { orderDrawerOpen, setOrderDrawerOpen, highlightOrderNo } = useCartContext();
+    const translate = useTranslate();
 
     // 用于触发 MyOrder 重新加载的 key
     const [refreshTrigger, setRefreshTrigger] = React.useState(0);
@@ -155,131 +157,140 @@ export default function MyOrderDrawer() {
                         borderBottom: "1px solid",
                         flexWrap: "nowrap",
                         overflowX: "auto",
-                        gap: 2,
+                        gap: 1,
                     }}
                 >
                     <Badge badgeContent={totalRecord} color="primary">
                         <GradingIcon color="inherit" />
                     </Badge>
                     <Box component="span" sx={{ flex: 1 }} />
-                    <FormGroup>
+                    <FormGroup sx={{flexShrink: 0}}>
                         <FormControlLabel
+                            sx={{
+                                m: 0,
+                                whiteSpace: 'nowrap',
+                                '& .MuiFormControlLabel-label': {whiteSpace: 'nowrap'},
+                            }}
                             control={
                                 <Switch checked={onlyMyOrder} onChange={handleOnlyMeChange} name="antoine"/>
                             }
-                            label="我的"
+                            label={translate('pos.list.mine')}
                         />
                     </FormGroup>
 
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                        <TextField
-                            variant="outlined"
-                            size="small"
-                            placeholder="搜索订单..."
-                            value={orderNo}
-                            onChange={handleSearch}
-                            sx={{
-                                flexGrow: 1,
-                                maxWidth: "300px",
-                                borderRadius: "4px",
-                            }}
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            size="medium"
-                                            color="error"
-                                            onClick={handleClearOrderNo}
-                                        >
-                                            <SearchOffIcon />
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                    </Box>
+                    <TextField
+                        variant="outlined"
+                        size="small"
+                        placeholder={translate('pos.list.search')}
+                        value={orderNo}
+                        onChange={handleSearch}
+                        sx={{
+                            width: 180,
+                            flexShrink: 0,
+                            '& .MuiInputBase-input': {whiteSpace: 'nowrap'},
+                        }}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        size="medium"
+                                        color="error"
+                                        onClick={handleClearOrderNo}
+                                    >
+                                        <SearchOffIcon />
+                                    </IconButton>
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
 
-                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
-                        <TextField
-                            select
-                            label="销售状态"
-                            value={saleStatus}
-                            onChange={handleSaleStatusChange}
-                            size="small"
-                            sx={{ minWidth: "150px", flexShrink: 0 }}
-                        >
-                            {orderSaleStatusMap.map((status) => (
-                                <MenuItem key={status.id} value={status.id}>
-                                    {status.name}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </Box>
+                    <TextField
+                        select
+                        label={translate('pos.list.sale_status')}
+                        value={saleStatus}
+                        onChange={handleSaleStatusChange}
+                        size="small"
+                        InputLabelProps={{sx: {whiteSpace: 'nowrap'}}}
+                        sx={{minWidth: 108, flexShrink: 0, '& .MuiSelect-select': {whiteSpace: 'nowrap'}}}
+                    >
+                        {orderSaleStatusMap.map((item) => (
+                            <MenuItem key={item.id} value={item.id}>
+                                {translate(`pos.sale_status.${item.id}`, {_: item.name})}
+                            </MenuItem>
+                        ))}
+                    </TextField>
 
-                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
-                        <TextField
-                            select
-                            label="订单状态"
-                            value={status}
-                            onChange={handleStatusChange}
-                            size="small"
-                            sx={{ minWidth: "150px", flexShrink: 0 }}
-                        >
-                            {orderStatusMap.map((status) => (
-                                <MenuItem key={status.id} value={status.id}>
-                                    {status.name}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </Box>
+                    <TextField
+                        select
+                        label={translate('pos.list.order_status')}
+                        value={status}
+                        onChange={handleStatusChange}
+                        size="small"
+                        InputLabelProps={{sx: {whiteSpace: 'nowrap'}}}
+                        sx={{minWidth: 108, flexShrink: 0, '& .MuiSelect-select': {whiteSpace: 'nowrap'}}}
+                    >
+                        {orderStatusMap.map((item) => (
+                            <MenuItem key={item.id} value={item.id}>
+                                {translate(`pos.status.${item.id}`, {_: item.name})}
+                            </MenuItem>
+                        ))}
+                    </TextField>
 
-                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
-                        <TextField
-                            select
-                            label="订单来源"
-                            value={source}
-                            onChange={handleSourceChange}
-                            size="small"
-                            sx={{ minWidth: "150px", flexShrink: 0 }}
-                        >
-                            {payMethodList.map((status) => (
-                                <MenuItem key={status.id} value={status.id}>
-                                    {status.name}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </Box>
+                    <TextField
+                        select
+                        label={translate('pos.list.source')}
+                        value={source}
+                        onChange={handleSourceChange}
+                        size="small"
+                        InputLabelProps={{sx: {whiteSpace: 'nowrap'}}}
+                        sx={{minWidth: 108, flexShrink: 0, '& .MuiSelect-select': {whiteSpace: 'nowrap'}}}
+                    >
+                        {payMethodList.map((item) => (
+                            <MenuItem key={item.id} value={item.id}>
+                                {translate(`pos.source.${item.id}`, {_: item.name})}
+                            </MenuItem>
+                        ))}
+                    </TextField>
 
-                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
-                        <TextField
-                            label="开始时间"
-                            type="datetime-local"
-                            value={startDate}
-                            onChange={handleDateChange("start")}
-                            size="small"
-                            InputLabelProps={{ shrink: true }}
-                            sx={{ minWidth: "200px", flexShrink: 0 }}
-                        />
-                    </Box>
+                    <TextField
+                        label={translate('pos.list.start')}
+                        type="datetime-local"
+                        value={startDate}
+                        onChange={handleDateChange("start")}
+                        size="small"
+                        InputLabelProps={{shrink: true, sx: {whiteSpace: 'nowrap'}}}
+                        sx={{minWidth: 188, flexShrink: 0}}
+                    />
 
-                    <Box sx={{display: "flex", alignItems: "center", gap: 3}}>
-                        <TextField
-                            label="结束时间"
-                            type="datetime-local"
-                            value={endDate}
-                            onChange={handleDateChange("end")}
-                            size="small"
-                            InputLabelProps={{ shrink: true }}
-                            sx={{ minWidth: "200px", flexShrink: 0 }}
-                        />
-                    </Box>
+                    <TextField
+                        label={translate('pos.list.end')}
+                        type="datetime-local"
+                        value={endDate}
+                        onChange={handleDateChange("end")}
+                        size="small"
+                        InputLabelProps={{shrink: true, sx: {whiteSpace: 'nowrap'}}}
+                        sx={{minWidth: 188, flexShrink: 0}}
+                    />
 
-                    <Box sx={{display: "flex", alignItems: "center", gap: 2}}>
-                        <Button variant="contained" color="primary" size="small" onClick={handleQuickFilter(0)}>今天</Button>
-                        <Button variant="contained" color="secondary" size="small" onClick={handleQuickFilter(3)}>近3天</Button>
-                        <Button variant="contained" color="success" size="small" onClick={handleQuickFilter(7)}>近7天</Button>
-                        <Button variant="contained" color="warning" size="small" onClick={handleQuickFilter(15)}>近15天</Button>
-                        <Button variant="contained" color="error" size="small" onClick={handleQuickFilter(30)}>近30天</Button>
+                    <Box sx={{display: "flex", alignItems: "center", gap: 0.75, flexShrink: 0}}>
+                        {[
+                            {days: 0, color: 'primary' as const, label: translate('pos.list.today')},
+                            {days: 3, color: 'secondary' as const, label: translate('pos.list.last_days', {days: 3})},
+                            {days: 7, color: 'success' as const, label: translate('pos.list.last_days', {days: 7})},
+                            {days: 15, color: 'warning' as const, label: translate('pos.list.last_days', {days: 15})},
+                            {days: 30, color: 'error' as const, label: translate('pos.list.last_days', {days: 30})},
+                        ].map(item => (
+                            <Button
+                                key={item.days}
+                                variant="contained"
+                                color={item.color}
+                                size="small"
+                                onClick={handleQuickFilter(item.days)}
+                                sx={{whiteSpace: 'nowrap', minWidth: 0, px: 1, flexShrink: 0, lineHeight: 1.5}}
+                            >
+                                {item.label}
+                            </Button>
+                        ))}
                     </Box>
                 </Box>
 

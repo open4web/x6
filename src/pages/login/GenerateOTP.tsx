@@ -12,6 +12,7 @@ import {authApi} from "../../utils/axios";
 import OtpInput from "react-otp-input";
 import TokenIcon from '@mui/icons-material/Token';
 import {useCartContext} from "../../dataProvider/MyCartProvider";
+import {tPos} from '../../i18n/t';
 
 // @ts-ignore
 export default function GenerateOTP({loading, myOtpUrl}) {
@@ -53,13 +54,13 @@ export default function GenerateOTP({loading, myOtpUrl}) {
             // 移除标识以便下一次进入密码登陆页面
             localStorage.setItem('verified_otp', 'true')
 
-            notify(`安全码绑定成功`, {type: 'success'});
+            notify(tPos('common.success'), {type: 'success'});
 
             // 登陆成功后跳转到首页
             redirect('/#/login');
 
         } catch (error: any) {
-            notify(`安全码绑定失败`, {type: 'error'});
+            notify(tPos('common.failed', {text: '2FA'}), {type: 'error'});
         }
     };
 

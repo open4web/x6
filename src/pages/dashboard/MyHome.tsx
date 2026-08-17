@@ -60,11 +60,11 @@ export const MyHome = () => {
                 )
             );
             console.log("increment quantity", cartItems)
-            toast.success(`${item.name} 数量增加`, { position: "top-center", autoClose: 2000 });
+            toast.success(translate('pos.cart.qty_up', {name: item.name}), { position: "top-center", autoClose: 2000 });
         } else {
             // 商品不存在，首次添加到购物车
             setCartItems([...cartItems, { ...item, quantity: 1 }]);
-            toast.success('商品已加入购物车', { position: "top-center", autoClose: 2000 });
+            toast.success(translate('pos.cart.added'), { position: "top-center", autoClose: 2000 });
         }
     };
 

@@ -2,10 +2,14 @@ import { TranslationMessages } from 'react-admin';
 
 import chineseMessages from "./chinese";
 import {posExtra} from "./posCatalog";
+import {extraUi} from "./extraUi";
 const customChineseMessages: TranslationMessages = {
     ...chineseMessages,
     pos: {
         ...posExtra.zh,
+        ...extraUi.zh,
+        cart: {...posExtra.zh.cart, ...extraUi.zh.cart},
+        handover: {...posExtra.zh.handover, ...extraUi.zh.handover},
         search: '搜索',
         configuration: '主题配置',
         userProfile: '个人中心',
@@ -17,15 +21,9 @@ const customChineseMessages: TranslationMessages = {
             dark: '暗',
         },
         auth: {
-            phone: "手机号",
-            merchant: "企业号",
-            code: "2FA Code",
-            security_code: "安全码",
-            verified: "验证并激活",
-            validate: "验证安全码",
+            ...extraUi.zh.auth,
             opt_verified: "2FA验证",
-            opt_enabled: "2FA启用"
-
+            opt_enabled: "2FA启用",
         },
         dashboard: {
             monthly_revenue: '月收入',

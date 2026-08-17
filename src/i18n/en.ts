@@ -1,11 +1,15 @@
 import { TranslationMessages } from 'react-admin';
 import englishMessages from 'ra-language-english';
 import {posExtra} from './posCatalog';
+import {extraUi} from './extraUi';
 
 const customEnglishMessages: TranslationMessages = {
     ...englishMessages,
     pos: {
         ...posExtra.en,
+        ...extraUi.en,
+        cart: {...posExtra.en.cart, ...extraUi.en.cart},
+        handover: {...posExtra.en.handover, ...extraUi.en.handover},
         search: 'Search',
         configuration: 'Configuration',
         language: 'Language',
@@ -15,8 +19,7 @@ const customEnglishMessages: TranslationMessages = {
             dark: 'Dark',
         },
         auth: {
-            phone: "Phone",
-
+            ...extraUi.en.auth,
         },
         dashboard: {
             monthly_revenue: 'Monthly Revenue',

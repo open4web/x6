@@ -8,7 +8,8 @@ import {
     Typography,
     Box
 } from '@mui/material';
-import { useNotify } from "react-admin";
+import { useNotify, useTranslate } from "react-admin";
+import {tPos} from '../../i18n/t';
 
 interface Merchant {
     merchant_id: string;
@@ -29,6 +30,7 @@ interface Props {
 
 const MerchantSelector: React.FC<Props> = ({ merchants, onSelect }) => {
     const notify = useNotify();
+    const translate = useTranslate();
 
     // 🔥 清缓存 + 重试
     const handleRetry = () => {
@@ -54,12 +56,12 @@ const MerchantSelector: React.FC<Props> = ({ merchants, onSelect }) => {
     // 🔥 角色映射
     const getRole = (m: Merchant) => {
         if (m.is_owner) {
-            return { label: "👑 Owner", color: "#a855f7" };
+            return { label: `👑 ${translate('pos.login.role_owner')}`, color: "#a855f7" };
         }
         if (m.is_admin) {
-            return { label: "🛠 Admin", color: "#38bdf8" };
+            return { label: `🛠 ${translate('pos.login.role_admin')}`, color: "#38bdf8" };
         }
-        return { label: "😐 User", color: "#94a3b8" };
+        return { label: `😐 ${translate('pos.login.role_user')}`, color: "#94a3b8" };
     };
 
     // 🔥 排序（Owner > Admin > 普通）
@@ -90,7 +92,7 @@ const MerchantSelector: React.FC<Props> = ({ merchants, onSelect }) => {
                         mb: 2,
                     }}
                 >
-                    暂无可用商户
+                    {translate('pos.login.no_merchant')}
                 </Typography>
 
                 <Typography
@@ -100,7 +102,7 @@ const MerchantSelector: React.FC<Props> = ({ merchants, onSelect }) => {
                         mb: 3,
                     }}
                 >
-                    请重新登录或联系管理员
+                    {translate('pos.login.no_merchant_hint')}
                 </Typography>
 
                 <CardActionArea onClick={handleRetry}>
@@ -126,7 +128,7 @@ const MerchantSelector: React.FC<Props> = ({ merchants, onSelect }) => {
                                 fontWeight: 600,
                             }}
                         >
-                            🔄 点击重试
+                            🔄 {translate('pos.login.retry')}
                         </Typography>
                     </Card>
                 </CardActionArea>
@@ -153,7 +155,7 @@ const MerchantSelector: React.FC<Props> = ({ merchants, onSelect }) => {
                     letterSpacing: 1
                 }}
             >
-                选择商户
+                {translate('pos.login.pick_merchant')}
             </Typography>
 
             <Grid container spacing={2}>
@@ -165,7 +167,7 @@ const MerchantSelector: React.FC<Props> = ({ merchants, onSelect }) => {
                             <CardActionArea
                                 onClick={() => {
                                     if (m.enabled === false) {
-                                        notify("该商户不可用", { type: "warning" });
+                                        notify(tPos('common.server'), { type: "warning" });
                                         return;
                                     }
                                     onSelect(m);
@@ -218,19 +220,23 @@ const MerchantSelector: React.FC<Props> = ({ merchants, onSelect }) => {
                                         </Typography>
 
                                         <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-                                            商户ID: {m.merchant_id}
+                                            {translate('pos.login.merchant_id')}: {m.merchant_id}
                                         </Typography>
 
                                         {/* 状态 */}
                                         <Typography
                                             variant="caption"
                                             sx={{
-                                                color: m.status === "已验证"
+                                                color: m.status === "已验证" || m.verified
                                                     ? "#22c55e"
                                                     : "#ef4444"
                                             }}
                                         >
-                                            {m.status}
+                                            {m.status === "已验证" || m.verified
+                                                ? translate('pos.login.status_ok')
+                                                : (m.status && m.status !== "未验证"
+                                                    ? m.status
+                                                    : translate('pos.login.status_no'))}
 
                                         </Typography>
 

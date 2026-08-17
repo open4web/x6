@@ -26,6 +26,7 @@ import {toast} from 'react-toastify';
 import {useFetchData} from '../../common/FetchData';
 import {Order, ShiftHandover} from './types';
 import {statusInfoMap} from './orderStatus';
+import {useTranslate} from 'react-admin';
 
 const HandoverPageDrawer: React.FC = () => {
     const [form] = Form.useForm();
@@ -35,6 +36,7 @@ const HandoverPageDrawer: React.FC = () => {
     const [showOpenOrders, setShowOpenOrders] = useState(false);
     const {shiftOpen, setShiftOpen, merchantId, setReady} = useCartContext();
     const {fetchData} = useFetchData();
+    const translate = useTranslate();
 
     const closeDrawer = () => {
         if (submitting) {
@@ -56,7 +58,7 @@ const HandoverPageDrawer: React.FC = () => {
                 });
             }, 'GET', {});
         } catch {
-            toast.error('交接数据加载失败');
+            toast.error(translate('pos.handover.load_failed'));
         } finally {
             setLoading(false);
         }
@@ -79,7 +81,7 @@ const HandoverPageDrawer: React.FC = () => {
             setShiftOpen(false);
             setCurrentShift(null);
             form.resetFields();
-            toast.success('交接成功');
+            toast.success(translate('pos.handover.success'));
         }, 'POST', postData);
     };
 
@@ -92,16 +94,16 @@ const HandoverPageDrawer: React.FC = () => {
 
     const handleSubmit = async (values: any) => {
         Modal.confirm({
-            title: '确认完成本班交接？',
-            content: '提交后当前班次将结束，本机退出值班状态。',
-            okText: '确认交接',
-            cancelText: '再检查一下',
+            title: translate('pos.handover.confirm_title'),
+            content: translate('pos.handover.confirm_body'),
+            okText: translate('pos.handover.confirm_ok'),
+            cancelText: translate('pos.handover.confirm_check'),
             onOk: async () => {
                 setSubmitting(true);
                 try {
                     await doHandover(values);
                 } catch {
-                    Modal.error({title: '交接失败', content: '请稍后重试'});
+                    Modal.error({title: translate('pos.handover.fail'), content: translate('pos.handover.retry')});
                 } finally {
                     setSubmitting(false);
                 }
@@ -110,19 +112,19 @@ const HandoverPageDrawer: React.FC = () => {
     };
 
     const openOrderColumns: ColumnsType<Order> = [
-        {title: '订单号', dataIndex: 'order_id'},
-        {title: '桌号', dataIndex: 'table_id'},
-        {title: '金额', dataIndex: 'total_amount', render: (v) => `¥${Number(v || 0).toFixed(2)}`},
+        {title: translate('pos.handover.order_no'), dataIndex: 'order_id'},
+        {title: translate('pos.handover.table'), dataIndex: 'table_id'},
+        {title: translate('pos.handover.amount'), dataIndex: 'total_amount', render: (v) => `¥${Number(v || 0).toFixed(2)}`},
         {
-            title: '状态',
+            title: translate('pos.handover.status'),
             dataIndex: 'status',
             render: (status: number) => {
-                const info = statusInfoMap[status] || {text: `未知(${status})`, color: 'default'};
-                return <Tag color={info.color}>{info.text}</Tag>;
+                const info = statusInfoMap[status] || {text: translate('pos.handover.unknown'), color: 'default'};
+                return <Tag color={info.color}>{translate(`pos.status.${status}`, {_: info.text})}</Tag>;
             },
         },
         {
-            title: '创建时间',
+            title: translate('pos.handover.created'),
             dataIndex: 'create_time',
             render: (v) => dayjs(v).format('YY-MM-DD HH:mm'),
         },
@@ -164,13 +166,13 @@ const HandoverPageDrawer: React.FC = () => {
             >
                 <Box>
                     <Typography variant="h6" sx={{fontWeight: 700, lineHeight: 1.2}}>
-                        交接班
+                        {translate('pos.handover.title')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        核对账目后交给下一班。不想交了可以直接取消。
+                        {translate('pos.handover.subtitle')}
                     </Typography>
                 </Box>
-                <IconButton onClick={closeDrawer} aria-label="关闭交接班" disabled={submitting}>
+                <IconButton onClick={closeDrawer} aria-label={translate('pos.handover.close')} disabled={submitting}>
                     <CloseIcon />
                 </IconButton>
             </Box>
@@ -180,26 +182,26 @@ const HandoverPageDrawer: React.FC = () => {
                     {!currentShift && !loading && (
                         <Alert
                             type="warning"
-                            message="暂未获取到本班数据"
-                            action={<Button size="small" onClick={loadCurrentShift}>重新加载</Button>}
+                            message={translate('pos.handover.no_data')}
+                            action={<Button size="small" onClick={loadCurrentShift}>{translate('pos.handover.reload')}</Button>}
                         />
                     )}
 
                     {currentShift && (
                         <>
                             <Descriptions bordered column={3} size="small">
-                                <Descriptions.Item label="当前收银员">{currentShift.previous_cashier}</Descriptions.Item>
-                                <Descriptions.Item label="开始时间">
+                                <Descriptions.Item label={translate('pos.handover.cashier')}>{currentShift.previous_cashier}</Descriptions.Item>
+                                <Descriptions.Item label={translate('pos.handover.start_time')}>
                                     {currentShift.start_time ? dayjs(currentShift.start_time).format('MM-DD HH:mm') : '-'}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="总订单数">{currentShift.total_orders} 单</Descriptions.Item>
-                                <Descriptions.Item label="销售额">
+                                <Descriptions.Item label={translate('pos.handover.order_count')}>{translate('pos.handover.orders_unit', {count: currentShift.total_orders})}</Descriptions.Item>
+                                <Descriptions.Item label={translate('pos.handover.sales')}>
                                     <strong>¥{Number(currentShift.total_sales_amount || 0).toFixed(2)}</strong>
                                 </Descriptions.Item>
-                                <Descriptions.Item label="总收款">
+                                <Descriptions.Item label={translate('pos.handover.paid')}>
                                     <strong>¥{Number(currentShift.total_paid_amount || 0).toFixed(2)}</strong>
                                 </Descriptions.Item>
-                                <Descriptions.Item label="总退款">
+                                <Descriptions.Item label={translate('pos.handover.refund')}>
                                     <strong>¥{Number(currentShift.total_refund_amount || 0).toFixed(2)}</strong>
                                 </Descriptions.Item>
                             </Descriptions>
@@ -207,31 +209,31 @@ const HandoverPageDrawer: React.FC = () => {
                             <Divider />
 
                             <Form form={form} layout="vertical" onFinish={handleSubmit}>
-                                <Form.Item label="下一班收银员" name="next_cashier" rules={[{required: true, message: '请填写下一班收银员'}]}>
-                                    <Input placeholder="请输入下一班收银员" style={{width: 320}} />
+                                <Form.Item label={translate('pos.handover.next_cashier')} name="next_cashier" rules={[{required: true, message: translate('pos.handover.next_required')}]}>
+                                    <Input placeholder={translate('pos.handover.next_placeholder')} style={{width: 320}} />
                                 </Form.Item>
-                                <Form.Item label="实点现金" name="closing_cash" rules={[{required: true, message: '请填写实点现金'}]}>
+                                <Form.Item label={translate('pos.handover.cash')} name="closing_cash" rules={[{required: true, message: translate('pos.handover.cash_required')}]}>
                                     <InputNumber style={{width: 320}} precision={2} prefix="¥" />
                                 </Form.Item>
-                                <Form.Item label="监交人" name="supervisor">
-                                    <Input placeholder="可选" style={{width: 320}} />
+                                <Form.Item label={translate('pos.handover.supervisor')} name="supervisor">
+                                    <Input placeholder={translate('pos.handover.optional')} style={{width: 320}} />
                                 </Form.Item>
-                                <Form.Item label="备注" name="special_notes">
+                                <Form.Item label={translate('pos.handover.notes')} name="special_notes">
                                     <Input.TextArea rows={3} />
                                 </Form.Item>
 
                                 <Space wrap>
                                     <Button onClick={closeDrawer} size="large" disabled={submitting}>
-                                        取消
+                                        {translate('pos.handover.cancel')}
                                     </Button>
                                     <Button icon={<PrinterOutlined />} size="large" onClick={() => window.print()}>
-                                        打印交接单
+                                        {translate('pos.handover.print')}
                                     </Button>
                                     <Button size="large" onClick={() => setShowOpenOrders(true)}>
-                                        未完成订单 ({currentShift.open_orders?.length || 0})
+                                        {translate('pos.handover.open_orders')} ({currentShift.open_orders?.length || 0})
                                     </Button>
                                     <Button type="primary" htmlType="submit" loading={submitting} size="large">
-                                        确认交接班
+                                        {translate('pos.handover.confirm_ok')}
                                     </Button>
                                 </Space>
                             </Form>
@@ -240,7 +242,7 @@ const HandoverPageDrawer: React.FC = () => {
                                 <Alert
                                     type="warning"
                                     icon={<WarningOutlined />}
-                                    message="异常记录"
+                                    message={translate('pos.handover.anomalies')}
                                     description={currentShift.anomalies.join(' | ')}
                                     style={{marginTop: 16}}
                                 />
@@ -248,7 +250,7 @@ const HandoverPageDrawer: React.FC = () => {
 
                             {currentShift.low_stock_items?.length > 0 ? (
                                 <Alert
-                                    message="以下商品库存不足"
+                                    message={translate('pos.handover.low_stock')}
                                     description={currentShift.low_stock_items.join('、')}
                                     type="warning"
                                     showIcon
@@ -256,7 +258,7 @@ const HandoverPageDrawer: React.FC = () => {
                                 />
                             ) : (
                                 <Typography variant="body2" color="text.secondary" sx={{mt: 2}}>
-                                    当前无库存告急
+                                    {translate('pos.handover.no_low_stock')}
                                 </Typography>
                             )}
                         </>
@@ -264,7 +266,7 @@ const HandoverPageDrawer: React.FC = () => {
                 </Card>
 
                 <Modal
-                    title="未完成订单"
+                    title={translate('pos.handover.open_orders')}
                     open={showOpenOrders}
                     onCancel={() => setShowOpenOrders(false)}
                     width={800}

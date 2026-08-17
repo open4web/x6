@@ -21,6 +21,7 @@ import {
     Radio,
 } from '@mui/material';
 import { toast } from 'react-toastify';
+import {tPos} from '../i18n/t';
 import { useFetchData } from "./FetchData";
 import PaymentDialog from "./PaymentDialog";
 
@@ -109,7 +110,7 @@ export default function RechargeCardSelector({
                 setCardList(formatted);
             }, "GET");
         } catch {
-            toast.error("获取充值卡失败");
+            toast.error(tPos('recharge.cards_failed'));
         } finally {
             setLoadingCards(false);
         }
@@ -141,7 +142,7 @@ export default function RechargeCardSelector({
                 }
             }, "GET", { phone_hex: phoneNumber });
         } catch {
-            toast.error("会员查询失败");
+            toast.error(tPos('member.query_failed'));
             setShowCreateForm(true);
         } finally {
             setLoadingMember(false);
@@ -174,13 +175,13 @@ export default function RechargeCardSelector({
     // ==================== 快速创建会员 ====================
     const handleCreateMember = async () => {
         if (!newMemberName.trim()) {
-            toast.warning("请输入姓名");
+            toast.warning(tPos('member.create_need_name'));
             return;
         }
 
         try {
             await fetchData('/v1/hlj/member/account', (res: any) => {
-                toast.success("✅ 会员创建成功！");
+                toast.success(tPos('member.created'));
 
                 // 关键修复：强制隐藏表单
                 setShowCreateForm(false);
@@ -199,7 +200,7 @@ export default function RechargeCardSelector({
                 gender: newMemberGender,
             });
         } catch {
-            toast.error("创建会员失败");
+            toast.error(tPos('member.create_failed'));
         }
     };
 
@@ -214,8 +215,8 @@ export default function RechargeCardSelector({
             name: selectedCard.name,
             price: orderAmount,
             number: 1,
-            desc: selectedCard.desc || "充值卡",
-            kindName: "虚拟产品",
+            desc: selectedCard.desc || tPos('recharge.card'),
+            kindName: tPos('recharge.virtual'),
             combName: "",
             combID: "",
             combPrice: 0,
@@ -233,7 +234,7 @@ export default function RechargeCardSelector({
             value: cardValue,
             buckets: [rechargeBucket],
             phone: phone,
-            remark: `充值卡：${selectedCard.name}`,
+            remark: tPos('recharge.remark', {name: selectedCard.name}),
             at: localStorage.getItem("current_store_id") as string,
             pick: 4,
         };
@@ -246,7 +247,7 @@ export default function RechargeCardSelector({
                 setTotalItems(response?.totalItems || 0);
                 setEstimatedWait(response?.estimatedWait || 0);
 
-                toast.success("订单创建成功！");
+                toast.success(tPos('recharge.order_ok'));
 
                 handleClose();
                 setOpenPayment(true);
@@ -254,22 +255,22 @@ export default function RechargeCardSelector({
                 onSuccess?.({ order: response, card: selectedCard, member });
             }, "POST", newOrderRequest);
         } catch {
-            toast.error("下单失败");
+            toast.error(tPos('recharge.order_failed'));
         }
     };
 
     const content = (
         <Box>
             <FormControl fullWidth variant="filled" sx={{ mb: 3 }}>
-                <InputLabel>手机号（11位）</InputLabel>
+                <InputLabel>{tPos('recharge.phone_label')}</InputLabel>
                 <FilledInput
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                    placeholder="请输入11位手机号"
+                    placeholder={tPos('recharge.phone')}
                 />
             </FormControl>
 
-            {loadingMember && <Typography>查询会员中...</Typography>}
+            {loadingMember && <Typography>{tPos('recharge.querying')}</Typography>}
 
             {member && (
                 <Box sx={{
@@ -279,45 +280,45 @@ export default function RechargeCardSelector({
                     border: memberValid ? "1px solid #81c784" : "1px solid #e57373"
                 }}>
                     <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                        会员信息
+                        {tPos('recharge.info')}
                     </Typography>
 
                     <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                         <Box>
-                            <Typography variant="body2" color="text.secondary">姓名</Typography>
-                            <Typography variant="body1" fontWeight={600}>{member.name || '未填写'}</Typography>
+                            <Typography variant="body2" color="text.secondary">{tPos('member.name')}</Typography>
+                            <Typography variant="body1" fontWeight={600}>{member.name || tPos('recharge.empty')}</Typography>
                         </Box>
                         <Box>
-                            <Typography variant="body2" color="text.secondary">手机号</Typography>
+                            <Typography variant="body2" color="text.secondary">{tPos('member.phone')}</Typography>
                             <Typography variant="body1" fontWeight={600}>
-                                {member.phone ? member.phone.slice(-4).padStart(11, '*') : '无'}
+                                {member.phone ? member.phone.slice(-4).padStart(11, '*') : tPos('recharge.none')}
                             </Typography>
                         </Box>
                         <Box>
-                            <Typography variant="body2" color="text.secondary">余额</Typography>
+                            <Typography variant="body2" color="text.secondary">{tPos('member.balance')}</Typography>
                             <Typography variant="body1" fontWeight={600} color="success.main">
                                 ¥{member.balance?.toFixed(2) || '0.00'}
                             </Typography>
                         </Box>
                         <Box>
-                            <Typography variant="body2" color="text.secondary">性别</Typography>
-                            <Typography variant="body1">{member.gender || '未填写'}</Typography>
+                            <Typography variant="body2" color="text.secondary">{tPos('member.gender')}</Typography>
+                            <Typography variant="body1">{member.gender || tPos('recharge.empty')}</Typography>
                         </Box>
                         <Box>
-                            <Typography variant="body2" color="text.secondary">会员等级</Typography>
-                            <Typography variant="body1">{member.level || '普通会员'}</Typography>
+                            <Typography variant="body2" color="text.secondary">{tPos('member.level')}</Typography>
+                            <Typography variant="body1">{member.level || tPos('recharge.default_level')}</Typography>
                         </Box>
                         <Box>
-                            <Typography variant="body2" color="text.secondary">注册时间</Typography>
+                            <Typography variant="body2" color="text.secondary">{tPos('member.register')}</Typography>
                             <Typography variant="body1">
-                                {member.registerTime ? new Date(member.registerTime).toLocaleDateString() : '未知'}
+                                {member.registerTime ? new Date(member.registerTime).toLocaleDateString() : tPos('common.unknown')}
                             </Typography>
                         </Box>
                     </Box>
 
                     <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed #ddd' }}>
                         <Typography color={memberValid ? "success.main" : "error.main"} fontWeight={600}>
-                            账号状态：{memberValid ? "✅ 正常" : "❌ 异常"}
+                            {tPos('recharge.status')}：{memberValid ? `✅ ${tPos('recharge.ok')}` : `❌ ${tPos('recharge.bad')}`}
                         </Typography>
                     </Box>
                 </Box>
@@ -326,27 +327,27 @@ export default function RechargeCardSelector({
             {/* 快速添加会员表单 */}
             {showCreateForm && !member && (
                 <Box sx={{ mb: 3, p: 3, border: '1px solid #ddd', borderRadius: 2 }}>
-                    <Typography variant="h6" gutterBottom>未找到会员，请新建</Typography>
+                    <Typography variant="h6" gutterBottom>{tPos('recharge.create_title')}</Typography>
 
                     <FormControl fullWidth sx={{ mb: 2 }}>
-                        <InputLabel>姓名</InputLabel>
+                        <InputLabel>{tPos('member.name')}</InputLabel>
                         <FilledInput
                             value={newMemberName}
                             onChange={(e) => setNewMemberName(e.target.value)}
-                            placeholder="请输入会员姓名"
+                            placeholder={tPos('recharge.name')}
                         />
                     </FormControl>
 
                     <FormControl fullWidth sx={{ mb: 3 }}>
-                        <Typography variant="body2" sx={{ mb: 1 }}>性别</Typography>
+                        <Typography variant="body2" sx={{ mb: 1 }}>{tPos('member.gender')}</Typography>
                         <RadioGroup
                             row
                             value={newMemberGender}
                             onChange={(e) => setNewMemberGender(Number(e.target.value) as UserGender)}
                         >
-                            <FormControlLabel value={0} control={<Radio />} label="男" />
-                            <FormControlLabel value={1} control={<Radio />} label="女" />
-                            <FormControlLabel value={2} control={<Radio />} label="其他" />
+                            <FormControlLabel value={0} control={<Radio />} label={tPos('recharge.male')} />
+                            <FormControlLabel value={1} control={<Radio />} label={tPos('recharge.female')} />
+                            <FormControlLabel value={2} control={<Radio />} label={tPos('recharge.other')} />
                         </RadioGroup>
                     </FormControl>
 
@@ -356,14 +357,14 @@ export default function RechargeCardSelector({
                         onClick={handleCreateMember}
                         disabled={!newMemberName.trim()}
                     >
-                        快速创建会员
+                        {tPos('recharge.create')}
                     </Button>
                 </Box>
             )}
 
             {/* 充值卡列表 */}
             {loadingCards ? (
-                <Typography>加载充值卡中...</Typography>
+                <Typography>{tPos('recharge.loading_cards')}</Typography>
             ) : (
                 <Grid container spacing={3}>
                     {cardList.map((card) => (
@@ -386,7 +387,7 @@ export default function RechargeCardSelector({
                                         <Typography variant="h6">{card.name}</Typography>
                                         <Typography variant="h4" color="primary">¥{card.value}</Typography>
                                         {card.sellPrice && card.sellPrice !== card.value && (
-                                            <Typography>售价 ¥{card.sellPrice}</Typography>
+                                            <Typography>{tPos('recharge.sell')} ¥{card.sellPrice}</Typography>
                                         )}
                                         {card.desc && <Typography variant="body2">{card.desc}</Typography>}
                                     </CardContent>
@@ -403,19 +404,19 @@ export default function RechargeCardSelector({
         return (
             <>
                 <Dialog open={!!isOpen} onClose={handleClose} fullWidth maxWidth="lg">
-                    <DialogTitle>充值下单</DialogTitle>
+                    <DialogTitle>{tPos('recharge.title')}</DialogTitle>
                     <DialogContent dividers>
                         {content}
                     </DialogContent>
 
                     <DialogActions>
-                        <Button onClick={handleClose}>取消</Button>
+                        <Button onClick={handleClose}>{tPos('recharge.cancel')}</Button>
                         <Button
                             variant="contained"
                             disabled={!selectedCard || !member || !memberValid}
                             onClick={handleConfirmOrder}
                         >
-                            确认下单支付
+                            {tPos('recharge.confirm')}
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -430,7 +431,7 @@ export default function RechargeCardSelector({
                     estimatedWait={estimatedWait}
                     fetchData={fetchData}
                     onSuccess={() => {
-                        toast.success("充值支付成功！");
+                        toast.success(tPos('recharge.pay_ok'));
                         handleClose();
                     }}
                 />

@@ -247,7 +247,7 @@ export default function MyDashboard() {
                                             <XAxis type="number" />
                                             <YAxis type="category" dataKey="name" width={80} />
                                             <ChartTooltip />
-                                            <Bar dataKey="count" name="销量" fill="#fb8c00" radius={[0, 4, 4, 0]} />
+                                            <Bar dataKey="count" name={translate('pos.chart.qty')} fill="#fb8c00" radius={[0, 4, 4, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 )}
@@ -268,7 +268,7 @@ export default function MyDashboard() {
                                             <XAxis dataKey="label" />
                                             <YAxis />
                                             <ChartTooltip formatter={(value: number) => money(value)} />
-                                            <Line type="monotone" dataKey="amount" name="金额" stroke="#1976d2" strokeWidth={2} dot={false} />
+                                            <Line type="monotone" dataKey="amount" name={translate('pos.chart.amount')} stroke="#1976d2" strokeWidth={2} dot={false} />
                                         </LineChart>
                                     </ResponsiveContainer>
                                 )}

@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 import {Box} from "@mui/material";
 import {toast} from "react-toastify";
+import {tPos} from "../i18n/t";
 import QRScanner from "./ScanCode";
 
 interface Props {
@@ -31,7 +32,7 @@ export default function ScanPayTab({value, index, submitPay}: Props) {
 
                     submitPay(scannedCode)
                         .catch(() => {
-                            toast.error("支付失败");
+                            toast.error(tPos('pay.failed'));
                         })
                         .finally(() => {
                             // 防止连续触发
@@ -41,7 +42,7 @@ export default function ScanPayTab({value, index, submitPay}: Props) {
                         });
                 }}
                 onScanLimitReached={() => {
-                    toast.warning("扫描次数过多，请检查设备或刷新页面", {
+                    toast.warning(tPos('pay.scan_limit'), {
                         position: "top-center",
                         autoClose: 5000
                     });

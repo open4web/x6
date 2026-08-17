@@ -6,7 +6,8 @@ import MyCard from "../MyCard";
 import { CombSelectInfo, ProductItem } from "./Type";
 import Typography from "@mui/material/Typography";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
-import {CartItem} from "../../../common/types"; // 引入你的 ProductItem 类型定义
+import {CartItem} from "../../../common/types";
+import {tPos} from '../../../i18n/t';
 
 interface MyCardWithScrollProps {
     groupItems: ProductItem[]; // 直接使用传递的 groupItems 参数
@@ -61,7 +62,7 @@ const MyCardWithScroll = ({
 
         // 如果已经达到最大限制，禁止选择并显示 Alert
         if (selectNumber >= maxLimit) {
-            setAlertMessage('已经达到了最大选择数量');
+            setAlertMessage(tPos('combo.max'));
             setOpenAlert(true);
             return; // 阻止继续点击
         }

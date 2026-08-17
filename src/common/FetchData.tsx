@@ -2,6 +2,7 @@ import axios, { Method } from 'axios';
 import { useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 import { Snackbar, Alert } from '@mui/material';
+import {tPos} from '../i18n/t';
 
 export const useFetchData = () => {
     const navigate = useNavigate();
@@ -45,10 +46,10 @@ export const useFetchData = () => {
                 if (response.status === 200 || response.status === 201) {
                     console.log(`Data fetched from ${path}:`, response.data);
                     setResponse(response.data);
-                    showAlert('请求成功！', 'success'); // 成功提示
+                    showAlert(tPos('common.success'), 'success');
                 } else {
                     console.error(`Unexpected response status from ${path}:`, response.status);
-                    showAlert('服务器响应异常，请稍后重试！', 'warning'); // 非 200 提示
+                    showAlert(tPos('common.server'), 'warning');
                 }
             } catch (error) {
                 console.error(`Error fetching data from ${path}:`, error);
@@ -57,12 +58,12 @@ export const useFetchData = () => {
                         console.warn('Unauthorized (401): Clearing cookies.');
                         localStorage.removeItem('cookie');
                         navigate('/login');
-                        showAlert('登录状态已过期，请重新登录！', 'warning'); // 未授权提示
+                        showAlert(tPos('common.expired'), 'warning');
                     } else {
-                        showAlert(`请求失败：${error.response.statusText}`, 'error'); // 其他错误提示
+                        showAlert(tPos('common.failed', {text: error.response.statusText}), 'error');
                     }
                 } else {
-                    showAlert('网络错误或未知错误，请检查网络连接！', 'error'); // 网络错误提示
+                    showAlert(tPos('common.network'), 'error');
                 }
             }
         },

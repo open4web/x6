@@ -29,7 +29,7 @@ import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import {Alert, FormControl, FormControlLabel, LinearProgress, Radio, RadioGroup} from "@mui/material";
 import {ComboGroup, ComboMatchResult, MatchedCombo} from "../types";
-import {convertToOrderRequest, FormatNanoseconds} from "../../../utils/time";
+import {convertToOrderRequest} from "../../../utils/time";
 
 import {
     Storefront,
@@ -42,36 +42,11 @@ import MemberSelector from "../../../common/MemberSelector";
 import {useTranslate} from 'react-admin';
 
 export const pickTypes = [
-    {
-        id: 0,
-        name: '自提',
-        color: 'primary',
-        icon: <Storefront />, // 到店取
-    },
-    {
-        id: 1,
-        name: '外卖',
-        color: 'success',
-        icon: <DeliveryDining />, // 即时配送
-    },
-    {
-        id: 2,
-        name: '堂食',
-        color: 'secondary',
-        icon: <Restaurant />, // 店内消费
-    },
-    {
-        id: 3,
-        name: '快递',
-        color: 'info',
-        icon: <LocalShipping />, // 物流配送
-    },
-    {
-        id: 4,
-        name: '虚拟',
-        color: 'warning',
-        icon: <Cloud />, // 虚拟商品 / 服务
-    },
+    {id: 0, nameKey: 'pos.cart.pickup_self', color: 'primary', icon: <Storefront />},
+    {id: 1, nameKey: 'pos.cart.pickup_takeout', color: 'success', icon: <DeliveryDining />},
+    {id: 2, nameKey: 'pos.cart.pickup_dine', color: 'secondary', icon: <Restaurant />},
+    {id: 3, nameKey: 'pos.cart.pickup_express', color: 'info', icon: <LocalShipping />},
+    {id: 4, nameKey: 'pos.cart.pickup_virtual', color: 'warning', icon: <Cloud />},
 ];
 
 export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProps) {
@@ -406,14 +381,14 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             {
                 hasNotTicket && (
                     <Alert variant={'standard'} color="error">
-                        请先设定台号后再下单
+                        {translate('pos.cart.need_table')}
                     </Alert>
                 )
             }
 
             {alertComponent}
             <Typography variant="h5" sx={{textAlign: 'center', mb: 2}}>
-                购物车
+                {translate('pos.cart.title')}
             </Typography>
             <List>
                 {cartItems.map((item) => (
@@ -564,7 +539,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                         <div key={group.groupId}>
                             <h4>
                                 {group.groupId}: {group.price > 0 ? ` ¥${group.price}` : ''} x {getValue(group.groupId)}
-                                {group.discount > 0 ? ` (优惠: ¥${group.discount})` : ''}
+                                {group.discount > 0 ? ` (${translate('pos.cart.discount')}: ¥${group.discount})` : ''}
                             </h4>
                             {group.matchedItems.map((item, index) => (
                                 <div key={index}>
@@ -580,14 +555,14 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
                 {
                     comboResult.totalDiscount > 0 && (
-                        <p>总优惠: ¥{comboResult.totalDiscount}</p>
+                        <p>{translate('pos.cart.total_discount')}: ¥{comboResult.totalDiscount}</p>
                     )
                 }
             </div>
             <Divider sx={{my: 2}}/>
 
             <Typography variant="h6" sx={{fontWeight: 'bold', color: 'red', textAlign: "right"}}>
-                总计: ¥{totalPrice.toFixed(2)}
+                {translate('pos.cart.total')}: ¥{totalPrice.toFixed(2)}
             </Typography>
 
             {/*选择就餐人数*/}
@@ -628,9 +603,9 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     </Typography>
                 </IconButton>
                 <NumericKeyboardDialog setOpen={setOpenTicket} open={openTicket} onSave={handleSaveResult}
-                                       title={"请输入台号"} min={1} max={99}/>
+                                       title={translate('pos.cart.table_no')} min={1} max={99}/>
                 <NumericKeyboardDialog setOpen={setOpenPeople} open={openPeople} onSave={handleSavePeopleResult}
-                                       title={"就餐人数"} min={1} max={20}/>
+                                       title={translate('pos.cart.people')} min={1} max={20}/>
                 <MemberSelector
                     price={price}
                     orderID={orderID}
@@ -683,7 +658,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                                                 sx: { fontSize: 18 },
                                             })}
                                             <Typography variant="body2">
-                                                {type.name}
+                                                {translate(type.nameKey)}
                                             </Typography>
                                         </Box>
                                     }

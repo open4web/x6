@@ -6,6 +6,7 @@ import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import {useFetchData} from "./FetchData";
 import {useCartContext} from "../dataProvider/MyCartProvider";
+import {useTranslate} from 'react-admin';
 
 type SelectStoreProps = {
     refreshAfterSelect?: boolean;
@@ -13,6 +14,7 @@ type SelectStoreProps = {
 
 // 选择门店并将选择的门店id存储到本地便于后续作为过滤条件
 export default function MerchantSelect({ refreshAfterSelect = true }: SelectStoreProps) {
+    const translate = useTranslate();
     const { setMerchantId, merchantId } = useCartContext();
     const [storeInfo, setStoreInfo] = React.useState(localStorage.getItem("current_store_id") || '');
     const [stores, setStores] = React.useState<{ id: string; name: string }[]>([]);
@@ -37,7 +39,9 @@ export default function MerchantSelect({ refreshAfterSelect = true }: SelectStor
         <Box sx={{ minWidth: 240 }}>
             {alertComponent}
             <FormControl fullWidth>
-                <InputLabel id="store-select-label" sx={{ color: "#ee8" }}>当前门店</InputLabel>
+                <InputLabel id="store-select-label" sx={{ color: "#ee8", whiteSpace: 'nowrap' }}>
+                    {translate('pos.store.current')}
+                </InputLabel>
                 <Select
                     labelId="store-select-label"
                     id="store_select"

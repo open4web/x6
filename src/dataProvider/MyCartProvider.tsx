@@ -1,5 +1,6 @@
 import React, {createContext, useCallback, useContext, useRef, useState, ReactNode} from 'react';
 import {toast} from 'react-toastify';
+import {tPos} from '../i18n/t';
 import {CartItem, CartItemHolder} from "../common/types";
 
 export type OrderSyncStatus = 'idle' | 'syncing' | 'ready';
@@ -122,7 +123,7 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
         lastPaidRef.current = orderNo;
-        toast.success("支付成功", {position: "top-center", autoClose: 2000});
+        toast.success(tPos('pay.success'), {position: "top-center", autoClose: 2000});
         setWatchingOrderNo('');
         setDrawerOpen(false);
         triggerOrderFly(orderNo, {

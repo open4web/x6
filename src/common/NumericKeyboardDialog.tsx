@@ -12,6 +12,7 @@ import {
     Typography,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
+import {useTranslate} from "react-admin";
 
 interface Props {
     open: boolean;
@@ -31,17 +32,18 @@ interface Props {
 }
 
 export default function NumericKeyboardDialog(props: Props) {
+    const translate = useTranslate();
     const {
         open,
         setOpen,
         onSave,
-        title = "请输入数字",
+        title = translate('pos.keypad.title'),
         min = 0,
         max = 100,
         requiredLength = 5,
         defaultValue = "0",
-        confirmText = "保存",
-        clearText = "清空",
+        confirmText = translate('pos.keypad.save'),
+        clearText = translate('pos.keypad.clear'),
         inline = false,
         type = "number",
     } = props;
@@ -141,7 +143,7 @@ export default function NumericKeyboardDialog(props: Props) {
             inputProps={{ readOnly: true }}
             placeholder={title}
             error={error}
-            helperText={error ? `请输入 ${min} 到 ${max} 之间的数字` : " "}
+            helperText={error ? translate('pos.keypad.range', {min, max}) : " "}
             InputProps={{
                 startAdornment: type === "money" && (
                     <InputAdornment position="start">
@@ -190,7 +192,7 @@ export default function NumericKeyboardDialog(props: Props) {
                         color="warning"
                         onClick={handleDelete}
                     >
-                        删除
+                        {translate('pos.keypad.delete')}
                     </Button>
                 </Grid>
 
@@ -208,7 +210,7 @@ export default function NumericKeyboardDialog(props: Props) {
 
             {!inline && (
                 <DialogActions>
-                    <Button onClick={handleCancel}>取消</Button>
+                    <Button onClick={handleCancel}>{translate('pos.keypad.cancel')}</Button>
                     <Button
                         onClick={handleSave}
                         color="success"
@@ -228,7 +230,7 @@ export default function NumericKeyboardDialog(props: Props) {
             <Box sx={{ p: 2 }}>
                 {KeyboardContent}
                 <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-                    <Button onClick={handleCancel}>取消</Button>
+                    <Button onClick={handleCancel}>{translate('pos.keypad.cancel')}</Button>
                     <Button
                         onClick={handleSave}
                         variant="contained"

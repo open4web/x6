@@ -180,6 +180,7 @@ const MyCard = (props: Props) => {
                         fontSize: '0.7rem',
                         fontWeight: 700,
                         lineHeight: 1.4,
+                        whiteSpace: 'nowrap',
                         zIndex: 2,
                         pointerEvents: 'none',
                     }}

@@ -9,6 +9,7 @@ import {ChannelType} from "./types";
 import NumericKeyboardDialog from "./NumericKeyboardDialog";
 import PayCodeDisplay from "./PayCodeInput";
 import MemberBalancePay from './MemberBalancePay';
+import {useTranslate} from 'react-admin';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -41,6 +42,7 @@ function a11yProps(index: number) {
 }
 
 export default function PayChannel({setCart, price, setOpen, orderID, at, offers, onSuccess, originalPrice}: any) {
+    const translate = useTranslate();
     const [value, setValue] = React.useState(0);
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
@@ -132,7 +134,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             }, "POST", {
                 channel: ChannelType.WeChatPay,
                 order_id: orderID,
-                desc: '商品支付',
+                desc: translate('pos.pay.desc'),
                 amount: price,
                 at,
                 code: scannedCode,
@@ -147,7 +149,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             startPaymentWatch(orderID);
 
         } catch {
-            toast.error("支付失败");
+            toast.error(translate('pos.pay.failed'));
         } finally {
             // payingRef.current = false;
         }
@@ -197,7 +199,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
         const amount = parseFloat(value);
 
         if (!amount || amount <= 0) {
-            toast.error("请输入正确金额", {position: "top-center"});
+            toast.error(translate('pos.pay.invalid_amount'), {position: "top-center"});
             return;
         }
 
@@ -206,7 +208,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             }, "POST", {
                 order_id: orderID,
                 amount: amount,
-                remark: "现金支付",
+                remark: translate('pos.pay.cash_remark'),
             });
             await offers?.redeem?.(orderID);
             onSuccess?.();
@@ -222,7 +224,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             startPaymentWatch(orderID);
 
         } catch (error) {
-            toast.error("现金支付失败", {position: "top-center"});
+            toast.error(translate('pos.pay.cash_failed'), {position: "top-center"});
         }
     };
 
@@ -235,7 +237,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                 setMemberList(res || []);
             }, "GET", {suffix});
         } catch {
-            toast.error("会员查询失败");
+            toast.error(translate('pos.pay.member_query_failed'));
         } finally {
             setLoadingMember(false);
         }
@@ -264,7 +266,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                 <Tabs
                     value={value}
                     onChange={handleChange}
-                    aria-label="支付渠道选择"
+                    aria-label={translate('pos.pay.channel')}
                     variant="fullWidth"
                     sx={{
                         minHeight: 64, // 🔥 增大整体高度（触屏友好）
@@ -287,10 +289,10 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                         }
                     }}
                 >
-                    <Tab icon="🤖" iconPosition="start" label="自动" {...a11yProps(0)} />
-                    <Tab icon="📷" iconPosition="start" label="扫码" {...a11yProps(1)} />
-                    <Tab icon="💵" iconPosition="start" label="现金" {...a11yProps(2)} />
-                    <Tab icon="💰" iconPosition="start" label="余额" {...a11yProps(3)} />
+                    <Tab icon="🤖" iconPosition="start" label={translate('pos.pay.auto')} {...a11yProps(0)} />
+                    <Tab icon="📷" iconPosition="start" label={translate('pos.pay.scan')} {...a11yProps(1)} />
+                    <Tab icon="💵" iconPosition="start" label={translate('pos.pay.cash')} {...a11yProps(2)} />
+                    <Tab icon="💰" iconPosition="start" label={translate('pos.pay.balance')} {...a11yProps(3)} />
                 </Tabs>
             </Box>
             <CustomTabPanel key={0} value={value} index={0}>
@@ -309,7 +311,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                         }
                     }}
                     onScanLimitReached={() => {
-                        toast.warning("扫描尝试次数已达到限制，请检查设备或刷新页面。", {
+                        toast.warning(translate('pos.pay.scan_limit'), {
                             position: "top-center",
                             autoClose: 5000
                         });
@@ -317,10 +319,10 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                 />
             </CustomTabPanel>
             <CustomTabPanel key={2} value={value} index={2}>
-                <NumericKeyboardDialog open={cash} setOpen={setCash} onSave={handlePayByCash} title={"请输入现金数额"}
-                                       min={1} max={999} defaultValue={price} confirmText={"确认余额支付"}
+                <NumericKeyboardDialog open={cash} setOpen={setCash} onSave={handlePayByCash} title={translate('pos.pay.enter_cash')}
+                                       min={1} max={999} defaultValue={price} confirmText={translate('pos.pay.confirm_cash')}
                                        type="money"
-                                       clearText={"免单"}
+                                       clearText={translate('pos.pay.free')}
                                        inline={true}
                 />
 

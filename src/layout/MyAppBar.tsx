@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AppBar } from 'react-admin';
+import { AppBar, useLocale } from 'react-admin';
 import {
     Box,
     useMediaQuery,
@@ -19,14 +19,15 @@ const MyAppBar = (props: any) => {
         theme.breakpoints.up('sm')
     );
 
-    const [currentTime, setCurrentTime] = React.useState<string>(() => FormatCurrentTime());
+    const locale = useLocale();
+    const [currentTime, setCurrentTime] = React.useState<string>(() => FormatCurrentTime(locale));
 
     React.useEffect(() => {
-        const intervalId = setInterval(() => {
-            setCurrentTime(FormatCurrentTime());
-        }, 1000);
+        const tick = () => setCurrentTime(FormatCurrentTime(locale));
+        tick();
+        const intervalId = setInterval(tick, 1000);
         return () => clearInterval(intervalId);
-    }, []);
+    }, [locale]);
 
     return (
         <AppBar {...props} color="primary">

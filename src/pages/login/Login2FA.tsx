@@ -40,7 +40,7 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                 login_id: loginId,
             });
 
-            notify('msg.verify_success', { type: 'success' });
+            notify(translate('pos.login.verify_ok'), { type: 'success' });
 
             const keysToRemove = [
                 'verified_otp',
@@ -66,10 +66,10 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
             if (status === 502) {
                 // 502：清空输入，等待重新输入
                 setOtp('');
-                notify('服务暂时不可用，请重新输入验证码', { type: 'warning' });
+                notify(translate('pos.common.server'), { type: 'warning' });
             } else {
                 setOtp(''); // 验证失败也清空，方便重新输入
-                notify('msg.verify_error', { type: 'error' });
+                notify(translate('pos.login.verify_fail'), { type: 'error' });
             }
         } finally {
             submittingRef.current = false;
@@ -120,7 +120,7 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                         intervalDelay={1000}
                         precision={1000}
                         onComplete={cleanCache}
-                        renderer={(props) => `剩余时间: ${Math.floor(props.total / 1000)} 秒`}
+                        renderer={(props) => translate('pos.login.remaining', {sec: Math.floor(props.total / 1000)})}
                     />
                 </Typography>
             </Box>
@@ -155,7 +155,7 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                     sx={{ width: '100%' }}
                 >
                     {isLoading && <CircularProgress size={25} thickness={2} sx={{ marginRight: 2 }} />}
-                    {translate('pos.auth.validate') || '验证 MFA'}
+                    {translate('pos.auth.validate')}
                 </Button>
             </CardActions>
         </Card>
