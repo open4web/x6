@@ -32,6 +32,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import axios from 'axios';
+import {useTranslate} from 'react-admin';
 import {useCartContext} from '../../dataProvider/MyCartProvider';
 
 type NamedAmount = { id: number; name: string; amount: number; count: number; ratio: number };
@@ -125,6 +126,7 @@ function KpiCard({label, value, hint}: {label: string; value: string; hint?: str
 }
 
 export default function MyDashboard() {
+    const translate = useTranslate();
     const {setDataDrawerOpen, merchantId} = useCartContext();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<StoreStats>(emptyStats());
@@ -132,7 +134,7 @@ export default function MyDashboard() {
 
     const load = async () => {
         if (!merchantId) {
-            setError('未选择门店');
+            setError(translate('pos.sales.no_store'));
             setLoading(false);
             return;
         }
@@ -143,7 +145,7 @@ export default function MyDashboard() {
             setStats(data || emptyStats());
         } catch (e) {
             console.error(e);
-            setError('销售数据加载失败');
+            setError(translate('pos.sales.load_failed'));
         } finally {
             setLoading(false);
         }
@@ -160,18 +162,18 @@ export default function MyDashboard() {
         <Box sx={{p: 3, maxHeight: '100vh', overflow: 'auto', position: 'relative', bgcolor: '#fafafa'}}>
             <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2}}>
                 <Box>
-                    <Typography variant="h5" sx={{fontWeight: 800}}>当日销售</Typography>
+                    <Typography variant="h5" sx={{fontWeight: 800}}>{translate('pos.sales.title')}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                        {stats.date || '今天'} · 当前门店实时汇总
+                        {stats.date || ''} · {translate('pos.sales.subtitle')}
                     </Typography>
                 </Box>
                 <Box>
-                    <Tooltip title="刷新">
+                    <Tooltip title={translate('pos.sales.refresh')}>
                         <IconButton onClick={load} disabled={loading}>
                             <RefreshIcon />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="关闭">
+                    <Tooltip title={translate('pos.sales.close')}>
                         <IconButton onClick={() => setDataDrawerOpen(false)}>
                             <CloseIcon />
                         </IconButton>
@@ -188,34 +190,34 @@ export default function MyDashboard() {
             {!loading && error && (
                 <Box sx={{textAlign: 'center', py: 6}}>
                     <Typography color="error" sx={{mb: 2}}>{error}</Typography>
-                    <Button variant="contained" onClick={load}>重新加载</Button>
+                    <Button variant="contained" onClick={load}>{translate('pos.sales.retry')}</Button>
                 </Box>
             )}
 
             {!loading && !error && (
                 <Grid container spacing={2}>
                     <Grid item xs={6} md={2.4}>
-                        <KpiCard label="实收金额" value={money(summary.paidAmount)} hint={`${summary.paidCount} 笔已支付`} />
+                        <KpiCard label={translate('pos.sales.paid_amount')} value={money(summary.paidAmount)} hint={translate('pos.sales.paid_orders', {count: summary.paidCount})} />
                     </Grid>
                     <Grid item xs={6} md={2.4}>
-                        <KpiCard label="客单价" value={money(summary.avgTicket)} hint={`共售 ${summary.itemCount} 件`} />
+                        <KpiCard label={translate('pos.sales.avg_ticket')} value={money(summary.avgTicket)} hint={translate('pos.sales.items_sold', {count: summary.itemCount})} />
                     </Grid>
                     <Grid item xs={6} md={2.4}>
-                        <KpiCard label="订单数" value={String(summary.orderCount)} hint={`待付 ${summary.unpaidCount} · 取消 ${summary.cancelCount}`} />
+                        <KpiCard label={translate('pos.sales.orders')} value={String(summary.orderCount)} hint={translate('pos.sales.unpaid_cancel', {unpaid: summary.unpaidCount, cancel: summary.cancelCount})} />
                     </Grid>
                     <Grid item xs={6} md={2.4}>
-                        <KpiCard label="新会员" value={String(summary.newCustomerCount)} hint={`会员单 ${summary.memberOrderCount} · 散客 ${summary.guestOrderCount}`} />
+                        <KpiCard label={translate('pos.sales.new_members')} value={String(summary.newCustomerCount)} hint={translate('pos.sales.member_guest', {member: summary.memberOrderCount, guest: summary.guestOrderCount})} />
                     </Grid>
                     <Grid item xs={6} md={2.4}>
-                        <KpiCard label="退款" value={money(summary.refundAmount)} hint={`${summary.refundCount} 笔`} />
+                        <KpiCard label={translate('pos.sales.refund')} value={money(summary.refundAmount)} hint={translate('pos.sales.refund_count', {count: summary.refundCount})} />
                     </Grid>
 
                     <Grid item xs={12} md={4}>
                         <Card elevation={0} sx={{border: '1px solid #eee', borderRadius: 2, height: 320}}>
                             <CardContent>
-                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>支付渠道金额</Typography>
+                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>{translate('pos.sales.pay_channel')}</Typography>
                                 {stats.payChannels.length === 0 ? (
-                                    <Typography color="text.secondary">暂无支付数据</Typography>
+                                    <Typography color="text.secondary">{translate('pos.sales.no_pay')}</Typography>
                                 ) : (
                                     <ResponsiveContainer width="100%" height={240}>
                                         <PieChart>
@@ -235,9 +237,9 @@ export default function MyDashboard() {
                     <Grid item xs={12} md={4}>
                         <Card elevation={0} sx={{border: '1px solid #eee', borderRadius: 2, height: 320}}>
                             <CardContent>
-                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>热销产品</Typography>
+                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>{translate('pos.sales.hot_products')}</Typography>
                                 {stats.hotProducts.length === 0 ? (
-                                    <Typography color="text.secondary">暂无热销数据</Typography>
+                                    <Typography color="text.secondary">{translate('pos.sales.no_hot')}</Typography>
                                 ) : (
                                     <ResponsiveContainer width="100%" height={240}>
                                         <BarChart data={stats.hotProducts} layout="vertical" margin={{left: 16}}>
@@ -256,9 +258,9 @@ export default function MyDashboard() {
                     <Grid item xs={12} md={4}>
                         <Card elevation={0} sx={{border: '1px solid #eee', borderRadius: 2, height: 320}}>
                             <CardContent>
-                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>分时销售额</Typography>
+                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>{translate('pos.sales.hourly')}</Typography>
                                 {hourly.length === 0 ? (
-                                    <Typography color="text.secondary">暂无分时数据</Typography>
+                                    <Typography color="text.secondary">{translate('pos.sales.no_hourly')}</Typography>
                                 ) : (
                                     <ResponsiveContainer width="100%" height={240}>
                                         <LineChart data={hourly}>
@@ -277,7 +279,7 @@ export default function MyDashboard() {
                     <Grid item xs={12} md={6}>
                         <Card elevation={0} sx={{border: '1px solid #eee', borderRadius: 2}}>
                             <CardContent>
-                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>热销明细</Typography>
+                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>{translate('pos.sales.hot_detail')}</Typography>
                                 <Table size="small">
                                     <TableHead>
                                         <TableRow>
@@ -296,7 +298,7 @@ export default function MyDashboard() {
                                         ))}
                                         {stats.hotProducts.length === 0 && (
                                             <TableRow>
-                                                <TableCell colSpan={3}>暂无数据</TableCell>
+                                                <TableCell colSpan={3}>{translate('pos.sales.no_data')}</TableCell>
                                             </TableRow>
                                         )}
                                     </TableBody>
@@ -308,7 +310,7 @@ export default function MyDashboard() {
                     <Grid item xs={12} md={6}>
                         <Card elevation={0} sx={{border: '1px solid #eee', borderRadius: 2}}>
                             <CardContent>
-                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>来源 / 取餐 / 状态</Typography>
+                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>{translate('pos.sales.mix')}</Typography>
                                 <Grid container spacing={2}>
                                     <Grid item xs={4}>
                                         {(stats.sources || []).map(item => (

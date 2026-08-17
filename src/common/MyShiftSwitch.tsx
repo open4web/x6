@@ -10,6 +10,7 @@ import {
     Typography,
 } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import {useTranslate} from 'react-admin';
 import {useFetchData} from './FetchData';
 import {useCartContext} from '../dataProvider/MyCartProvider';
 
@@ -21,6 +22,7 @@ const formatShiftTime = (seconds: number): string => {
 };
 
 export default function MyShiftSwitch() {
+    const translate = useTranslate();
     const {merchantId, ready, setReady, startReady, setStartReady, setShiftOpen} = useCartContext();
     const {fetchData} = useFetchData();
     const [elapsedTime, setElapsedTime] = React.useState(0);
@@ -128,27 +130,27 @@ export default function MyShiftSwitch() {
                             }}
                         />
                         <Typography variant="body2" sx={{fontWeight: 700, letterSpacing: 0.2}}>
-                            值班中 {formatShiftTime(elapsedTime)}
+                            {translate('pos.shift.on_duty')} {formatShiftTime(elapsedTime)}
                         </Typography>
                     </Box>
                 ) : (
                     <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5}}>
                         <PlayArrowRoundedIcon sx={{fontSize: 20}} />
-                        开始值班
+                        {translate('pos.shift.start')}
                     </Box>
                 )}
             </Button>
 
             <Dialog open={confirmOpen} onClose={() => !starting && setConfirmOpen(false)} maxWidth="xs" fullWidth>
-                <DialogTitle sx={{fontWeight: 700}}>开始本班值班？</DialogTitle>
+                <DialogTitle sx={{fontWeight: 700}}>{translate('pos.shift.confirm_title')}</DialogTitle>
                 <DialogContent>
                     <Typography color="text.secondary">
-                        开始后将记录本班次的营业时间和收银数据。结束值班请走交接班，不能用开关随便关掉。
+                        {translate('pos.shift.confirm_body')}
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{px: 3, pb: 2}}>
                     <Button onClick={() => setConfirmOpen(false)} disabled={starting}>
-                        取消
+                        {translate('pos.shift.cancel')}
                     </Button>
                     <Button
                         variant="contained"
@@ -157,7 +159,7 @@ export default function MyShiftSwitch() {
                         disabled={starting}
                         startIcon={starting ? <CircularProgress size={16} color="inherit" /> : <PlayArrowRoundedIcon />}
                     >
-                        开始值班
+                        {translate('pos.shift.start')}
                     </Button>
                 </DialogActions>
             </Dialog>

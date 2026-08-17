@@ -12,6 +12,7 @@ import { FormatCurrentTime } from "../utils/time";
 import MyShiftAppBar from "../common/MyShift";
 import MyShiftSwitch from "../common/MyShiftSwitch";
 import Version from "../common/Version"
+import AppearanceMenu from "./AppearanceMenu";
 
 const MyAppBar = (props: any) => {
     const isLargeEnough = useMediaQuery<Theme>(theme =>
@@ -44,6 +45,9 @@ const MyAppBar = (props: any) => {
                 <MyDataAppBar />
             </Box>
 
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <AppearanceMenu />
+            </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <MyPrinter />
             </Box>

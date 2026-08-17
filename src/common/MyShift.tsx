@@ -1,13 +1,15 @@
 import * as React from 'react';
 import {Button, Tooltip} from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/Handshake';
+import {useTranslate} from 'react-admin';
 import {useCartContext} from '../dataProvider/MyCartProvider';
 
 export default function MyShiftAppBar() {
+    const translate = useTranslate();
     const {shiftOpen, setShiftOpen, ready} = useCartContext();
 
     return (
-        <Tooltip title={ready ? '结束本班，办理交接' : '请先开始值班后再交接'}>
+        <Tooltip title={ready ? translate('pos.handover.end_hint') : translate('pos.handover.need_duty')}>
             <span>
                 <Button
                     variant="outlined"
@@ -33,7 +35,7 @@ export default function MyShiftAppBar() {
                         },
                     }}
                 >
-                    交接班
+                    {translate('pos.handover.action')}
                 </Button>
             </span>
         </Tooltip>

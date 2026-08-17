@@ -3,6 +3,7 @@ import {Badge, Box, CircularProgress, Fab, Grid, Paper, Typography} from '@mui/m
 import CheckIcon from '@mui/icons-material/Check';
 import MyProducts from "../home/Components/MyProducts";
 import { toast } from "react-toastify";
+import {useTranslate} from 'react-admin';
 import MyCartDrawer from "../home/Components/MyCartDrawer";
 import { useCartContext } from "../../dataProvider/MyCartProvider";
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -23,6 +24,7 @@ export const MyHome = () => {
         orderFlyEvent, orderDrawerOpen, startOrderListSync, orderSyncStatus, orderSyncProgress,
         resetOrderSync, ready, clearOrderFlyEvent,
     } = useCartContext();
+    const translate = useTranslate();
     const [clearCartSignal, setClearCartSignal] = useState(false);
     const [rechargeOpen, setRechargeOpen] = useState(false);
     const [inboundOrders, setInboundOrders] = useState(0);
@@ -33,7 +35,7 @@ export const MyHome = () => {
         if (ready) {
             return true;
         }
-        toast.warning('请先开始值班后再点餐', {position: 'top-center', autoClose: 2200});
+        toast.warning(translate('pos.lock.toast'), {position: 'top-center', autoClose: 2200});
         return false;
     };
 
@@ -140,10 +142,10 @@ export const MyHome = () => {
                                 >
                                     <Box>
                                         <Typography sx={{fontWeight: 700, color: '#e65100'}}>
-                                            尚未开始值班
+                                            {translate('pos.lock.title')}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
-                                            点左上角「开始值班」后才能点餐和下单。查看订单不受影响。
+                                            {translate('pos.lock.body')}
                                         </Typography>
                                     </Box>
                                 </Paper>

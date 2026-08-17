@@ -1,9 +1,11 @@
 import { TranslationMessages } from 'react-admin';
 import englishMessages from 'ra-language-english';
+import {posExtra} from './posCatalog';
 
 const customEnglishMessages: TranslationMessages = {
     ...englishMessages,
     pos: {
+        ...posExtra.en,
         search: 'Search',
         configuration: 'Configuration',
         language: 'Language',

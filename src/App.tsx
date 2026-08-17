@@ -5,6 +5,7 @@ import {Route} from 'react-router';
 
 import {Layout, Login} from './layout';
 import chineseMessages from './i18n/zh';
+import {supportedLocales} from './i18n/locales';
 
 // @ts-ignore
 import Configuration from './configuration/Configuration';
@@ -18,16 +19,26 @@ import {MyHome} from "./pages/dashboard/MyHome";
 import {MyCartProvider} from "./dataProvider/MyCartProvider";
 
 // 国际化
+const localeLoaders: Record<string, () => Promise<{default: any}>> = {
+    zh: () => Promise.resolve({default: chineseMessages}),
+    'zh-TW': () => import('./i18n/zh-TW'),
+    en: () => import('./i18n/en'),
+    fr: () => import('./i18n/fr'),
+    ja: () => import('./i18n/ja'),
+    ko: () => import('./i18n/ko'),
+    th: () => import('./i18n/th'),
+    vi: () => import('./i18n/vi'),
+    id: () => import('./i18n/id'),
+    es: () => import('./i18n/es'),
+};
+
 const i18nProvider = polyglotI18nProvider(locale => {
-    if (locale === 'fr') {
-        return import('./i18n/fr').then(messages => messages.default);
-    } else if (locale === 'en') {
-        console.log("choose en")
-        return import('./i18n/en').then(messages => messages.default);
+    const loader = localeLoaders[locale];
+    if (loader && locale !== 'zh') {
+        return loader().then(messages => messages.default);
     }
-    // Always fallback on chinese
     return chineseMessages;
-}, 'zh');
+}, 'zh', [...supportedLocales]);
 
 
 // 应用配置

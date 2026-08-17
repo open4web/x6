@@ -39,6 +39,7 @@ import {
     Cloud,
 } from '@mui/icons-material';
 import MemberSelector from "../../../common/MemberSelector";
+import {useTranslate} from 'react-admin';
 
 export const pickTypes = [
     {
@@ -74,6 +75,7 @@ export const pickTypes = [
 ];
 
 export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProps) {
+    const translate = useTranslate();
     const {holdOrders, setHoldOrders, startPaymentWatch, ready} = useCartContext();
     const [price, setPrice] = React.useState(0);
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
@@ -701,7 +703,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     onClick={resetCart}
                     disabled={cartItems.length === 0}
                 >
-                    清空
+                    {translate('pos.cart.clear')}
                 </Button>
                 <Button
                     variant="contained"
@@ -710,7 +712,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     onClick={holdOrder}
                     disabled={!ready || cartItems.length === 0}
                 >
-                    挂单
+                    {translate('pos.cart.hold')}
                 </Button>
                 <Button
                     variant="contained"
@@ -719,7 +721,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     onClick={handlePlaceOrder}
                     disabled={!ready || cartItems.length === 0}
                 >
-                    结算
+                    {translate('pos.cart.checkout')}
                 </Button>
             </Box>
             {getDialog()}

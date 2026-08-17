@@ -1,9 +1,11 @@
 import { TranslationMessages } from 'react-admin';
 
 import chineseMessages from "./chinese";
+import {posExtra} from "./posCatalog";
 const customChineseMessages: TranslationMessages = {
     ...chineseMessages,
     pos: {
+        ...posExtra.zh,
         search: '搜索',
         configuration: '主题配置',
         userProfile: '个人中心',

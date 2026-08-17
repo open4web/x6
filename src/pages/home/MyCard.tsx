@@ -13,6 +13,7 @@ import Box from "@mui/material/Box";
 import {ProductItem} from "./Components/Type";
 import {Badge, Fade, Modal} from '@mui/material';
 import {useCartContext} from "../../dataProvider/MyCartProvider";
+import {useTranslate} from 'react-admin';
 import {PropertyIconView} from "./Components/PropertyIcons";
 
 interface ExpandMoreProps extends IconButtonProps {
@@ -44,6 +45,7 @@ interface Props {
 }
 
 const MyCard = (props: Props) => {
+    const translate = useTranslate();
     const {cartItems, showProductImage} = useCartContext();
     const {item, handleClick, kindName, kindColor, clearCartSignal, backgroundColor, combID} = props;
     // const [expanded, setExpanded] = React.useState(false);
@@ -182,7 +184,7 @@ const MyCard = (props: Props) => {
                         pointerEvents: 'none',
                     }}
                 >
-                    {item.stock === 0 ? '已售罄' : `剩余 ${item.stock}`}
+                    {item.stock === 0 ? translate('pos.product.sold_out') : translate('pos.product.remaining', {stock: item.stock})}
                 </Box>
                 <CardHeader
                     sx={{pt: 3.5}}
