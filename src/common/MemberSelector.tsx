@@ -1,5 +1,5 @@
 // components/MemberSelector.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Box,
     Button,
@@ -14,13 +14,17 @@ import {
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useMemberSearch } from "./useMemberSearch";
+import CheckoutOfferBar from "./checkout/CheckoutOfferBar";
+import { CheckoutOffers } from "./checkout/useCheckoutOffers";
 
 interface MemberSelectorProps {
     price: number;
+    originalPrice?: number;
     orderID: string;
     fetchData: any;
     onSuccess?: () => void;
     onCancel?: () => void;
+    offers?: CheckoutOffers;
 
     // 新增参数
     modal?: boolean;
@@ -30,10 +34,12 @@ interface MemberSelectorProps {
 
 export default function MemberSelector({
                                            price,
+                                           originalPrice,
                                            orderID,
                                            fetchData,
                                            onSuccess,
                                            onCancel,
+                                           offers,
                                            modal = false,
                                            open,
                                            onClose,
@@ -43,6 +49,23 @@ export default function MemberSelector({
     const [selectedMember, setSelectedMember] = useState<any>(null);
     const [internalOpen, setInternalOpen] = useState(false);
     const isOpen = modal ? (open ?? internalOpen) : true;
+
+    useEffect(() => {
+        if (!offers || !selectedMember || offers.ticketId || !offers.tickets.length) {
+            return;
+        }
+        const origin = originalPrice || price;
+        const need = origin - Number(selectedMember.balance || 0);
+        const usable = offers.tickets.filter((item) => item.benefit > 0);
+        if (!usable.length) {
+            return;
+        }
+        const coverGap = [...usable].sort((a, b) => a.benefit - b.benefit).find((item) => item.benefit >= need);
+        const picked = need > 0 ? (coverGap || usable.sort((a, b) => b.benefit - a.benefit)[0]) : usable[0];
+        if (picked) {
+            offers.setTicketId(picked.id);
+        }
+    }, [offers?.tickets, selectedMember]);
 
     const handleClose = () => {
         if (modal) {
@@ -61,8 +84,9 @@ export default function MemberSelector({
                 order_id: orderID,
                 account_id: selectedMember.id,
                 amount: price,
-                remark: '余额支付',
+                remark: offers?.ticketId ? '余额+优惠券' : (offers?.campaignId ? '余额+活动满减' : '余额支付'),
             });
+            await offers?.redeem?.(orderID);
 
             toast.success('支付成功');
             onSuccess?.();
@@ -96,6 +120,11 @@ export default function MemberSelector({
                         key={m.id}
                         onClick={() => {
                             setSelectedMember(m);
+                            offers?.bindMember?.({
+                                id: m.id,
+                                uid: (m as any).uid,
+                                account_id: (m as any).account_id || m.id,
+                            });
                             if (!modal) setInternalOpen(true);
                         }}
                         sx={{
@@ -168,7 +197,7 @@ export default function MemberSelector({
 
             {/* 详情弹窗 - 保持原有逻辑（有余额比较） */}
             <Dialog open={!!selectedMember} onClose={() => setSelectedMember(null)} fullWidth>
-                <DialogTitle>会员详情</DialogTitle>
+                <DialogTitle>余额支付 · 选择优惠</DialogTitle>
                 <DialogContent>
                     {selectedMember && (
                         <>
@@ -176,15 +205,27 @@ export default function MemberSelector({
                             <Typography>手机号：{selectedMember.phone}</Typography>
                             <Typography>余额：¥{selectedMember.balance}</Typography>
 
+                            {offers && (
+                                <Box sx={{ mt: 2, p: 1.5, border: '1px dashed', borderColor: 'secondary.light', borderRadius: 1 }}>
+                                    <CheckoutOfferBar offers={offers} showTickets />
+                                </Box>
+                            )}
+
                             <Box sx={{
                                 mt: 1,
                                 p: 1,
                                 borderRadius: 1,
                                 bgcolor: selectedMember.balance >= price ? "#e8f5e9" : "#ffebee"
                             }}>
-                                <Typography color={"red"}>
-                                    订单金额：¥{price}
-                                </Typography>
+                                {originalPrice && originalPrice > price ? (
+                                    <Typography color={"red"}>
+                                        原价 ¥{originalPrice.toFixed(2)}，实付 ¥{price.toFixed(2)}
+                                    </Typography>
+                                ) : (
+                                    <Typography color={"red"}>
+                                        订单金额：¥{price}
+                                    </Typography>
+                                )}
 
                                 <Box
                                     sx={{

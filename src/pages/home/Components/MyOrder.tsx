@@ -22,7 +22,7 @@ import {TransitionProps} from '@mui/material/transitions';
 import {useFetchData} from '../../../common/FetchData';
 import {FormatTimestampAsTime} from '../../../utils/time';
 import MyOrderDetail, {OpenReason} from '../../../common/MyOrderDetail';
-import PayChannel from '../../../common/PayChannel';
+import PaymentDialog from '../../../common/PaymentDialog';
 import {Order} from './types';
 import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
 import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
@@ -331,31 +331,14 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
 
             {/* 支付渠道对话框 */}
             {selectedOrder && (
-                <Dialog
+                <PaymentDialog
                     open={openPayChannel}
-                    fullWidth={true}
-                    TransitionComponent={Transition}
-                    keepMounted
                     onClose={handleClosePayChannel}
-                    aria-describedby="alert-dialog-slide-description"
-                >
-                    <DialogTitle>
-                        <Typography variant="h6" align="center">订单号: {selectedOrder.identity?.order_no}</Typography>
-                        <Typography variant="subtitle1" align="center" color="text.secondary">
-                            待支付金额: <span style={{ color: "#d32f2f", fontWeight: "bold" }}>¥{selectedOrder?.price?.pay_price.toFixed(2)}</span>
-                        </Typography>
-                    </DialogTitle>
-                    <DialogContent>
-                        <PayChannel
-                            setCart={null}
-                            price={selectedOrder?.price?.pay_price}
-                            setOpen={setOpenPayChannel}
-                            orderID={selectedOrder?.identity?.order_no}
-                            at={selectedOrder?.merchant?.id}
-                        />
-                    </DialogContent>
-                    <DialogActions/>
-                </Dialog>
+                    price={selectedOrder?.price?.pay_price || 0}
+                    orderID={selectedOrder.identity?.order_no}
+                    fetchData={fetchData}
+                    storeId={selectedOrder?.merchant?.id}
+                />
             )}
         </Container>
     );

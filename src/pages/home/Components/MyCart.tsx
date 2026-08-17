@@ -15,7 +15,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import Slide from "@mui/material/Slide";
 import {TransitionProps} from "@mui/material/transitions";
-import PayChannel from "../../../common/PayChannel";
+import PaymentDialog from "../../../common/PaymentDialog";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {useFetchData} from "../../../common/FetchData";
 import {CartItem, MyCartProps} from "../../../common/types";
@@ -379,42 +379,20 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     }, [cartItems]);
 
     function getDialog() {
-        return <Dialog
-            open={openPayChannel}
-            fullWidth={true}
-            TransitionComponent={Transition}
-            keepMounted
-            onClose={() => setOpenPayChannel(false)}
-            aria-describedby="alert-dialog-slide-description"
-        >
-            <DialogTitle>
-                <Typography variant="h6" align="center">订单号: {orderID}</Typography>
-                <Typography variant="subtitle1" align="center" color="text.secondary">
-                    待支付金额: <span style={{color: "#d32f2f", fontWeight: "bold"}}>¥{price.toFixed(2)}</span>
-                </Typography>
-                {/*valueBuffer 应该设置为商品数量*/}
-                <LinearProgress variant="buffer" value={totalItems} valueBuffer={30}/>
-                <Box sx={{minWidth: 35}}>
-                    <Typography
-                        variant="body2"
-                        sx={{color: 'text.secondary'}}
-                    >{`${Math.round(orderCount)}%`}</Typography>
-                </Box>
-                <Typography variant="subtitle1" align="center" color="text.secondary">
-                    预计等待时间: <span
-                    style={{color: "#dfff2f", fontWeight: "bold"}}>⏳{FormatNanoseconds(estimatedWait)}</span>
-                </Typography>
-            </DialogTitle>
-            <DialogContent>
-                <PayChannel
-                    setCart={setCartItems}
-                    price={price}
-                    setOpen={setOpenPayChannel}
-                    orderID={orderID}
-                    at={localStorage.getItem("current_store_id")}
-                />
-            </DialogContent>
-        </Dialog>;
+        return (
+            <PaymentDialog
+                open={openPayChannel}
+                onClose={() => setOpenPayChannel(false)}
+                price={price}
+                orderID={orderID}
+                orderCount={orderCount}
+                totalItems={totalItems}
+                estimatedWait={estimatedWait}
+                fetchData={fetchData}
+                setCart={setCartItems}
+                storeId={localStorage.getItem("current_store_id") || ''}
+            />
+        );
     }
 
     return (

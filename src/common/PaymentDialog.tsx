@@ -12,6 +12,8 @@ import { TransitionProps } from '@mui/material/transitions';
 import Slide from '@mui/material/Slide';
 import { FormatNanoseconds } from '../utils/time';
 import PayChannel from './PayChannel';
+import { useCheckoutOffers } from './checkout/useCheckoutOffers';
+import CheckoutOfferBar from './checkout/CheckoutOfferBar';
 
 interface PaymentDialogProps {
     open: boolean;
@@ -22,8 +24,9 @@ interface PaymentDialogProps {
     totalItems?: number;
     estimatedWait?: number;
     fetchData: any;
-    setCart?: (cart: any[]) => void;           // 仅购物车需要
-    onSuccess?: () => void;                    // 支付成功后的回调（充值、其他场景都可用）
+    setCart?: (cart: any[]) => void;
+    onSuccess?: () => void;
+    storeId?: string;
 }
 
 function Transition(props: TransitionProps & { children: React.ReactElement<any, any> }) {
@@ -31,21 +34,24 @@ function Transition(props: TransitionProps & { children: React.ReactElement<any,
 }
 
 export default function PaymentDialog({
-                                          open,
-                                          onClose,
-                                          price,
-                                          orderID,
-                                          orderCount = 0,
-                                          totalItems = 0,
-                                          estimatedWait = 0,
-                                          fetchData,
-                                          setCart,
-                                          onSuccess,
-                                      }: PaymentDialogProps) {
+    open,
+    onClose,
+    price,
+    orderID,
+    orderCount = 0,
+    totalItems = 0,
+    estimatedWait = 0,
+    fetchData,
+    setCart,
+    onSuccess,
+    storeId,
+}: PaymentDialogProps) {
+    const offers = useCheckoutOffers(price, storeId);
+    const payAmount = offers.payAmount;
 
-    const handlePaySuccess = () => {
-        setCart?.([]);           // 只在购物车场景清空
-        onSuccess?.();           // 通用成功回调
+    const handlePaySuccess = async () => {
+        setCart?.([]);
+        onSuccess?.();
         onClose();
     };
 
@@ -62,11 +68,16 @@ export default function PaymentDialog({
                 <Typography variant="h6" align="center">
                     订单号: {orderID}
                 </Typography>
-                <Typography variant="subtitle1" align="center" color="text.secondary">
-                    待支付金额: <span style={{ color: "#d32f2f", fontWeight: "bold" }}>
-                        ¥{price.toFixed(2)}
-                    </span>
-                </Typography>
+                {offers.totalBenefit > 0 ? (
+                    <Typography variant="subtitle1" align="center" color="text.secondary">
+                        原价 <span style={{ textDecoration: 'line-through' }}>¥{price.toFixed(2)}</span>
+                        {' '}实付 <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>¥{payAmount.toFixed(2)}</span>
+                    </Typography>
+                ) : (
+                    <Typography variant="subtitle1" align="center" color="text.secondary">
+                        待支付金额: <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>¥{price.toFixed(2)}</span>
+                    </Typography>
+                )}
 
                 <LinearProgress
                     variant="buffer"
@@ -82,20 +93,23 @@ export default function PaymentDialog({
                 </Box>
 
                 <Typography variant="subtitle1" align="center" color="text.secondary" sx={{ mt: 1 }}>
-                    预计等待时间: <span style={{ color: "#dfff2f", fontWeight: "bold" }}>
+                    预计等待时间: <span style={{ color: '#dfff2f', fontWeight: 'bold' }}>
                         ⏳{FormatNanoseconds(estimatedWait)}
                     </span>
                 </Typography>
             </DialogTitle>
 
             <DialogContent>
+                <CheckoutOfferBar offers={offers} showTickets={offers.tickets.length > 0} />
                 <PayChannel
-                    price={price}
+                    price={payAmount}
+                    originalPrice={price}
                     orderID={orderID}
                     fetchData={fetchData}
                     setCart={setCart}
                     setOpen={onClose}
                     onSuccess={handlePaySuccess}
+                    offers={offers}
                 />
             </DialogContent>
         </Dialog>

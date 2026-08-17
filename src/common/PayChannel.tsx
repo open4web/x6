@@ -40,7 +40,7 @@ function a11yProps(index: number) {
     };
 }
 
-export default function PayChannel({setCart, price, setOpen, orderID, at}: any) {
+export default function PayChannel({setCart, price, setOpen, orderID, at, offers, onSuccess, originalPrice}: any) {
     const [value, setValue] = React.useState(0);
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
@@ -137,6 +137,8 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
                 at,
                 code: scannedCode,
             });
+            await offers?.redeem?.(orderID);
+            onSuccess?.();
 
             if (setCart) {
                 setCart([]);
@@ -203,9 +205,11 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
             await fetchData('/v1/pay/cash/pay', () => {
             }, "POST", {
                 order_id: orderID,
-                amount: amount, // 👉 元（后端会转分）
+                amount: amount,
                 remark: "现金支付",
             });
+            await offers?.redeem?.(orderID);
+            onSuccess?.();
 
             // 清空购物车
             if (setCart) {
@@ -326,11 +330,13 @@ export default function PayChannel({setCart, price, setOpen, orderID, at}: any) 
                     value={value}
                     index={3}
                     price={price}
+                    originalPrice={originalPrice || price}
                     orderID={orderID}
                     fetchData={fetchData}
                     setCart={setCart}
                     setOpen={setOpen}
                     setOrderDrawerOpen={setOrderDrawerOpen}
+                    offers={offers}
                 />
             </CustomTabPanel>
 
