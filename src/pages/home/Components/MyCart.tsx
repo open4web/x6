@@ -74,7 +74,7 @@ export const pickTypes = [
 ];
 
 export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProps) {
-    const {holdOrders, setHoldOrders, startPaymentWatch} = useCartContext();
+    const {holdOrders, setHoldOrders, startPaymentWatch, ready} = useCartContext();
     const [price, setPrice] = React.useState(0);
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const [orderID, setOrderID] = React.useState("");
@@ -211,6 +211,9 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     };
 
     const handlePlaceOrder = async () => {
+        if (!ready) {
+            return;
+        }
         const ticketNumber = localStorage.getItem('ticketNumber');
 
         // 如果没有设置座位号，先弹出输入框
@@ -705,7 +708,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     color="error"
                     fullWidth
                     onClick={holdOrder}
-                    disabled={cartItems.length === 0}
+                    disabled={!ready || cartItems.length === 0}
                 >
                     挂单
                 </Button>
@@ -714,7 +717,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     color="success"
                     fullWidth
                     onClick={handlePlaceOrder}
-                    disabled={cartItems.length === 0}
+                    disabled={!ready || cartItems.length === 0}
                 >
                     结算
                 </Button>

@@ -14,6 +14,8 @@ function quad(p0: number, p1: number, p2: number, t: number) {
     return u * u * p0 + 2 * u * t * p1 + t * t * p2;
 }
 
+const playedFlyIds = new Set<number>();
+
 export default function OrderFlyOverlay({event, targetEl, onArrived}: Props) {
     const [pos, setPos] = useState<{x: number; y: number; scale: number; visible: boolean}>({
         x: 0,
@@ -23,9 +25,10 @@ export default function OrderFlyOverlay({event, targetEl, onArrived}: Props) {
     });
 
     useEffect(() => {
-        if (!event) {
+        if (!event || playedFlyIds.has(event.id)) {
             return;
         }
+        playedFlyIds.add(event.id);
 
         const target = targetEl?.getBoundingClientRect();
         const endX = (target?.left ?? window.innerWidth - 56) + (target?.width ?? 56) / 2;

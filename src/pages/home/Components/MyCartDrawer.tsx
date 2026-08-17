@@ -11,8 +11,14 @@ import {readCombs, writeCombs} from "../../../utils/catalogCache";
 export default function MyCartDrawer() {
     const {fetchData, alertComponent} = useFetchData();
 
-    const { cartItems, setCartItems, drawerOpen, setDrawerOpen, merchantId } = useCartContext();
+    const { cartItems, setCartItems, drawerOpen, setDrawerOpen, merchantId, ready } = useCartContext();
     const [comboGroups, setCombs] = useState<ComboGroup[]>(() => readCombs(merchantId)?.data ?? []);
+
+    useEffect(() => {
+        if (!ready && drawerOpen) {
+            setDrawerOpen(false);
+        }
+    }, [ready, drawerOpen, setDrawerOpen]);
 
     useEffect(() => {
         if (!merchantId) {

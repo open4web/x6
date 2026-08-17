@@ -44,6 +44,7 @@ type CartContextType = {
     notifyOrderPaid: (orderNo: string) => void;
     orderFlyEvent: OrderFlyEvent | null;
     triggerOrderFly: (orderNo: string, start?: {x: number; y: number}) => void;
+    clearOrderFlyEvent: () => void;
     orderSyncStatus: OrderSyncStatus;
     orderSyncProgress: number;
     setOrderSyncProgress: React.Dispatch<React.SetStateAction<number>>;
@@ -106,6 +107,10 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
             startX: start?.x ?? window.innerWidth - 220,
             startY: start?.y ?? window.innerHeight / 2,
         });
+    }, []);
+
+    const clearOrderFlyEvent = useCallback(() => {
+        setOrderFlyEvent(null);
     }, []);
 
     const [orderSyncStatus, setOrderSyncStatus] = useState<OrderSyncStatus>('idle');
@@ -174,6 +179,7 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
             notifyOrderPaid,
             orderFlyEvent,
             triggerOrderFly,
+            clearOrderFlyEvent,
             orderSyncStatus,
             orderSyncProgress,
             setOrderSyncProgress,

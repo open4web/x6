@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Badge, Box, CircularProgress, Fab, Grid} from '@mui/material';
+import {Badge, Box, CircularProgress, Fab, Grid, Paper, Typography} from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import MyProducts from "../home/Components/MyProducts";
 import { toast } from "react-toastify";
@@ -21,7 +21,7 @@ export const MyHome = () => {
     const {
         cartItems, setCartItems, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen,
         orderFlyEvent, orderDrawerOpen, startOrderListSync, orderSyncStatus, orderSyncProgress,
-        resetOrderSync,
+        resetOrderSync, ready, clearOrderFlyEvent,
     } = useCartContext();
     const [clearCartSignal, setClearCartSignal] = useState(false);
     const [rechargeOpen, setRechargeOpen] = useState(false);
@@ -29,7 +29,18 @@ export const MyHome = () => {
     const [fabPulse, setFabPulse] = useState(false);
     const orderFabRef = useRef<HTMLButtonElement>(null);
 
+    const guardOrdering = () => {
+        if (ready) {
+            return true;
+        }
+        toast.warning('请先开始值班后再点餐', {position: 'top-center', autoClose: 2200});
+        return false;
+    };
+
     const handleClick = (item: CartItem) => {
+        if (!guardOrdering()) {
+            return;
+        }
         setDrawerOpen(true);
 
         // 检查购物车中是否已存在该商品
@@ -80,7 +91,8 @@ export const MyHome = () => {
         setFabPulse(true);
         window.setTimeout(() => setFabPulse(false), 700);
         startOrderListSync(orderNo);
-    }, [startOrderListSync]);
+        clearOrderFlyEvent();
+    }, [startOrderListSync, clearOrderFlyEvent]);
 
     return (
         <Grid container spacing={2} mt={1}>
@@ -91,6 +103,11 @@ export const MyHome = () => {
                     <MyCartDrawer />
                     <MyOrderDrawer/>
                     <MyDataDrawer/>
+                    <OrderFlyOverlay
+                        event={dataDrawerOpen ? null : orderFlyEvent}
+                        targetEl={orderFabRef.current}
+                        onArrived={handleOrderArrived}
+                    />
                     <HandoverPageDrawer/>
                     <RechargeCardSelector
                         modal={true}
@@ -104,7 +121,42 @@ export const MyHome = () => {
                     {/* 仅在 dataDrawerOpen 为 false 时渲染以下部分 */}
                     {!dataDrawerOpen && (
                         <>
-                            <MyProducts handleClick={handleClick} clearCartSignal={clearCartSignal} />
+                            {!ready && (
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        mb: 2,
+                                        mx: 1,
+                                        px: 2.5,
+                                        py: 1.75,
+                                        borderRadius: 2,
+                                        border: '1px solid #ffe0b2',
+                                        bgcolor: '#fff8e1',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: 2,
+                                    }}
+                                >
+                                    <Box>
+                                        <Typography sx={{fontWeight: 700, color: '#e65100'}}>
+                                            尚未开始值班
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            点左上角「开始值班」后才能点餐和下单。查看订单不受影响。
+                                        </Typography>
+                                    </Box>
+                                </Paper>
+                            )}
+                            <Box
+                                sx={{
+                                    pointerEvents: ready ? 'auto' : 'none',
+                                    filter: ready ? 'none' : 'grayscale(0.25)',
+                                    opacity: ready ? 1 : 0.55,
+                                }}
+                            >
+                                <MyProducts handleClick={handleClick} clearCartSignal={clearCartSignal} />
+                            </Box>
 
                             {/* Floating Action Button */}
                             <Fab
@@ -183,12 +235,6 @@ export const MyHome = () => {
                                     )}
                                 </Fab>
                             </Box>
-                            <OrderFlyOverlay
-                                event={orderFlyEvent}
-                                targetEl={orderFabRef.current}
-                                onArrived={handleOrderArrived}
-                            />
-
                             <Fab
                                 aria-label="Expand"
                                 color="inherit"
@@ -198,9 +244,15 @@ export const MyHome = () => {
                                     right: 16,
                                     zIndex: 1000,
                                 }}
-                                onClick={() => setDrawerOpen(true)}
+                                disabled={!ready}
+                                onClick={() => {
+                                    if (!guardOrdering()) {
+                                        return;
+                                    }
+                                    setDrawerOpen(true);
+                                }}
                             >
-                                <ShoppingCartIcon fontSize="large" color={'error'} />
+                                <ShoppingCartIcon fontSize="large" color={ready ? 'error' : 'disabled'} />
                             </Fab>
                         </>
                     )}
