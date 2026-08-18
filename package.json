@@ -1,6 +1,6 @@
 {
     "name": "x7",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "private": true,
     "dependencies": {
         "@ant-design/plots": "^2.6.8",
