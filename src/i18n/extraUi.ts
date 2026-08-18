@@ -27,7 +27,7 @@ export const extraUi = pack(
             people: '就餐人数', qty_up: '%{name} 数量增加', added: '商品已加入购物车',
             pickup_self: '自提', pickup_takeout: '外卖', pickup_dine: '堂食', pickup_express: '快递', pickup_virtual: '虚拟',
             discount: '优惠', total_discount: '总优惠', pick_seat: '选桌', confirm_seat: '选定', resume: '继续',
-            pick_table: '选择台号/桌位',
+            pick_table: '选择台号/桌位', view_seats: '查看桌位',
         },
         seat: {
             empty: '空闲', busy: '使用中', reserved: '预定', disabled: '禁用',
@@ -158,7 +158,7 @@ export const extraUi = pack(
             people: 'Party size', qty_up: '%{name} quantity increased', added: 'Added to cart',
             pickup_self: 'Pickup', pickup_takeout: 'Delivery', pickup_dine: 'Dine-in', pickup_express: 'Express', pickup_virtual: 'Virtual',
             discount: 'Off', total_discount: 'Total off', pick_seat: 'Pick table', confirm_seat: 'Select', resume: 'Resume',
-            pick_table: 'Table / seat',
+            pick_table: 'Table / seat', view_seats: 'Tables',
         },
         seat: {
             empty: 'Free', busy: 'In use', reserved: 'Reserved', disabled: 'Off',

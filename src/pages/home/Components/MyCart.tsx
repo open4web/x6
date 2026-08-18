@@ -59,6 +59,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const [orderID, setOrderID] = React.useState("");
     const [openTicket, setOpenTicket] = React.useState(false);
+    const [openSeatBoard, setOpenSeatBoard] = React.useState(false);
     const [openPeople, setOpenPeople] = React.useState(false);
     const [openPhone, setOpenPhone] = React.useState(false);
     const [hasNotTicket, setHasNotTicket] = React.useState(false);
@@ -732,6 +733,28 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     {translate('pos.cart.checkout')}
                 </Button>
             </Box>
+            <Button
+                variant="outlined"
+                color="primary"
+                fullWidth
+                sx={{mt: 1.5}}
+                onClick={() => setOpenSeatBoard(true)}
+            >
+                {translate('pos.cart.view_seats')}
+            </Button>
+            <TablePicker
+                open={openSeatBoard}
+                setOpen={setOpenSeatBoard}
+                storeId={localStorage.getItem('current_store_id') || ''}
+                onSave={(value) => {
+                    if (value.tableNo) {
+                        localStorage.setItem('ticketNumber', value.tableNo);
+                    }
+                    if (value.seatId) {
+                        localStorage.setItem('selectedSeatId', value.seatId);
+                    }
+                }}
+            />
             {getDialog()}
         </Box>
 

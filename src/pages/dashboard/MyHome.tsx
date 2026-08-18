@@ -7,7 +7,9 @@ import {useTranslate} from 'react-admin';
 import MyCartDrawer from "../home/Components/MyCartDrawer";
 import { useCartContext } from "../../dataProvider/MyCartProvider";
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
 import GradingIcon from '@mui/icons-material/Grading';
+import TablePicker from "../../common/TablePicker";
 import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 import {CartItem} from "../../common/types";
 import {useCallback, useEffect, useRef, useState} from "react";
@@ -22,11 +24,12 @@ export const MyHome = () => {
     const {
         cartItems, setCartItems, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen,
         orderFlyEvent, orderDrawerOpen, startOrderListSync, orderSyncStatus, orderSyncProgress,
-        resetOrderSync, ready, clearOrderFlyEvent,
+        resetOrderSync, ready, clearOrderFlyEvent, merchantId,
     } = useCartContext();
     const translate = useTranslate();
     const [clearCartSignal, setClearCartSignal] = useState(false);
     const [rechargeOpen, setRechargeOpen] = useState(false);
+    const [seatBoardOpen, setSeatBoardOpen] = useState(false);
     const [inboundOrders, setInboundOrders] = useState(0);
     const [fabPulse, setFabPulse] = useState(false);
     const orderFabRef = useRef<HTMLButtonElement>(null);
@@ -245,7 +248,7 @@ export const MyHome = () => {
                                 data-fly-target="cart"
                                 sx={{
                                     position: 'fixed',
-                                    bottom: 144,
+                                    bottom: 208,
                                     right: 16,
                                     zIndex: 1000,
                                 }}
@@ -259,6 +262,32 @@ export const MyHome = () => {
                             >
                                 <ShoppingCartIcon fontSize="large" color={ready ? 'error' : 'disabled'} />
                             </Fab>
+                            <Fab
+                                aria-label={translate('pos.cart.view_seats')}
+                                color="inherit"
+                                sx={{
+                                    position: 'fixed',
+                                    bottom: 144,
+                                    right: 16,
+                                    zIndex: 1000,
+                                }}
+                                onClick={() => setSeatBoardOpen(true)}
+                            >
+                                <TableRestaurantIcon fontSize="large" color="primary" />
+                            </Fab>
+                            <TablePicker
+                                open={seatBoardOpen}
+                                setOpen={setSeatBoardOpen}
+                                storeId={merchantId || localStorage.getItem('current_store_id') || ''}
+                                onSave={(value) => {
+                                    if (value.tableNo) {
+                                        localStorage.setItem('ticketNumber', value.tableNo);
+                                    }
+                                    if (value.seatId) {
+                                        localStorage.setItem('selectedSeatId', value.seatId);
+                                    }
+                                }}
+                            />
                         </>
                     )}
                 </React.Fragment>
