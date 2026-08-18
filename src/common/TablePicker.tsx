@@ -18,7 +18,7 @@ import axios from 'axios';
 
 type Props = {
     open: boolean;
-    setOpen: (open: boolean) => void;
+    setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     storeId: string;
     onSave: (value: {tableNo: string; seatId?: string; people?: number}) => void;
 };
