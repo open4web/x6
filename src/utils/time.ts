@@ -48,7 +48,6 @@ export function FormatCurrentTime(locale = 'zh') {
     const now = new Date();
     const parts = new Intl.DateTimeFormat(intlLocale, {
         weekday: 'short',
-        year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
@@ -61,19 +60,18 @@ export function FormatCurrentTime(locale = 'zh') {
     const get = (type: Intl.DateTimeFormatPartTypes) =>
         parts.find((part) => part.type === type)?.value || '';
 
-    const year = get('year');
     const month = get('month');
     const day = get('day');
     const time = `${get('hour')}:${get('minute')}:${get('second')}`;
     const weekday = get('weekday');
 
     if (intlLocale.startsWith('zh') || intlLocale.startsWith('ja')) {
-        return `${year}年${month}月${day}日 ${time} ${weekday}`;
+        return `${month}月${day}日 ${time} ${weekday}`;
     }
     if (intlLocale.startsWith('ko')) {
-        return `${year}년 ${month}월 ${day}일 ${time} ${weekday}`;
+        return `${month}월 ${day}일 ${time} ${weekday}`;
     }
-    return `${weekday} ${year}-${month}-${day} ${time}`;
+    return `${weekday} ${month}-${day} ${time}`;
 }
 
 /**

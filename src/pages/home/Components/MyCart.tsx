@@ -27,6 +27,8 @@ import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
+import TablePicker from "../../../common/TablePicker";
+import {readStoreTables, writeStoreTables} from "../../../utils/storeCache";
 import {Alert, FormControl, FormControlLabel, LinearProgress, Radio, RadioGroup} from "@mui/material";
 import {ComboGroup, ComboMatchResult, MatchedCombo} from "../types";
 import {convertToOrderRequest} from "../../../utils/time";
@@ -193,12 +195,12 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             return;
         }
         const ticketNumber = localStorage.getItem('ticketNumber');
+        const seatId = localStorage.getItem('selectedSeatId') || '';
 
-        // 如果没有设置座位号，先弹出输入框
         if (!ticketNumber || ticketNumber.trim() === "") {
             setHasNotTicket(true);
             setOpenTicket(true);
-            return;   // 先不往下执行，等用户输入完后再继续
+            return;
         }
 
         // 如果已经有座位号，则直接继续执行结算逻辑
@@ -220,6 +222,9 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             setPrice(response?.price || 0);
             setOrderID(createdOrderNo);
             setOpenPayChannel(true);
+            if (seatId) {
+                occupyCurrentSeat(createdOrderNo, seatId);
+            }
 
             // 设置订单预计排队信息
             setOrderCount(response?.orderCount || 0);
@@ -234,9 +239,34 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 // 新增一个专门用于结算后清理的函数
     const resetCartAfterOrder = () => {
         localStorage.removeItem('ticketNumber');
+        localStorage.removeItem('selectedSeatId');
         localStorage.removeItem('phoneNumber');
         localStorage.removeItem('peopleNumber');
         setCartItems([]);
+    };
+
+    const occupyCurrentSeat = (orderNo: string, seatId: string) => {
+        const storeId = localStorage.getItem('current_store_id') || '';
+        if (!storeId || !seatId) {
+            return;
+        }
+        const people = Number(localStorage.getItem('peopleNumber') || 0);
+        fetchData(`/v1/hlj/store/seat/${storeId}`, () => {
+            const cached = readStoreTables(storeId);
+            if (!cached) {
+                return;
+            }
+            writeStoreTables(storeId, {
+                ...cached,
+                seats: (cached.seats || []).map(item => item.id === seatId ? {
+                    ...item,
+                    status: 1,
+                    order_no: orderNo,
+                    occupied_at: Math.floor(Date.now() / 1000),
+                    people: people || item.people,
+                } : item),
+            });
+        }, 'PUT', {id: seatId, status: 1, order_no: orderNo, people});
     };
 
     const holdOrder = (event?: React.MouseEvent) => {
@@ -266,6 +296,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         setCartItems([]);
         setDrawerOpen(false);
         localStorage.removeItem('ticketNumber');
+        localStorage.removeItem('selectedSeatId');
         localStorage.removeItem('phoneNumber');
         localStorage.removeItem('peopleNumber');
     };
@@ -315,18 +346,22 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         // setHasNotTicket(false)
     }
 
-    const handleSaveResult = (value: string) => {
-        console.log("保存的台号是:", value);
-
-        if (value && value.trim() !== "") {
-            localStorage.setItem("ticketNumber", value);
-            setHasNotTicket(false);
-
-            // 关键：输入完座位号后，自动继续执行结算逻辑
-            setTimeout(() => {
-                handlePlaceOrder();   // 自动调用结算
-            }, 300); // 给一点延迟，让对话框关闭
+    const handleSaveResult = (value: {tableNo: string; seatId?: string; people?: number} | string) => {
+        const tableNo = typeof value === 'string' ? value : value.tableNo;
+        if (!tableNo || tableNo.trim() === "") {
+            return;
         }
+        localStorage.setItem("ticketNumber", tableNo);
+        if (typeof value !== 'string' && value.seatId) {
+            localStorage.setItem('selectedSeatId', value.seatId);
+        }
+        if (typeof value !== 'string' && value.people && !localStorage.getItem('peopleNumber')) {
+            localStorage.setItem('peopleNumber', String(value.people));
+        }
+        setHasNotTicket(false);
+        setTimeout(() => {
+            handlePlaceOrder();
+        }, 300);
     };
 
     // handleSavePhoneResult
@@ -341,6 +376,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
     const resetCart = () => {
         localStorage.removeItem('ticketNumber')
+        localStorage.removeItem('selectedSeatId')
         localStorage.removeItem('phoneNumber')
         localStorage.removeItem('peopleNumber')
         setCartItems([])
@@ -595,8 +631,12 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                         {localStorage.getItem('peopleNumber') || "-"} {/* 默认显示"未选择" */}
                     </Typography>
                 </IconButton>
-                <NumericKeyboardDialog setOpen={setOpenTicket} open={openTicket} onSave={handleSaveResult}
-                                       title={translate('pos.cart.table_no')} min={1} max={99}/>
+                <TablePicker
+                    open={openTicket}
+                    setOpen={setOpenTicket}
+                    storeId={localStorage.getItem('current_store_id') || ''}
+                    onSave={handleSaveResult}
+                />
                 <NumericKeyboardDialog setOpen={setOpenPeople} open={openPeople} onSave={handleSavePeopleResult}
                                        title={translate('pos.cart.people')} min={1} max={20}/>
                 <MemberSelector

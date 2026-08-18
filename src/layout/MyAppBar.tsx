@@ -9,7 +9,6 @@ import MerchantSelect from "../common/MerchantSelect";
 import MyPrinter from "../common/MyPrinter";
 import MyDataAppBar from "../common/MyData";
 import { FormatCurrentTime } from "../utils/time";
-import MyShiftAppBar from "../common/MyShift";
 import MyShiftSwitch from "../common/MyShiftSwitch";
 import Version from "../common/Version"
 import AppearanceMenu from "./AppearanceMenu";
@@ -34,7 +33,6 @@ const MyAppBar = (props: any) => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <MerchantSelect />
                 <MyShiftSwitch/>
-                <MyShiftAppBar />
                 <Box sx={{ ml: 1, color: 'white', fontSize: '1rem', whiteSpace: 'nowrap', opacity: 0.92 }}>
                     {currentTime}
                 </Box>
