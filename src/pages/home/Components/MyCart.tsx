@@ -39,7 +39,7 @@ import {
     Cloud,
 } from '@mui/icons-material';
 import MemberSelector from "../../../common/MemberSelector";
-import {useTranslate} from 'react-admin';
+import {useSidebarState, useTranslate} from 'react-admin';
 
 export const pickTypes = [
     {id: 0, nameKey: 'pos.cart.pickup_self', color: 'primary', icon: <Storefront />},
@@ -51,7 +51,8 @@ export const pickTypes = [
 
 export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProps) {
     const translate = useTranslate();
-    const {holdOrders, setHoldOrders, ready} = useCartContext();
+    const [, setSidebarOpen] = useSidebarState();
+    const {setHoldOrders, ready, triggerOrderFly, setDrawerOpen} = useCartContext();
     const [price, setPrice] = React.useState(0);
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const [orderID, setOrderID] = React.useState("");
@@ -238,42 +239,35 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         setCartItems([]);
     };
 
-    const holdOrder = () => {
-        console.log("Holding order...");
-
-        // 从 localStorage 获取当前已存储的 holdOrders 列表
-        const holdOrders = JSON.parse(localStorage.getItem("holdOrders") || "[]");
-
-        // 从 localStorage 获取当前的 uniqueId，如果不存在则初始化为 1
+    const holdOrder = (event?: React.MouseEvent) => {
+        const stored = JSON.parse(localStorage.getItem("holdOrders") || "[]");
         let uniqueId = parseInt(localStorage.getItem("uniqueId") || "1", 10);
 
-        // 构建新的 holdOrder 对象
         const newHoldOrder = {
-            id: uniqueId, // 使用全局唯一 ID
-            cartItems: cartItems, // 保存当前购物车的内容
-            createdAt: FormatDate(new Date()), // 保存创建时间
+            id: uniqueId,
+            cartItems: cartItems,
+            createdAt: FormatDate(new Date()),
         };
 
-        console.log("cartItems ===>", cartItems)
-
-        // 将新订单添加到 holdOrders 数组中
-        holdOrders.push(newHoldOrder);
-
-        // 更新 holdOrders 到 localStorage
-        localStorage.setItem("holdOrders", JSON.stringify(holdOrders));
-        setHoldOrders(holdOrders)
-
-        // 更新 uniqueId 到 localStorage，确保每次调用都递增
+        stored.push(newHoldOrder);
+        localStorage.setItem("holdOrders", JSON.stringify(stored));
+        setHoldOrders(stored);
         localStorage.setItem("uniqueId", (uniqueId + 1).toString());
 
-        // 清空购物车
-        setCartItems([]);
-        console.log("Hold order stored:", newHoldOrder);
+        triggerOrderFly(String(uniqueId), {
+            start: {
+                x: event?.clientX ?? window.innerWidth - 180,
+                y: event?.clientY ?? window.innerHeight / 2,
+            },
+            kind: 'hold',
+        });
 
-        // 结算后清空当前选项
-        localStorage.removeItem('ticketNumber')
-        localStorage.removeItem('phoneNumber')
-        localStorage.removeItem('peopleNumber')
+        setSidebarOpen(true);
+        setCartItems([]);
+        setDrawerOpen(false);
+        localStorage.removeItem('ticketNumber');
+        localStorage.removeItem('phoneNumber');
+        localStorage.removeItem('peopleNumber');
     };
 
     // 统计各个属性的单价

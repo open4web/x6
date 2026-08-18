@@ -11,7 +11,19 @@ type HoldOrderPageProps = {
 export default function HoldOrderPage({ open }: HoldOrderPageProps) {
     const translate = useTranslate();
     // 指定 cartItems 的类型为 CartItem[]
-    const { setCartItems, setDrawerOpen,holdOrders, setHoldOrders } = useCartContext();
+    const { setCartItems, setDrawerOpen, holdOrders, setHoldOrders, triggerOrderFly, orderFlyEvent } = useCartContext();
+    const [pulseId, setPulseId] = React.useState<number | null>(null);
+
+    React.useEffect(() => {
+        if (orderFlyEvent?.kind === 'hold') {
+            const id = Number(orderFlyEvent.orderNo);
+            if (Number.isFinite(id)) {
+                setPulseId(id);
+                const timer = window.setTimeout(() => setPulseId(null), 900);
+                return () => window.clearTimeout(timer);
+            }
+        }
+    }, [orderFlyEvent?.id, orderFlyEvent?.kind, orderFlyEvent?.orderNo]);
 
     // 删除订单的处理函数
     const handleDeleteOrder = (orderId: number) => {
@@ -24,22 +36,31 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
     };
 
 
-    const handleContinueOrder = (order: CartItemHolder) => {
+    const handleContinueOrder = (order: CartItemHolder, event?: React.MouseEvent) => {
+        triggerOrderFly(String(order.id), {
+            start: {
+                x: event?.clientX ?? 48,
+                y: event?.clientY ?? 180,
+            },
+            kind: 'resume',
+        });
         setCartItems(order.cartItems);
         setDrawerOpen(true);
+        handleDeleteOrder(order.id);
     };
 
 
     return (
         <Box
+            data-fly-target="hold"
             sx={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'left',
                 justifyContent: 'left',
                 padding: 0,
-                maxHeight: '100vh', // 限制高度以支持滚动
-                overflowY: 'auto', // 启用垂直滚动
+                maxHeight: '100vh',
+                overflowY: 'auto',
                 bgcolor: 'background.default',
             }}
         >
@@ -53,6 +74,8 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                         borderRadius: 1,
                         boxShadow: 3,
                         background: 'white',
+                        outline: pulseId === order.id ? '2px solid #42a5f5' : 'none',
+                        animation: pulseId === order.id ? 'orderShake 0.28s ease-in-out 2' : 'none',
                     }}
                 >
                     {open ? (
@@ -130,7 +153,7 @@ export default function HoldOrderPage({ open }: HoldOrderPageProps) {
                                         textTransform: 'none',
                                         minWidth: '100px',
                                     }}
-                                    onClick={() => handleContinueOrder(order)}
+                                    onClick={(event) => handleContinueOrder(order, event)}
                                 >
                                     {translate('pos.cart.resume')}
                                 </Button>

@@ -22,6 +22,7 @@ import {getOrderStatus} from "./orderStatus";
 import {isOrderExpired} from "../utils/expireStore";
 import {useFetchData} from "./FetchData";
 import {getPlatformInfo} from "./payMethod";
+import {useTranslate} from 'react-admin';
 
 interface MyOrderDetailProps {
     open: boolean;
@@ -38,44 +39,37 @@ export enum OpenReason {
 }
 
 export const OpenReasonMap: Record<OpenReason, { title: string; action: string }> = {
-    [OpenReason.Default]: {
-        title: "订单详情",
-        action: "",
-    },
-    [OpenReason.FastCancel]: {
-        title: "快速取消订单",
-        action: "立即取消",
-    },
-    [OpenReason.Cancel]: {
-        title: "取消订单",
-        action: "取消",
-    },
-    [OpenReason.Close]: {
-        title: "关闭订单详情",
-        action: "关闭订单",
-    },
+    [OpenReason.Default]: {title: 'pos.detail.title', action: ''},
+    [OpenReason.FastCancel]: {title: 'pos.detail.fast_cancel', action: 'pos.detail.cancel_now'},
+    [OpenReason.Cancel]: {title: 'pos.detail.cancel_order', action: 'pos.detail.cancel'},
+    [OpenReason.Close]: {title: 'pos.detail.close_title', action: 'pos.detail.close_action'},
 };
 
 const reasonList = [
-    "商家未履约",
-    "个人原因",
-    "缺货",
-    "品质问题",
-    "点错",
-    "更换菜品",
-    "长时间未出餐",
-    "其它",
-]
+    {value: '商家未履约', key: 'r_merchant'},
+    {value: '个人原因', key: 'r_personal'},
+    {value: '缺货', key: 'r_stock'},
+    {value: '品质问题', key: 'r_quality'},
+    {value: '点错', key: 'r_wrong'},
+    {value: '更换菜品', key: 'r_change'},
+    {value: '长时间未出餐', key: 'r_late'},
+    {value: '其它', key: 'r_other'},
+];
 
 interface SelectedItems {
     [key: string]: boolean;
 }
 
 const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, openOrderDetailWithReason}) => {
-    // 根据理由从映射中读取 title 和 action
+    const translate = useTranslate();
     const reasonDetails = OpenReasonMap[openOrderDetailWithReason];
-
+    const dialogTitle = translate(reasonDetails.title);
     const {name: statusName, color: statusColor} = getOrderStatus(orderData.status);
+    const statusLabel = translate(`pos.status.${orderData.status}`, {_: statusName});
+    const reasonLabel = (value: string) => {
+        const found = reasonList.find(item => item.value === value);
+        return found ? translate(`pos.detail.${found.key}`) : value;
+    };
     const {fetchData, alertComponent} = useFetchData();
 
     const [refundReason, setRefundReason] = useState<string>(''); // 存储退款原因
@@ -247,7 +241,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
             printWindow.document.write(`
                 <html>
                 <head>
-                    <title>{reasonDetails.title}</title>
+                    <title>${dialogTitle}</title>
                     <style>
                         body {
                             font-family: Arial, sans-serif;
@@ -298,22 +292,22 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>
-                {reasonDetails.title} - {orderData.identity.order_no}
+                {dialogTitle} - {orderData.identity.order_no}
                 <IconButton onClick={handleCloudPrint} sx={{float: 'right'}}>
                     <PrintIcon/>
                 </IconButton>
             </DialogTitle>
             <DialogContent>
                 {/* 订单详情信息 */}
-                <Typography variant="h6">基本信息</Typography>
+                <Typography variant="h6">{translate('pos.detail.basic')}</Typography>
                 <Card variant="outlined" sx={{marginBottom: 2}}>
                     <CardContent>
                         <Box display="flex" flexDirection="column" gap={1}>
-                            <Typography>订单号: {orderData.identity.order_no}</Typography>
-                            <Typography>桌号: {orderData.identity.table_no || '未指定'}</Typography>
-                            <Typography>创建时间: {new Date(orderData.stp.created_at * 1000).toLocaleString()}</Typography>
+                            <Typography>{translate('pos.detail.order_no')}: {orderData.identity.order_no}</Typography>
+                            <Typography>{translate('pos.detail.table')}: {orderData.identity.table_no || translate('pos.detail.unset')}</Typography>
+                            <Typography>{translate('pos.detail.created')}: {new Date(orderData.stp.created_at * 1000).toLocaleString()}</Typography>
                             <Typography>
-                                状态: <Chip label={statusName} sx={{backgroundColor: statusColor, color: '#fff',}}
+                                {translate('pos.detail.status')}: <Chip label={statusLabel} sx={{backgroundColor: statusColor, color: '#fff',}}
                                             size={"small"}/>
                             </Typography>
                         </Box>
@@ -322,21 +316,21 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
 
                 {/* 隐藏的打印清单 */}
                 <div id="print-section" style={{display: 'none'}}>
-                    <div className="title">订单清单</div>
+                    <div className="title">{translate('pos.detail.receipt')}</div>
                     <div className="info">
-                        <div className="info-item">订单号: {orderData.identity.order_no}</div>
-                        <div className="info-item">桌号: {orderData.identity.table_no || '未指定'}</div>
+                        <div className="info-item">{translate('pos.detail.order_no')}: {orderData.identity.order_no}</div>
+                        <div className="info-item">{translate('pos.detail.table')}: {orderData.identity.table_no || translate('pos.detail.unset')}</div>
                         <div
-                            className="info-item">创建时间: {new Date(orderData.stp.created_at * 1000).toLocaleString()}</div>
-                        <div className="info-item">状态: {orderData.status}</div>
+                            className="info-item">{translate('pos.detail.created')}: {new Date(orderData.stp.created_at * 1000).toLocaleString()}</div>
+                        <div className="info-item">{translate('pos.detail.status')}: {statusLabel}</div>
                     </div>
                     <div className="items">
                         <div className="items-header">
-                            <span>商品</span>
-                            <span>单价</span>
-                            <span>数量</span>
-                            <span>小计</span>
-                            <span>状态</span>
+                            <span>{translate('pos.detail.product')}</span>
+                            <span>{translate('pos.detail.unit_price')}</span>
+                            <span>{translate('pos.detail.qty')}</span>
+                            <span>{translate('pos.detail.subtotal')}</span>
+                            <span>{translate('pos.detail.item_status')}</span>
                         </div>
                         {orderData?.buckets?.map((bucket) => (
                             <div className={`item ${bucket.status === 1 ? 'refunded' : ''}`} key={bucket.id}>
@@ -344,18 +338,18 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                                 <span>¥{bucket.price.toFixed(2)}</span>
                                 <span>{bucket.number}</span>
                                 <span>¥{(bucket.price * bucket.number).toFixed(2)}</span>
-                                <span>{bucket.status === 1 ? '已退款' : '正常'}</span>
+                                <span>{bucket.status === 1 ? translate('pos.detail.refunded') : translate('pos.detail.normal')}</span>
                             </div>
                         ))}
                     </div>
                     <div className="item-total">
-                        总计: ¥{orderData.price.pay_price.toFixed(2)}
+                        {translate('pos.detail.total')}: ¥{orderData.price.pay_price.toFixed(2)}
                     </div>
                 </div>
 
                 {/* 商品列表 */}
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                    <Typography variant="h6">商品列表</Typography>
+                    <Typography variant="h6">{translate('pos.detail.items')}</Typography>
                     {hasRefundableItems() && (
                         <FormControlLabel
                             control={
@@ -365,7 +359,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                                     onChange={(e) => handleSelectAll(e.target.checked)}
                                 />
                             }
-                            label="全选可退款商品"
+                            label={translate('pos.detail.select_all')}
                         />
                     )}
                 </Box>
@@ -399,7 +393,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                                                                 {bucket.name}
                                                                 {isRefunded && (
                                                                     <Chip
-                                                                        label="已退款"
+                                                                        label={translate('pos.detail.refunded')}
                                                                         size="small"
                                                                         color="default"
                                                                         sx={{ ml: 1 }}
@@ -421,7 +415,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                                                             color={isRefunded ? "textSecondary" : "error"}
                                                             sx={{fontWeight: 'bold', textDecoration: isRefunded ? 'line-through' : 'none'}}
                                                         >
-                                                            小计: ¥{(bucket.price * bucket.number).toFixed(2)}
+                                                            {translate('pos.detail.subtotal')}: ¥{(bucket.price * bucket.number).toFixed(2)}
                                                         </Typography>
                                                     </Box>
                                                 </Box>
@@ -435,14 +429,14 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                         {hasSelectedItems() && (
                             <Box mt={2} p={1} bgcolor="red.100" borderRadius={1}>
                                 <Typography variant="body2">
-                                    已选商品金额: <strong>¥{getSelectedItemsTotal().toFixed(2)}</strong>
+                                    {translate('pos.detail.selected_amount')}: <strong>¥{getSelectedItemsTotal().toFixed(2)}</strong>
                                 </Typography>
                             </Box>
                         )}
                         {!hasRefundableItems() && (
                             <Box mt={2} p={2} textAlign="center" bgcolor="grey30" borderRadius={1}>
                                 <Typography variant="body2" color="textSecondary">
-                                    所有商品均已退款，无法再次退款
+                                    {translate('pos.detail.all_refunded')}
                                 </Typography>
                             </Box>
                         )}
@@ -450,13 +444,13 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 </Card>
 
                 {/* 支付信息 */}
-                <Typography variant="h6">支付信息</Typography>
+                <Typography variant="h6">{translate('pos.detail.pay_info')}</Typography>
                 <Card variant="outlined" sx={{marginBottom: 2}}>
                     <CardContent>
                         <Box display="flex" flexDirection="row" gap={2} justifyContent="space-between">
                             <Box display="flex" flexDirection="column" gap={1} flex="1">
-                                <Typography>支付金额: ¥{orderData.price.pay_price}</Typography>
-                                <Typography>支付状态: {orderData.pay.status === 0 ? '未支付' : '已支付'}</Typography>
+                                <Typography>{translate('pos.detail.pay_amount')}: ¥{orderData.price.pay_price}</Typography>
+                                <Typography>{translate('pos.detail.pay_status')}: {orderData.pay.status === 0 ? translate('pos.detail.unpaid') : translate('pos.detail.paid')}</Typography>
                             </Box>
                             <Box display="flex" flexDirection="column" gap={1} flex="1">
                                 {(() => {
@@ -464,17 +458,17 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                                     return (
                                         <Box>
                                             <Typography>
-                                                支付方式: <Chip label={name} sx={{backgroundColor: color, color: '#fff',}}
+                                                {translate('pos.detail.pay_method')}: <Chip label={translate(`pos.source.${orderData.pay.method}`, {_: name})} sx={{backgroundColor: color, color: '#fff',}}
                                                                 size={"small"}/>
                                             </Typography>
                                         </Box>
                                     );
                                 })()}
-                                <Typography>支付单号: {orderData.pay.transaction_id}</Typography>
+                                <Typography>{translate('pos.detail.txn')}: {orderData.pay.transaction_id}</Typography>
                             </Box>
                             <Box display="flex" flexDirection="column" gap={1} flex="1">
-                                <Typography> 退款次数: {orderData.refund_summary.total_times || 0}</Typography>
-                                <Typography>已退款金额: ¥{(orderData.refund_summary.total_amount || 0).toFixed(2)}</Typography>
+                                <Typography>{translate('pos.detail.refund_times')}: {orderData.refund_summary.total_times || 0}</Typography>
+                                <Typography>{translate('pos.detail.refunded_amount')}: ¥{(orderData.refund_summary.total_amount || 0).toFixed(2)}</Typography>
                             </Box>
                         </Box>
                     </CardContent>
@@ -482,7 +476,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
 
                 {/* 订单流程 */}
                 <Typography variant="h6" sx={{flexShrink: 0}}>
-                    订单流程
+                    {translate('pos.detail.workflow')}
                 </Typography>
                 <Card
                     variant="outlined"
@@ -504,35 +498,33 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                     </CardContent>
                 </Card>
                 <Dialog open={openRefundDialog} onClose={() => setOpenRefundDialog(false)} maxWidth="sm" fullWidth>
-                    <DialogTitle>选择退款原因</DialogTitle>
+                    <DialogTitle>{translate('pos.detail.pick_reason')}</DialogTitle>
                     <DialogContent dividers>
                         <RadioGroup value={refundReason} onChange={(e) => setRefundReason(e.target.value)}>
                             {reasonList.map((reason) => (
-                                <FormControlLabel key={reason} value={reason} control={<Radio />} label={reason} />
+                                <FormControlLabel key={reason.value} value={reason.value} control={<Radio />} label={translate(`pos.detail.${reason.key}`)} />
                             ))}
                         </RadioGroup>
 
                         {hasSelectedItems() && (
                             <FormControl component="fieldset" sx={{ mt: 2 }}>
-                                <FormLabel component="legend">退款类型</FormLabel>
+                                <FormLabel component="legend">{translate('pos.detail.refund_type')}</FormLabel>
                                 <Box sx={{ mt: 1 }}>
                                     <Typography variant="body2" color="textSecondary">
-                                        {hasRefundHistory()
-                                            ? `部分退款 (已选中 ${getSelectedItemIds().length} 个商品，金额: ¥${getSelectedItemsTotal().toFixed(2)})`
-                                            : areAllItemsSelected()
-                                                ? "全额退款 (已选中所有可退款商品)"
-                                                : `部分退款 (已选中 ${getSelectedItemIds().length} 个商品，金额: ¥${getSelectedItemsTotal().toFixed(2)})`}
+                                        {hasRefundHistory() || !areAllItemsSelected()
+                                            ? translate('pos.detail.partial', {count: getSelectedItemIds().length, amount: getSelectedItemsTotal().toFixed(2)})
+                                            : translate('pos.detail.full')}
                                     </Typography>
                                 </Box>
                             </FormControl>
                         )}
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => setOpenRefundDialog(false)} color="primary">取消</Button>
+                        <Button onClick={() => setOpenRefundDialog(false)} color="primary">{translate('pos.detail.cancel')}</Button>
                         <Button
                             onClick={() => {
                                 if (!refundReason) {
-                                    alert("请选择退款原因");
+                                    alert(translate('pos.detail.need_reason'));
                                     return;
                                 }
                                 setOpenRefundDialog(false);
@@ -540,7 +532,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                             color="secondary"
                             variant="contained"
                         >
-                            确认
+                            {translate('pos.detail.confirm')}
                         </Button>
                     </DialogActions>
                 </Dialog>
@@ -549,9 +541,9 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 {/* 退款原因显示 */}
                 {refundReason && (
                     <Typography variant="body2" color="textSecondary" sx={{ marginRight: "auto" }}>
-                        退款原因：
+                        {translate('pos.detail.reason')}：
                         <Chip
-                            label={refundReason}
+                            label={reasonLabel(refundReason)}
                             color="warning"
                             variant="outlined"
                             size="small"
@@ -559,7 +551,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                         />
                         {hasSelectedItems() && (
                             <Chip
-                                label={`${hasRefundHistory() ? '部分' : areAllItemsSelected() ? '全额' : '部分'}退款: ¥${getSelectedItemsTotal().toFixed(2)}`}
+                                label={translate(hasRefundHistory() || !areAllItemsSelected() ? 'pos.detail.partial_tag' : 'pos.detail.full_tag', {amount: getSelectedItemsTotal().toFixed(2)})}
                                 color="info"
                                 variant="outlined"
                                 size="small"
@@ -572,26 +564,26 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                 {/* 取消订单按钮（仅在符合状态时显示） */}
                 {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && (
                     <Button onClick={handleOrderDetailCancel} variant="contained" color="secondary">
-                        {refundReason ? (hasRefundHistory() ? "取消选中商品" : areAllItemsSelected() ? "立即取消" : "取消选中商品") : "申请取消"}
+                        {refundReason ? (hasRefundHistory() || !areAllItemsSelected() ? translate('pos.detail.cancel_selected') : translate('pos.detail.cancel_now')) : translate('pos.detail.apply_cancel')}
                     </Button>
                 )}
                 {/* 快速退款订单按钮（仅在符合状态时显示） */}
                 {orderData?.status === 1 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && hasRefundableItems() && (
                     <Button onClick={handleOrderRefund} variant="contained" color="error">
-                        {refundReason ? (hasRefundHistory() ? "退款选中商品" : areAllItemsSelected() ? "立即退款" : "退款选中商品") : "申请退款"}
+                        {refundReason ? (hasRefundHistory() || !areAllItemsSelected() ? translate('pos.detail.refund_selected') : translate('pos.detail.refund_now')) : translate('pos.detail.apply_refund')}
                     </Button>
                 )}
 
                 {/* 快速退款订单按钮（仅在符合状态时显示） */}
                 {orderData?.status === 16 && openOrderDetailWithReason === OpenReason.FastCancel && reasonDetails.action.length > 0 && hasRefundableItems() && (
                     <Button onClick={handleOrderRefund} variant="contained" color="error">
-                        {refundReason ? (hasRefundHistory() ? "退款选中商品" : areAllItemsSelected() ? "继续退款" : "退款选中商品") : "申请再次退款"}
+                        {refundReason ? (hasRefundHistory() || !areAllItemsSelected() ? translate('pos.detail.refund_selected') : translate('pos.detail.refund_continue')) : translate('pos.detail.refund_again')}
                     </Button>
                 )}
 
                 {/* 关闭按钮 */}
                 <Button onClick={onClose} variant="contained" color="primary">
-                    关闭
+                    {translate('pos.detail.close')}
                 </Button>
             </DialogActions>
             {alertComponent}

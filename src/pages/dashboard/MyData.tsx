@@ -28,17 +28,19 @@ import {
     CartesianGrid,
     ResponsiveContainer,
     Tooltip as ChartTooltip,
+    Legend,
 } from 'recharts';
 import CloseIcon from '@mui/icons-material/Close';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import axios from 'axios';
-import {useTranslate} from 'react-admin';
+import {useLocale, useTranslate} from 'react-admin';
 import {useCartContext} from '../../dataProvider/MyCartProvider';
 
 type NamedAmount = { id: number; name: string; amount: number; count: number; ratio: number };
 type NamedCount = { id: number; name: string; count: number; ratio: number };
 type HotProduct = { id: string; name: string; count: number; amount: number };
 type HourlyPoint = { hour: number; label: string; count: number; amount: number };
+type WeeklyPoint = { date: string; label: string; weekday: number; count: number; amount: number; isToday?: boolean };
 
 type StoreStats = {
     storeId: string;
@@ -65,6 +67,7 @@ type StoreStats = {
     pickups: NamedCount[];
     statuses: NamedCount[];
     hourly: HourlyPoint[];
+    weekly: WeeklyPoint[];
 };
 
 const COLORS = ['#fb8c00', '#2e7d32', '#1976d2', '#7b1fa2', '#d32f2f', '#00897b', '#5d4037', '#546e7a'];
@@ -94,6 +97,7 @@ const emptyStats = (): StoreStats => ({
     pickups: [],
     statuses: [],
     hourly: [],
+    weekly: [],
 });
 
 const money = (value?: number) => `¥${Number(value || 0).toFixed(2)}`;
@@ -127,6 +131,7 @@ function KpiCard({label, value, hint}: {label: string; value: string; hint?: str
 
 export default function MyDashboard() {
     const translate = useTranslate();
+    const locale = useLocale();
     const {setDataDrawerOpen, merchantId} = useCartContext();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<StoreStats>(emptyStats());
@@ -157,29 +162,61 @@ export default function MyDashboard() {
 
     const summary = stats.summary;
     const hourly = (stats.hourly || []).filter(item => item.count > 0 || item.amount > 0);
+    const weekly = (stats.weekly || []).map(item => {
+        const date = new Date(`${item.date}T00:00:00+08:00`);
+        const weekday = Number.isNaN(date.getTime())
+            ? item.label
+            : date.toLocaleDateString(locale === 'zh' ? 'zh-CN' : locale, {weekday: 'short'});
+        return {
+            ...item,
+            axis: `${item.label} ${weekday}`.trim(),
+        };
+    });
+    const hasWeekly = weekly.some(item => item.count > 0 || item.amount > 0);
+
+    const closeReport = () => setDataDrawerOpen(false);
 
     return (
-        <Box sx={{p: 3, maxHeight: '100vh', overflow: 'auto', position: 'relative', bgcolor: '#fafafa'}}>
-            <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2}}>
+        <Box sx={{display: 'flex', flexDirection: 'column', maxHeight: '92vh', bgcolor: '#fafafa'}}>
+            <Box
+                sx={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 3,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    px: 3,
+                    py: 1.5,
+                    bgcolor: '#fff',
+                    borderBottom: '1px solid #eee',
+                    flexShrink: 0,
+                }}
+            >
                 <Box>
                     <Typography variant="h5" sx={{fontWeight: 800}}>{translate('pos.sales.title')}</Typography>
                     <Typography variant="body2" color="text.secondary">
                         {stats.date || ''} · {translate('pos.sales.subtitle')}
                     </Typography>
                 </Box>
-                <Box>
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                     <Tooltip title={translate('pos.sales.refresh')}>
                         <IconButton onClick={load} disabled={loading}>
                             <RefreshIcon />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title={translate('pos.sales.close')}>
-                        <IconButton onClick={() => setDataDrawerOpen(false)}>
-                            <CloseIcon />
-                        </IconButton>
-                    </Tooltip>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        startIcon={<CloseIcon />}
+                        onClick={closeReport}
+                        sx={{fontWeight: 700, px: 2}}
+                    >
+                        {translate('pos.sales.close')}
+                    </Button>
                 </Box>
             </Box>
+            <Box sx={{p: 3, overflow: 'auto', flex: 1}}>
 
             {loading && (
                 <Box sx={{display: 'flex', justifyContent: 'center', py: 8}}>
@@ -210,6 +247,52 @@ export default function MyDashboard() {
                     </Grid>
                     <Grid item xs={6} md={2.4}>
                         <KpiCard label={translate('pos.sales.refund')} value={money(summary.refundAmount)} hint={translate('pos.sales.refund_count', {count: summary.refundCount})} />
+                    </Grid>
+
+                    <Grid item xs={12}>
+                        <Card elevation={0} sx={{border: '1px solid #eee', borderRadius: 2, height: 300}}>
+                            <CardContent>
+                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>{translate('pos.sales.weekly')}</Typography>
+                                {!hasWeekly ? (
+                                    <Typography color="text.secondary">{translate('pos.sales.no_weekly')}</Typography>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height={230}>
+                                        <LineChart data={weekly} margin={{top: 8, right: 16, left: 0, bottom: 0}}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="axis" tick={{fontSize: 12}} />
+                                            <YAxis yAxisId="amount" tickFormatter={(value) => `${value}`} width={56} />
+                                            <YAxis yAxisId="count" orientation="right" width={36} allowDecimals={false} />
+                                            <ChartTooltip
+                                                formatter={(value: number, name: string) =>
+                                                    name === translate('pos.chart.amount') ? money(value) : value
+                                                }
+                                            />
+                                            <Legend />
+                                            <Line
+                                                yAxisId="amount"
+                                                type="monotone"
+                                                dataKey="amount"
+                                                name={translate('pos.chart.amount')}
+                                                stroke="#1976d2"
+                                                strokeWidth={2.4}
+                                                dot={{r: 3}}
+                                                activeDot={{r: 5}}
+                                            />
+                                            <Line
+                                                yAxisId="count"
+                                                type="monotone"
+                                                dataKey="count"
+                                                name={translate('pos.sales.orders')}
+                                                stroke="#fb8c00"
+                                                strokeWidth={2}
+                                                strokeDasharray="5 4"
+                                                dot={{r: 3}}
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                )}
+                            </CardContent>
+                        </Card>
                     </Grid>
 
                     <Grid item xs={12} md={4}>
@@ -339,6 +422,7 @@ export default function MyDashboard() {
                     </Grid>
                 </Grid>
             )}
+            </Box>
         </Box>
     );
 }

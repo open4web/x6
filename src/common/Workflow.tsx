@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Step, StepLabel, Stepper, Typography, Skeleton } from "@mui/material";
 import { FormatTimestampAsTime } from "../utils/time";
+import {useTranslate} from 'react-admin';
 
 interface WorkflowStep {
     label: string;
@@ -16,11 +17,12 @@ interface OrderWorkflowProps {
 }
 
 const OrderWorkflow: React.FC<OrderWorkflowProps> = ({ workflow, loading = false }) => {
+    const translate = useTranslate();
     if (loading || !workflow) {
         return (
             <Box sx={{ width: "100%", padding: 2 }}>
                 <Typography variant="h6" gutterBottom>
-                    订单流程
+                    {translate('pos.detail.workflow')}
                 </Typography>
                 {[...Array(3)].map((_, index) => (
                     <Box key={index} sx={{ marginBottom: 2 }}>
@@ -37,7 +39,7 @@ const OrderWorkflow: React.FC<OrderWorkflowProps> = ({ workflow, loading = false
         return (
             <Box sx={{ width: "100%", padding: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                    暂无流程记录。
+                    {translate('pos.detail.no_workflow')}
                 </Typography>
             </Box>
         );
@@ -57,13 +59,13 @@ const OrderWorkflow: React.FC<OrderWorkflowProps> = ({ workflow, loading = false
                             {/* 展示 datetime 字段 */}
                             {step.datetime && (
                                 <Typography variant="body2" sx={{ color: "#616161" }}>
-                                    时间: {step.datetime}
+                                    {translate('pos.detail.time')}: {step.datetime}
                                 </Typography>
                             )}
                             {/* 如果没有 datetime 字段，则回退到 description */}
                             {!step.datetime && step.description && (
                                 <Typography variant="body2" sx={{ color: "#616161" }}>
-                                    时间: {step.description}
+                                    {translate('pos.detail.time')}: {step.description}
                                 </Typography>
                             )}
                             {/*兼容旧数据 datetime存储在 description */}
@@ -71,13 +73,13 @@ const OrderWorkflow: React.FC<OrderWorkflowProps> = ({ workflow, loading = false
                             {/*如果同时存在datetime和description 说明数据字段已经更新，使用新字段展示数据*/}
                             {step.datetime && step.description && (
                                 <Typography variant="body2" sx={{ color: "#616161" }}>
-                                    描述: {step.description}
+                                    {translate('pos.detail.desc')}: {step.description}
                                 </Typography>
                             )}
 
                             {step.operator && (
                                 <Typography variant="body2" sx={{ color: "#616161" }}>
-                                    操作人: {step.operator}
+                                    {translate('pos.detail.operator')}: {step.operator}
                                 </Typography>
                             )}
                         </Box>

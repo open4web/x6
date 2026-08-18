@@ -94,16 +94,24 @@ export default function MyDataDrawer() {
 
 
     return (
-        <div>
-            <Drawer open={dataDrawerOpen} onClose={toggleDrawer(false)} elevation={2} anchor="top">
-
-                {/* 订单内容
-                orderNo, phoneNumber, status, startDate, endDate
-                */}
-                <Box sx={{ padding: 2 }}>
-                    <MyDashboard/>
-                </Box>
-            </Drawer>
-        </div>
+        <Drawer
+            open={dataDrawerOpen}
+            onClose={toggleDrawer(false)}
+            elevation={8}
+            anchor="top"
+            ModalProps={{keepMounted: false}}
+            PaperProps={{
+                sx: {
+                    height: 'auto',
+                    maxHeight: '92vh',
+                    overflow: 'hidden',
+                    borderRadius: '0 0 16px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                },
+            }}
+        >
+            <MyDashboard />
+        </Drawer>
     );
 }

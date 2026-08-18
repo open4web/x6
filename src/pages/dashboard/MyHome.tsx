@@ -88,11 +88,13 @@ export const MyHome = () => {
         }
     }, [orderDrawerOpen, orderSyncStatus, resetOrderSync]);
 
-    const handleOrderArrived = useCallback((orderNo: string) => {
-        setInboundOrders(count => count + 1);
-        setFabPulse(true);
-        window.setTimeout(() => setFabPulse(false), 700);
-        startOrderListSync(orderNo);
+    const handleOrderArrived = useCallback((orderNo: string, kind?: string) => {
+        if (kind === 'paid' || !kind) {
+            setInboundOrders(count => count + 1);
+            setFabPulse(true);
+            window.setTimeout(() => setFabPulse(false), 700);
+            startOrderListSync(orderNo);
+        }
         clearOrderFlyEvent();
     }, [startOrderListSync, clearOrderFlyEvent]);
 
@@ -106,7 +108,7 @@ export const MyHome = () => {
                     <MyOrderDrawer/>
                     <MyDataDrawer/>
                     <OrderFlyOverlay
-                        event={dataDrawerOpen ? null : orderFlyEvent}
+                        event={dataDrawerOpen && (!orderFlyEvent?.kind || orderFlyEvent.kind === 'paid') ? null : orderFlyEvent}
                         targetEl={orderFabRef.current}
                         onArrived={handleOrderArrived}
                     />
@@ -240,6 +242,7 @@ export const MyHome = () => {
                             <Fab
                                 aria-label="Expand"
                                 color="inherit"
+                                data-fly-target="cart"
                                 sx={{
                                     position: 'fixed',
                                     bottom: 144,

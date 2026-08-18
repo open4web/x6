@@ -1,12 +1,43 @@
 import React, {useEffect, useState} from 'react';
 import {Box} from '@mui/material';
 import GradingIcon from '@mui/icons-material/Grading';
-import {OrderFlyEvent} from '../../../dataProvider/MyCartProvider';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import {OrderFlyEvent, OrderFlyKind} from '../../../dataProvider/MyCartProvider';
 
 type Props = {
     event: OrderFlyEvent | null;
     targetEl: HTMLElement | null;
-    onArrived?: (orderNo: string) => void;
+    onArrived?: (orderNo: string, kind: OrderFlyKind) => void;
+};
+
+function resolveEnd(event: OrderFlyEvent, targetEl: HTMLElement | null) {
+    if (typeof event.endX === 'number' && typeof event.endY === 'number') {
+        return {x: event.endX, y: event.endY};
+    }
+    const kind = event.kind || 'paid';
+    const selector = kind === 'hold' ? '[data-fly-target="hold"]' : kind === 'resume' ? '[data-fly-target="cart"]' : '';
+    const el = selector ? (document.querySelector(selector) as HTMLElement | null) : targetEl;
+    const rect = el?.getBoundingClientRect();
+    if (rect) {
+        return {x: rect.left + rect.width / 2, y: rect.top + rect.height / 2};
+    }
+    if (kind === 'hold') {
+        return {x: 40, y: 160};
+    }
+    if (kind === 'resume') {
+        return {x: window.innerWidth - 48, y: window.innerHeight - 172};
+    }
+    return {
+        x: (targetEl?.getBoundingClientRect().left ?? window.innerWidth - 56) + 28,
+        y: (targetEl?.getBoundingClientRect().top ?? window.innerHeight - 108) + 28,
+    };
+}
+
+const flyTheme: Record<OrderFlyKind, {bg: string; color: string; border: string}> = {
+    paid: {bg: '#fff8e1', color: '#e65100', border: '#ff9800'},
+    hold: {bg: '#e3f2fd', color: '#1565c0', border: '#42a5f5'},
+    resume: {bg: '#e8f5e9', color: '#2e7d32', border: '#66bb6a'},
 };
 
 function quad(p0: number, p1: number, p2: number, t: number) {
@@ -30,9 +61,9 @@ export default function OrderFlyOverlay({event, targetEl, onArrived}: Props) {
         }
         playedFlyIds.add(event.id);
 
-        const target = targetEl?.getBoundingClientRect();
-        const endX = (target?.left ?? window.innerWidth - 56) + (target?.width ?? 56) / 2;
-        const endY = (target?.top ?? window.innerHeight - 108) + (target?.height ?? 56) / 2;
+        const end = resolveEnd(event, targetEl);
+        const endX = end.x;
+        const endY = end.y;
         const startX = event.startX;
         const startY = event.startY;
         const midX = (startX + endX) / 2;
@@ -55,7 +86,7 @@ export default function OrderFlyOverlay({event, targetEl, onArrived}: Props) {
             if (t < 1) {
                 frame = requestAnimationFrame(tick);
             } else {
-                onArrived?.(event.orderNo);
+                onArrived?.(event.orderNo, event.kind || 'paid');
             }
         };
 
@@ -69,7 +100,10 @@ export default function OrderFlyOverlay({event, targetEl, onArrived}: Props) {
         return null;
     }
 
-    const label = event.orderNo ? `#${event.orderNo.slice(-6)}` : '订单';
+    const kind = event.kind || 'paid';
+    const theme = flyTheme[kind];
+    const label = event.orderNo ? `#${event.orderNo.slice(-6)}` : '#';
+    const Icon = kind === 'hold' ? PauseCircleOutlineIcon : kind === 'resume' ? ShoppingCartIcon : GradingIcon;
 
     return (
         <Box
@@ -90,9 +124,9 @@ export default function OrderFlyOverlay({event, targetEl, onArrived}: Props) {
                     gap: 0.75,
                     px: 1.25,
                     py: 0.75,
-                    bgcolor: '#fff8e1',
-                    color: '#e65100',
-                    border: '2px solid #ff9800',
+                    bgcolor: theme.bg,
+                    color: theme.color,
+                    border: `2px solid ${theme.border}`,
                     borderRadius: 1.5,
                     boxShadow: '0 8px 22px rgba(0,0,0,0.28)',
                     fontWeight: 700,
@@ -100,7 +134,7 @@ export default function OrderFlyOverlay({event, targetEl, onArrived}: Props) {
                     whiteSpace: 'nowrap',
                 }}
             >
-                <GradingIcon fontSize="small" />
+                <Icon fontSize="small" />
                 {label}
             </Box>
         </Box>

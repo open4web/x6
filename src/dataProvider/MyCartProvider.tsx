@@ -5,11 +5,16 @@ import {CartItem, CartItemHolder} from "../common/types";
 
 export type OrderSyncStatus = 'idle' | 'syncing' | 'ready';
 
+export type OrderFlyKind = 'paid' | 'hold' | 'resume';
+
 export type OrderFlyEvent = {
     id: number;
     orderNo: string;
     startX: number;
     startY: number;
+    kind?: OrderFlyKind;
+    endX?: number;
+    endY?: number;
 };
 
 type CartContextType = {
@@ -44,7 +49,11 @@ type CartContextType = {
     startPaymentWatch: (orderNo: string) => void;
     notifyOrderPaid: (orderNo: string) => void;
     orderFlyEvent: OrderFlyEvent | null;
-    triggerOrderFly: (orderNo: string, start?: {x: number; y: number}) => void;
+    triggerOrderFly: (orderNo: string, opts?: {
+        start?: {x: number; y: number};
+        end?: {x: number; y: number};
+        kind?: OrderFlyKind;
+    }) => void;
     clearOrderFlyEvent: () => void;
     orderSyncStatus: OrderSyncStatus;
     orderSyncProgress: number;
@@ -101,12 +110,19 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
 
     const [orderFlyEvent, setOrderFlyEvent] = useState<OrderFlyEvent | null>(null);
 
-    const triggerOrderFly = useCallback((orderNo: string, start?: {x: number; y: number}) => {
+    const triggerOrderFly = useCallback((orderNo: string, opts?: {
+        start?: {x: number; y: number};
+        end?: {x: number; y: number};
+        kind?: OrderFlyKind;
+    }) => {
         setOrderFlyEvent({
             id: Date.now(),
             orderNo,
-            startX: start?.x ?? window.innerWidth - 220,
-            startY: start?.y ?? window.innerHeight / 2,
+            startX: opts?.start?.x ?? window.innerWidth - 220,
+            startY: opts?.start?.y ?? window.innerHeight / 2,
+            endX: opts?.end?.x,
+            endY: opts?.end?.y,
+            kind: opts?.kind || 'paid',
         });
     }, []);
 
@@ -127,8 +143,11 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
         setWatchingOrderNo('');
         setDrawerOpen(false);
         triggerOrderFly(orderNo, {
-            x: window.innerWidth / 2,
-            y: window.innerHeight / 2,
+            start: {
+                x: window.innerWidth / 2,
+                y: window.innerHeight / 2,
+            },
+            kind: 'paid',
         });
     }, [triggerOrderFly]);
 
