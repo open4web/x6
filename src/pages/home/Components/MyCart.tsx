@@ -347,7 +347,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         // setHasNotTicket(false)
     }
 
-    const handleSaveResult = (value: {tableNo: string; seatId?: string; people?: number} | string) => {
+    const handleSaveResult = (value: {tableNo: string; seatId?: string; people?: number; intent?: string} | string) => {
         const tableNo = typeof value === 'string' ? value : value.tableNo;
         if (!tableNo || tableNo.trim() === "") {
             return;
@@ -360,6 +360,9 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             localStorage.setItem('peopleNumber', String(value.people));
         }
         setHasNotTicket(false);
+        if (typeof value !== 'string' && value.intent === 'add') {
+            return;
+        }
         setTimeout(() => {
             handlePlaceOrder();
         }, 300);

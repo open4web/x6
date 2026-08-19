@@ -80,7 +80,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
     const handleItemSelect = (itemId: string) => {
         // 检查商品是否已退款，已退款的不允许选择
         const item = orderData.buckets.find(b => b.id === itemId);
-        if (item && item.status === 1) {
+        if (item && item.status === 8) {
             return; // 已退款，不处理选择
         }
 
@@ -96,7 +96,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         if (selectAll) {
             orderData.buckets.forEach(item => {
                 // 只选择未退款的商品
-                if (item.status !== 1) {
+                if (item.status !== 8) {
                     newSelected[item.id] = true;
                 }
             });
@@ -106,7 +106,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
 
     // 获取可选择的商品（未退款的）
     const getSelectableItems = () => {
-        return orderData.buckets.filter(item => item.status !== 1);
+        return orderData.buckets.filter(item => item.status !== 8);
     };
 
     // 获取选中的商品ID列表
@@ -117,7 +117,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
     // 获取选中商品的总金额
     const getSelectedItemsTotal = (): number => {
         return orderData.buckets.reduce((total, item) => {
-            if (selectedItems[item.id] && item.status !== 1) { // 只计算未退款的选中商品
+            if (selectedItems[item.id] && item.status !== 8) { // 只计算未退款的选中商品
                 return total + (item.price * item.number);
             }
             return total;
@@ -134,13 +134,13 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
     // 检查是否有选中的商品
     const hasSelectedItems = (): boolean => {
         return Object.keys(selectedItems).some(id =>
-            selectedItems[id] && orderData.buckets.find(b => b.id === id)?.status !== 1
+            selectedItems[id] && orderData.buckets.find(b => b.id === id)?.status !== 8
         );
     };
 
     // 检查是否有可退款的商品
     const hasRefundableItems = (): boolean => {
-        return orderData?.buckets?.some(item => item.status !== 1);
+        return orderData?.buckets?.some(item => item.status !== 8);
     };
 
     // 检查是否有退款记录
@@ -333,12 +333,12 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                             <span>{translate('pos.detail.item_status')}</span>
                         </div>
                         {orderData?.buckets?.map((bucket) => (
-                            <div className={`item ${bucket.status === 1 ? 'refunded' : ''}`} key={bucket.id}>
+                            <div className={`item ${bucket.status === 8 ? 'refunded' : ''}`} key={bucket.id}>
                                 <span>{bucket.name}</span>
                                 <span>¥{bucket.price.toFixed(2)}</span>
                                 <span>{bucket.number}</span>
                                 <span>¥{(bucket.price * bucket.number).toFixed(2)}</span>
-                                <span>{bucket.status === 1 ? translate('pos.detail.refunded') : translate('pos.detail.normal')}</span>
+                                <span>{bucket.status === 8 ? translate('pos.detail.refunded') : translate('pos.detail.normal')}</span>
                             </div>
                         ))}
                     </div>
@@ -367,7 +367,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                     <CardContent>
                         <List>
                             {orderData && orderData?.buckets && orderData?.buckets.map((bucket) => {
-                                const isRefunded = bucket.status === 1;
+                                const isRefunded = bucket.status === 8;
                                 return (
                                     <React.Fragment key={bucket.id}>
                                         <ListItem sx={{
