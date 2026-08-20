@@ -162,22 +162,29 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         // 即使全选也要传，因为这是部分退款（相对于原始订单）
         const shouldSendItems = hasHistory || selectedIds.length > 0;
 
-        let url = `/v1/hlj/order/fastCancel/${orderData.id}/${refundReason}`;
+        const payload: {
+            order_id: string;
+            reason: string;
+            items?: string[];
+        } = {
+            order_id: orderData.id,
+            reason: refundReason,
+        };
 
         if (shouldSendItems && selectedIds.length > 0) {
-            url += `?items=${selectedIds.join(',')}`;
+            payload.items = selectedIds;
         }
 
         fetchData(
-            url,
+            `/v1/hlj/order/fastCancel`,
             (response) => {
-                console.log("订单取消成功 =>", response);
+                console.log("退款成功 =>", response);
                 onClose();
             },
             'PUT',
-            '',
+            payload,
         ).catch(() => {
-            console.log('Failed to cancel order.');
+            console.log('Failed to process refund.');
         });
     };
 
@@ -188,27 +195,33 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
         }
 
         const selectedIds = getSelectedItemIds();
-        // 检查是否有退款记录
         const hasHistory = hasRefundHistory();
 
-        // 如果有退款记录，则必须传items参数
+        // 如果有退款记录，则必须传 items
         // 即使全选也要传，因为这是部分退款（相对于原始订单）
         const shouldSendItems = hasHistory || selectedIds.length > 0;
 
-        let url = `/v1/hlj/order/fastRefund/${orderData.id}/${refundReason}`;
+        const payload: {
+            order_id: string;
+            reason: string;
+            items?: string[];
+        } = {
+            order_id: orderData.id,
+            reason: refundReason,
+        };
 
         if (shouldSendItems && selectedIds.length > 0) {
-            url += `?items=${selectedIds.join(',')}`;
+            payload.items = selectedIds;
         }
 
         fetchData(
-            url,
+            `/v1/hlj/order/fastRefund`,
             (response) => {
                 console.log("退款成功 =>", response);
                 onClose();
             },
             'PUT',
-            '',
+            payload,
         ).catch(() => {
             console.log('Failed to process refund.');
         });
