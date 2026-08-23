@@ -22,11 +22,11 @@ export function authHeaders(): Record<string, string> {
 export function orderWsUrl(path = '/v1/hlj/order/ws') {
     const token = readAuthToken();
     const params = new URLSearchParams();
-    if (token) {
-        params.set('token', token);
-        params.set('jwt', token);
-        params.set('authorization', `Bearer ${token}`);
-    }
+    // if (token) {
+    //     params.set('token', token);
+    //     params.set('jwt', token);
+    //     params.set('authorization', `Bearer ${token}`);
+    // }
     const userId = localStorage.getItem('user_id') || '';
     if (userId) {
         params.set('user_id', userId);

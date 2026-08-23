@@ -107,21 +107,21 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             console.log('支付 WebSocket 断开');
             wsRef.current = null;
             // 可自动重连
-            setTimeout(connectPaymentWS, 3000);
+            // setTimeout(connectPaymentWS, 3000);
         };
 
         ws.onerror = (err) => console.error('支付 WebSocket 错误', err);
     };
 
-    useEffect(() => {
-        connectPaymentWS();
-
-        return () => {
-            if (wsRef.current) {
-                wsRef.current.close();
-            }
-        };
-    }, [orderID]);
+    // useEffect(() => {
+    //     connectPaymentWS();
+    //
+    //     return () => {
+    //         if (wsRef.current) {
+    //             wsRef.current.close();
+    //         }
+    //     };
+    // }, [orderID]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
