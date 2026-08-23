@@ -1,26 +1,16 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
 import Slide from "@mui/material/Slide";
 import {TransitionProps} from "@mui/material/transitions";
 import PaymentDialog from "../../../common/PaymentDialog";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {useFetchData} from "../../../common/FetchData";
 import {CartItem, MyCartProps} from "../../../common/types";
-import RemoveIcon from "@mui/icons-material/RemoveCircleOutline";
-import AddCircleIcon from '@mui/icons-material/AddCircle';
 import {FormatDate} from "../../../common/MyDatetime";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
@@ -29,9 +19,11 @@ import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import TablePicker from "../../../common/TablePicker";
 import {readStoreTables, writeStoreTables} from "../../../utils/storeCache";
-import {Alert, FormControl, FormControlLabel, LinearProgress, Radio, RadioGroup} from "@mui/material";
+import {Alert, FormControl, FormControlLabel, Radio, RadioGroup} from "@mui/material";
 import {ComboGroup, ComboMatchResult, MatchedCombo} from "../types";
 import {convertToOrderRequest} from "../../../utils/time";
+import {cartPanelWidth, useCartStyle} from "../../../layout/cartStyle";
+import {CartItemList} from "./CartItemLayouts";
 
 import {
     Storefront,
@@ -63,6 +55,10 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     const [openPeople, setOpenPeople] = React.useState(false);
     const [openPhone, setOpenPhone] = React.useState(false);
     const [hasNotTicket, setHasNotTicket] = React.useState(false);
+    const [needAddress, setNeedAddress] = React.useState(false);
+    const [address, setAddress] = React.useState(() => localStorage.getItem('deliveryAddress') || '');
+    const [receiver, setReceiver] = React.useState(() => localStorage.getItem('deliveryReceiver') || '');
+    const [cartStyle] = useCartStyle();
     const [orderCount, setOrderCount] = React.useState(0);
     const [totalItems, setTotalItems] = React.useState(0);
     const [estimatedWait, setEstimatedWait] = React.useState(0);
@@ -188,8 +184,14 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     }
 
     const handlePickChange = (event: { target: { value: any; }; }) => {
-        setPick(Number(event.target.value));
+        const next = Number(event.target.value);
+        setPick(next);
+        if (next !== 1) {
+            setNeedAddress(false);
+        }
     };
+
+    const isTakeout = pick === 1;
 
     const handlePlaceOrder = async () => {
         if (!ready) {
@@ -197,33 +199,49 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         }
         const ticketNumber = localStorage.getItem('ticketNumber');
         const seatId = localStorage.getItem('selectedSeatId') || '';
+        const phone = localStorage.getItem('phoneNumber') || '';
+        const deliveryAddress = address.trim();
 
-        if (!ticketNumber || ticketNumber.trim() === "") {
+        if (isTakeout) {
+            if (!deliveryAddress) {
+                setNeedAddress(true);
+                return;
+            }
+            localStorage.setItem('deliveryAddress', deliveryAddress);
+            if (receiver.trim()) {
+                localStorage.setItem('deliveryReceiver', receiver.trim());
+            }
+            setNeedAddress(false);
+            setHasNotTicket(false);
+        } else if (!ticketNumber || ticketNumber.trim() === "") {
             setHasNotTicket(true);
             setOpenTicket(true);
             return;
+        } else {
+            setHasNotTicket(false);
         }
 
-        // 如果已经有座位号，则直接继续执行结算逻辑
-        setHasNotTicket(false);
-
-        // 增加 seat 和 phone 等信息
         const newOrderRequest = {
             at: localStorage.getItem("current_store_id") as string,
             buckets: convertToOrderRequest(cartItems),
-            seat: localStorage.getItem('ticketNumber'),
-            phone: localStorage.getItem('phoneNumber'),
+            seat: isTakeout ? '' : localStorage.getItem('ticketNumber'),
+            phone,
             people: localStorage.getItem('peopleNumber'),
             pick: pick,
+            address: isTakeout ? deliveryAddress : '',
+            take_out: isTakeout ? {
+                address: deliveryAddress,
+                receiver: receiver.trim(),
+                rec_phone: phone,
+            } : undefined,
         };
 
-        // 执行下单请求
         await fetchData('/v1/hlj/order/pos', (response) => {
             const createdOrderNo = response?.identity?.order_no || "";
             setPrice(response?.price || 0);
             setOrderID(createdOrderNo);
             setOpenPayChannel(true);
-            if (seatId) {
+            if (!isTakeout && seatId) {
                 occupyCurrentSeat(createdOrderNo, seatId);
             }
 
@@ -391,6 +409,22 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         return matchComboGroups(cartItems, comboGroup);
     }, [cartItems]);
 
+    const changeQty = (item: CartItem, delta: number) => {
+        setCartItems(prevItems =>
+            prevItems.map(it =>
+                it.id === item.id && it.desc === item.desc
+                    ? {...it, quantity: Math.max(1, it.quantity + delta)}
+                    : it
+            )
+        );
+    };
+
+    const removeItem = (item: CartItem) => {
+        setCartItems(prevItems =>
+            prevItems.filter(it => !(it.id === item.id && it.desc === item.desc))
+        );
+    };
+
     function getDialog() {
         return (
             <PaymentDialog
@@ -408,162 +442,52 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         );
     }
 
+    const docked = cartStyle === 'dock';
+    const ticketLook = cartStyle === 'ticket';
+
     return (
-        <Box sx={{width: 400, padding: 1}}>
+        <Box sx={{
+            width: cartPanelWidth(cartStyle),
+            padding: 1,
+            bgcolor: ticketLook ? '#fffaf3' : docked ? '#fafafa' : 'background.paper',
+            minHeight: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+        }}>
 
             {
-                hasNotTicket && (
+                hasNotTicket && !isTakeout && (
                     <Alert variant={'standard'} color="error">
                         {translate('pos.cart.need_table')}
                     </Alert>
                 )
             }
+            {
+                needAddress && isTakeout && (
+                    <Alert variant={'standard'} color="error">
+                        {translate('pos.cart.need_address')}
+                    </Alert>
+                )
+            }
 
             {alertComponent}
-            <Typography variant="h5" sx={{textAlign: 'center', mb: 2}}>
+            <Typography variant="h5" sx={{
+                textAlign: 'center',
+                mb: 2,
+                letterSpacing: ticketLook ? 3 : 0,
+                fontFamily: ticketLook ? 'ui-monospace, Menlo, monospace' : undefined,
+            }}>
                 {translate('pos.cart.title')}
             </Typography>
-            <List>
-                {cartItems.map((item) => (
-                    <ListItem key={item.id} sx={{display: 'flex', alignItems: 'center'}}>
-                        <ListItemText
-                            primary={
-                                <Box sx={{position: 'relative', paddingTop: item.combName ? '0.9rem' : '0.9rem'}}>
-                                    {item.combName && (
-                                        <Typography
-                                            variant="caption"
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                fontSize: '0.65rem', // 字体小一点
-                                                fontWeight: 'bold', // 加粗
-                                                color: '#d32f2f', // 深红色，提高对比度
-                                            }}
-                                        >
-                                            {item.combName}
-                                        </Typography>
-                                    )}
-                                    {!item.combName && (
-                                        <Typography
-                                            variant="caption"
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                fontSize: '0.65rem', // 字体小一点
-                                                fontWeight: 'bold', // 加粗
-                                                color: 'gray', // 深红色，提高对比度
-                                            }}
-                                        >
-                                            {item.kindName}
-                                        </Typography>
-                                    )}
-                                    <Typography variant="body1">{item.name}</Typography>
-                                </Box>
-                            }
-                            secondary={item.desc}
-                        />
-
-                        <Box sx={{display: 'flex', alignItems: 'center', gap: 0.1}}>
-
-                            <IconButton
-                                onClick={() =>
-                                    setCartItems((prevItems) =>
-                                        prevItems.map((it) =>
-                                            it.id === item.id && it.desc === item.desc
-                                                ? {...it, quantity: Math.max(1, it.quantity - 1)}
-                                                : it
-                                        )
-                                    )
-                                }
-                                size="small"
-                                // disabled={!!item.combName} // 如果 combName 存在，则禁用按钮
-                            >
-                                <RemoveIcon/>
-                            </IconButton>
-                            <TextField
-                                type="text"
-                                size="small"
-                                disabled={true}
-                                value={item.quantity}
-                                onChange={(e) =>
-                                    setCartItems((prevItems) =>
-                                        prevItems.map((it) =>
-                                            it.id === item.id && it.desc === item.desc
-                                                ? {...it, quantity: Math.max(1, Math.min(10, Number(e.target.value)))} // 限制范围 1-10
-                                                : it
-                                        )
-                                    )
-                                }
-                                inputProps={{
-                                    style: {textAlign: 'center'}, // 让输入的文本居中
-                                }}
-                                sx={{
-                                    width: 50, // 适当缩小宽度，更紧凑
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderWidth: '1px', // 边框变细
-                                        },
-                                        '&:hover fieldset': {
-                                            borderWidth: '1px', // 悬停时保持细边框
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderWidth: '1px', // 聚焦时也保持细边框
-                                        },
-                                    },
-                                    '& input': {
-                                        textAlign: 'center', // 确保文本在输入框中居中
-                                        padding: '4px 0', // 减少内边距，使其更紧凑
-                                        fontSize: '0.9rem', // 字体稍微调小
-                                    },
-                                }}
-                            />
-                            <IconButton
-                                onClick={() =>
-                                    setCartItems((prevItems) =>
-                                        prevItems.map((it) =>
-                                            it.id === item.id && it.desc === item.desc
-                                                ? {...it, quantity: it.quantity + 1}
-                                                : it
-                                        )
-                                    )
-                                }
-                                size="small"
-                                // disabled={!!item.combName} // 如果 combName 存在，则禁用按钮
-                            >
-                                <AddCircleIcon/>
-                            </IconButton>
-                            <Typography
-                                variant="h6"
-                                sx={{
-                                    fontWeight: 'bold',
-                                    color: 'darkorange',
-                                    textAlign: "right",
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    fontFamily: 'monospace', // 确保数字等宽
-                                    minWidth: '60px', // 设定最小宽度，避免价格长度变化导致对齐问题
-                                    justifyContent: 'flex-end' // 让价格靠右对齐
-                                }}
-                            >
-                                {item.price.toFixed(2)}
-                            </Typography>
-                        </Box>
-                        <ListItemSecondaryAction>
-                            <IconButton edge="end" onClick={() =>
-                                setCartItems((prevItems) =>
-                                    prevItems.filter(
-                                        (it) => !(it.id === item.id && it.desc === item.desc)
-                                    )
-                                )
-                            }>
-                                <DeleteIcon color={"error"}/>
-                            </IconButton>
-                        </ListItemSecondaryAction>
-                    </ListItem>
-                ))}
-            </List>
+            <Box sx={{flex: 1, overflowY: 'auto'}}>
+                <CartItemList
+                    items={cartItems}
+                    styleName={cartStyle}
+                    onInc={item => changeQty(item, 1)}
+                    onDec={item => changeQty(item, -1)}
+                    onRemove={removeItem}
+                />
+            </Box>
             <Divider sx={{my: 2}}/>
             {/* Display combo meal summaries if there are any */}
             <div>
@@ -594,7 +518,16 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             </div>
             <Divider sx={{my: 2}}/>
 
-            <Typography variant="h6" sx={{fontWeight: 'bold', color: 'red', textAlign: "right"}}>
+            <Typography variant="h6" sx={{
+                fontWeight: 'bold',
+                textAlign: 'right',
+                bgcolor: docked ? '#3e2723' : 'transparent',
+                color: docked ? '#ffcc80' : 'red',
+                px: docked ? 1.5 : 0,
+                py: docked ? 1 : 0,
+                borderRadius: docked ? 1 : 0,
+                mt: docked ? 1 : 0,
+            }}>
                 {translate('pos.cart.total')}: ¥{totalPrice.toFixed(2)}
             </Typography>
 
@@ -705,6 +638,35 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                 </RadioGroup>
             </FormControl>
 
+            {isTakeout && (
+                <Box sx={{mt: 1.5, display: 'flex', flexDirection: 'column', gap: 1}}>
+                    <TextField
+                        size="small"
+                        required
+                        error={needAddress && !address.trim()}
+                        label={translate('pos.cart.address')}
+                        placeholder={translate('pos.cart.address_ph')}
+                        value={address}
+                        onChange={event => {
+                            setAddress(event.target.value);
+                            if (event.target.value.trim()) {
+                                setNeedAddress(false);
+                            }
+                        }}
+                        multiline
+                        minRows={2}
+                        fullWidth
+                    />
+                    <TextField
+                        size="small"
+                        label={translate('pos.cart.receiver')}
+                        value={receiver}
+                        onChange={event => setReceiver(event.target.value)}
+                        fullWidth
+                    />
+                </Box>
+            )}
+
             <Divider sx={{my: 2}}/>
 
             <Box sx={{display: "flex", justifyContent: "space-between", gap: 2}}>
@@ -736,6 +698,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     {translate('pos.cart.checkout')}
                 </Button>
             </Box>
+            {!isTakeout && (
             <Button
                 variant="outlined"
                 color="primary"
@@ -745,6 +708,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             >
                 {translate('pos.cart.view_seats')}
             </Button>
+            )}
             <TablePicker
                 open={openSeatBoard}
                 setOpen={setOpenSeatBoard}

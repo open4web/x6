@@ -1,44 +1,19 @@
 import React, {useEffect, useState} from 'react';
 import {
     Box,
-    Button,
-    Card,
-    CardActions,
-    CardContent, Chip,
     Container,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
     Slide,
-    Table,
-    TableBody,
-    TableRow,
-    Typography,
 } from '@mui/material';
-import TableCell from '@mui/material/TableCell';
 import {TransitionProps} from '@mui/material/transitions';
 import {useFetchData} from '../../../common/FetchData';
-import {FormatTimestampAsTime} from '../../../utils/time';
 import MyOrderDetail, {OpenReason} from '../../../common/MyOrderDetail';
 import PaymentDialog from '../../../common/PaymentDialog';
 import {Order} from './types';
-import ExpandCircleDownIcon from '@mui/icons-material/ExpandCircleDown';
-import PublishedWithChangesIcon from '@mui/icons-material/PublishedWithChanges';
-import SubscriptIcon from '@mui/icons-material/Subscript';
-import CancelIcon from '@mui/icons-material/Cancel';
 import {isOrderExpired} from "../../../utils/expireStore";
 import {MyOrderSkeleton} from "../../../common/MyOrderSkeleton";
-import { orderStatusMap } from '../../../common/orderStatus';
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
-import {useTranslate} from 'react-admin';
-
-const statusColors = ['#ffe0b2', '#c5e1a5']; // OrderInit, OrderPaid
-
-function getStatusColor(status: number) {
-    return statusColors[status] || '#ffffff';
-}
+import {orderCardWidth, useOrderCardStyle} from '../../../layout/orderCardStyle';
+import {OrderCardFace} from './OrderCardLayouts';
 
 interface MyOrderProps {
     orderNo?: string;
@@ -85,14 +60,8 @@ function generateQueryParams({ orderNo, status, startDate, endDate, source , onl
     return queryParams;
 }
 
-// 计算订单中所有商品的总数量
-function calculateTotalItems(buckets: any[]): number {
-    return buckets?.reduce((total, bucket) => total + bucket.number, 0);
-}
-
 function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onlyMyOrder, setTotalRecord , saleStatus}: MyOrderProps) {
     const [orders, setOrders] = useState<Order[]>([]);
-    const [viewMode, setViewMode] = useState('list');
     const [loading, setLoading] = useState<boolean>(true); // 添加加载状态
     const [openPayChannel, setOpenPayChannel] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null); // 保存选中的订单
@@ -102,7 +71,8 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
     const [highlightOrderId, setHighlightOrderId] = useState(''); // 高亮订单 ID
     const { fetchData, alertComponent } = useFetchData();
     const { highlightOrderNo, setHighlightOrderNo } = useCartContext();
-    const translate = useTranslate();
+    const [cardStyle] = useOrderCardStyle();
+    const cardWidth = orderCardWidth(cardStyle);
 
     useEffect(() => {
         // 每次请求都先设定加载骨架
@@ -203,128 +173,15 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                 {loading
                     ? Array.from({ length: 4 }).map((_, index) => MyOrderSkeleton(index))
                     : orders?.map((order) => (
-                        <Box key={order.id} sx={{ flexShrink: 0, width: 300 }}>
-                            <Card
-                                variant="outlined"
-                                sx={{
-                                    backgroundColor: getStatusColor(order.status),
-                                    boxShadow: 3,
-                                    padding: 0,
-                                    borderRadius: 1,
-                                    border: highlightOrderId === order?.identity?.order_no ? '3px solid #FF5722' : '1px solid transparent',
-                                    animation: highlightOrderId === order?.identity?.order_no ? 'orderShake 0.28s ease-in-out 2' : 'none',
-                                    transformOrigin: 'center center',
-                                }}
-                            >
-                                <CardContent>
-                                    <Typography
-                                        variant="body1"
-                                        sx={{
-                                            fontWeight: 'bold',
-                                            color: '#3e2723',
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <Box>
-                                            {`#${order?.identity?.order_no}`}
-                                            {order?.identity?.table_no && (
-                                                <Typography
-                                                    component="span"
-                                                    variant="body1"
-                                                    sx={{
-                                                        fontWeight: 'normal',
-                                                        color: '#6d4c41',
-                                                        marginLeft: 1,
-                                                    }}
-                                                >
-                                                    {`@${order?.identity?.table_no}`}
-                                                </Typography>
-                                            )}
-                                        </Box>
-                                    </Typography>
-
-                                    {/* 显示订单总金额和商品总数 */}
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, gap: 0.5, flexWrap: 'nowrap' }}>
-                                        <Typography variant="body2" noWrap sx={{ fontWeight: 'bold', color: '#d32f2f', flexShrink: 0 }}>
-                                            {translate('pos.cart.total')}: ¥{order.price?.pay_price?.toFixed(2)}
-                                        </Typography>
-
-                                        {/* 添加状态展示 */}
-                                        {(() => {
-                                            const statusInfo = orderStatusMap.find(item => item.id === order.status);
-                                            if (statusInfo) {
-                                                return (
-                                                    <Chip
-                                                        label={translate(`pos.status.${order.status}`, {_: statusInfo.name})}
-                                                        size="small"
-                                                        sx={{
-                                                            backgroundColor: 'darkgray',
-                                                            color: `${statusInfo.color}`,
-                                                            fontWeight: 'bold',
-                                                            flexShrink: 0,
-                                                            height: 22,
-                                                            '& .MuiChip-label': {whiteSpace: 'nowrap', px: 0.75},
-                                                        }}
-                                                    />
-                                                );
-                                            }
-                                            return null;
-                                        })()}
-
-                                        <Typography variant="body2" noWrap sx={{ color: '#6d4c41', flexShrink: 0 }}>
-                                            {translate('pos.list.items', {count: calculateTotalItems(order.buckets)})}
-                                        </Typography>
-                                    </Box>
-
-                                    <Box sx={{ height: 100, overflowY: 'auto' }}>
-                                        <Table size="small" aria-label="buckets table">
-                                            <TableBody>
-                                                {order.buckets?.map((bucket) => (
-                                                    <TableRow key={bucket.id}>
-                                                        <TableCell align="left" sx={{ color: '#333333', padding: '2px 4px' }}>
-                                                            {bucket.name}
-                                                        </TableCell>
-                                                        <TableCell align="left" sx={{ color: '#333333', padding: '2px 4px' }}>
-                                                            {`${bucket.number} ${bucket.unit}`}
-                                                        </TableCell>
-                                                        <TableCell align="left" sx={{ color: '#333333', padding: '2px 4px' }}>
-                                                            {`¥${bucket.price}`}
-                                                        </TableCell>
-                                                        <TableCell align="left" sx={{ color: '#333333', padding: '2px 4px', fontSize: 8 }}>
-                                                            {bucket.props_text}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </Box>
-                                </CardContent>
-                                <CardActions>
-                                    <Typography component="span" variant="body1" sx={{ fontWeight: 'normal', color: '#3e2723', marginLeft: 1 }}>
-                                        {FormatTimestampAsTime(order.stp.created_at)}
-                                    </Typography>
-                                    {order?.status === 0 && (
-                                        <Button size="large" color="info" onClick={() => handleContinuePay(order)}>
-                                            {translate('pos.list.pay')}
-                                        </Button>
-                                    )}
-                                    {order?.status === 1 && (
-                                        <IconButton aria-label="delete" size="large" color="error" onClick={() => handleOrderCancel(order)}>
-                                            <CancelIcon />
-                                        </IconButton>
-                                    )}
-                                    {order?.status === 16 && (
-                                        <IconButton aria-label="delete" size="large" color="error" onClick={() => handleOrderCancel(order)}>
-                                            <SubscriptIcon />
-                                        </IconButton>
-                                    )}
-                                    <IconButton aria-label="delete" size="large" color="success" onClick={() => handleOrderDetail(order)}>
-                                        <ExpandCircleDownIcon />
-                                    </IconButton>
-                                </CardActions>
-                            </Card>
+                        <Box key={order.id} sx={{ flexShrink: 0, width: cardWidth }}>
+                            <OrderCardFace
+                                styleName={cardStyle}
+                                order={order}
+                                highlighted={highlightOrderId === order?.identity?.order_no}
+                                onPay={handleContinuePay}
+                                onCancel={handleOrderCancel}
+                                onDetail={handleOrderDetail}
+                            />
                         </Box>
                     ))}
             </Box>

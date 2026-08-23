@@ -10,6 +10,7 @@ import NumericKeyboardDialog from "./NumericKeyboardDialog";
 import PayCodeDisplay from "./PayCodeInput";
 import MemberBalancePay from './MemberBalancePay';
 import {useTranslate} from 'react-admin';
+import {orderWsUrl, readAuthToken} from '../utils/authToken';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -62,15 +63,24 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
     const connectPaymentWS = () => {
         if (wsRef.current) return;
 
-        const ws = new WebSocket('/v1/hlj/order/ws');   // 或你的支付专用 ws 地址
+        const token = readAuthToken();
+        const ws = new WebSocket(orderWsUrl('/v1/hlj/order/ws'));
         wsRef.current = ws;
 
         ws.onopen = () => {
             console.log('支付监听 WebSocket 已连接');
-            // 可选：订阅当前订单
+            if (token) {
+                ws.send(JSON.stringify({
+                    type: 'auth',
+                    token,
+                    authorization: `Bearer ${token}`,
+                }));
+            }
             ws.send(JSON.stringify({
                 type: 'subscribe',
-                order_id: orderID
+                order_id: orderID,
+                token,
+                authorization: token ? `Bearer ${token}` : '',
             }));
         };
 
