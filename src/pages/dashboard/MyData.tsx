@@ -32,6 +32,9 @@ import {
 } from 'recharts';
 import CloseIcon from '@mui/icons-material/Close';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
 import axios from 'axios';
 import {useLocale, useTranslate} from 'react-admin';
 import {useCartContext} from '../../dataProvider/MyCartProvider';
@@ -41,6 +44,30 @@ type NamedCount = { id: number; name: string; count: number; ratio: number };
 type HotProduct = { id: string; name: string; count: number; amount: number };
 type HourlyPoint = { hour: number; label: string; count: number; amount: number };
 type WeeklyPoint = { date: string; label: string; weekday: number; count: number; amount: number; isToday?: boolean };
+
+type DurationStat = {count: number; avgSeconds: number; maxSeconds: number};
+type DurationStats = {
+    payToMaking: DurationStat;
+    makingToReady: DurationStat;
+    payToReady: DurationStat;
+};
+type StaffRank = {
+    accountId: string;
+    name: string;
+    count: number;
+    amount: number;
+    rank: number;
+    isMe: boolean;
+};
+type DayPoint = {date: string; count: number; amount: number};
+type DayCompare = {
+    today: DayPoint;
+    yesterday: DayPoint;
+    countDiff: number;
+    amountDiff: number;
+    countPct: number;
+    amountPct: number;
+};
 
 type StoreStats = {
     storeId: string;
@@ -67,7 +94,12 @@ type StoreStats = {
     pickups: NamedCount[];
     statuses: NamedCount[];
     hourly: HourlyPoint[];
+    yesterdayHourly: HourlyPoint[];
     weekly: WeeklyPoint[];
+    duration: DurationStats;
+    staff: StaffRank[];
+    myRank?: StaffRank;
+    compare: DayCompare;
 };
 
 const COLORS = ['#fb8c00', '#2e7d32', '#1976d2', '#7b1fa2', '#d32f2f', '#00897b', '#5d4037', '#546e7a'];
@@ -97,17 +129,46 @@ const emptyStats = (): StoreStats => ({
     pickups: [],
     statuses: [],
     hourly: [],
+    yesterdayHourly: [],
     weekly: [],
+    duration: {
+        payToMaking: {count: 0, avgSeconds: 0, maxSeconds: 0},
+        makingToReady: {count: 0, avgSeconds: 0, maxSeconds: 0},
+        payToReady: {count: 0, avgSeconds: 0, maxSeconds: 0},
+    },
+    staff: [],
+    compare: {
+        today: {date: '', count: 0, amount: 0},
+        yesterday: {date: '', count: 0, amount: 0},
+        countDiff: 0,
+        amountDiff: 0,
+        countPct: 0,
+        amountPct: 0,
+    },
 });
 
 const money = (value?: number) => `¥${Number(value || 0).toFixed(2)}`;
 
+const formatDuration = (seconds?: number) => {
+    const value = Math.max(0, Math.round(Number(seconds || 0)));
+    if (!value) return '--';
+    const hours = Math.floor(value / 3600);
+    const minutes = Math.floor((value % 3600) / 60);
+    const rest = value % 60;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (minutes > 0) return `${minutes}m ${rest}s`;
+    return `${rest}s`;
+};
+
+const deltaColor = (value: number) => (value > 0 ? '#2e7d32' : value < 0 ? '#c62828' : '#616161');
+
 async function fetchStoreStats(storeId: string): Promise<StoreStats> {
     const cookie = localStorage.getItem('cookie') || '';
     const today = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Shanghai'});
+    const accountId = localStorage.getItem('user_id') || '';
     const response = await axios({
         method: 'GET',
-        url: '/v1/hlj/order/pos/stats?filter=' + JSON.stringify({storeId, date: today}),
+        url: '/v1/hlj/order/pos/stats?filter=' + JSON.stringify({storeId, date: today, accountId}),
         headers: {
             'Content-Type': 'application/json',
             Cookies: cookie,
@@ -124,6 +185,37 @@ function KpiCard({label, value, hint}: {label: string; value: string; hint?: str
                 <Typography variant="body2" color="text.secondary">{label}</Typography>
                 <Typography variant="h5" sx={{fontWeight: 800, mt: 0.5, letterSpacing: 0.2}}>{value}</Typography>
                 {hint && <Typography variant="caption" color="text.secondary">{hint}</Typography>}
+            </CardContent>
+        </Card>
+    );
+}
+
+function DeltaChip({value, suffix}: {value: number; suffix?: string}) {
+    const Icon = value > 0 ? TrendingUpIcon : value < 0 ? TrendingDownIcon : TrendingFlatIcon;
+    const sign = value > 0 ? '+' : '';
+    return (
+        <Box sx={{display: 'inline-flex', alignItems: 'center', gap: 0.4, color: deltaColor(value), fontWeight: 700}}>
+            <Icon sx={{fontSize: 18}} />
+            <span>{sign}{suffix || String(value)}</span>
+        </Box>
+    );
+}
+
+function DurationCard({label, stat}: {label: string; stat?: DurationStat}) {
+    const translate = useTranslate();
+    const empty = !stat || !stat.count;
+    return (
+        <Card elevation={0} sx={{border: '1px solid #eee', borderRadius: 2, height: '100%'}}>
+            <CardContent sx={{py: 1.75, '&:last-child': {pb: 1.75}}}>
+                <Typography variant="body2" color="text.secondary">{label}</Typography>
+                <Typography variant="h5" sx={{fontWeight: 800, mt: 0.5}}>
+                    {empty ? '--' : formatDuration(stat.avgSeconds)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                    {empty
+                        ? translate('pos.sales.duration_empty')
+                        : `${translate('pos.sales.max')} ${formatDuration(stat.maxSeconds)} · ${translate('pos.sales.samples', {count: stat.count})}`}
+                </Typography>
             </CardContent>
         </Card>
     );
@@ -161,7 +253,16 @@ export default function MyDashboard() {
     }, [merchantId]);
 
     const summary = stats.summary;
-    const hourly = (stats.hourly || []).filter(item => item.count > 0 || item.amount > 0);
+    const compare = stats.compare || emptyStats().compare;
+    const duration = stats.duration || emptyStats().duration;
+    const staff = stats.staff || [];
+    const myRank = stats.myRank;
+    const yesterdayHourly = stats.yesterdayHourly || [];
+    const hourly = (stats.hourly || []).map((item, index) => ({
+        ...item,
+        yesterdayAmount: yesterdayHourly[index]?.amount || 0,
+        yesterdayCount: yesterdayHourly[index]?.count || 0,
+    })).filter(item => item.count > 0 || item.amount > 0 || item.yesterdayCount > 0 || item.yesterdayAmount > 0);
     const weekly = (stats.weekly || []).map(item => {
         const date = new Date(`${item.date}T00:00:00+08:00`);
         const weekday = Number.isNaN(date.getTime())
@@ -250,6 +351,93 @@ export default function MyDashboard() {
                     </Grid>
 
                     <Grid item xs={12}>
+                        <Card elevation={0} sx={{border: '1px solid #eee', borderRadius: 2, bgcolor: '#fff'}}>
+                            <CardContent sx={{py: 1.75, '&:last-child': {pb: 1.75}}}>
+                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>{translate('pos.sales.day_compare')}</Typography>
+                                <Grid container spacing={2} alignItems="center">
+                                    <Grid item xs={12} md={4}>
+                                        <Typography variant="body2" color="text.secondary">{translate('pos.sales.orders')}</Typography>
+                                        <Box sx={{display: 'flex', alignItems: 'baseline', gap: 1.5, mt: 0.5}}>
+                                            <Typography variant="h4" sx={{fontWeight: 800}}>{compare.today.count}</Typography>
+                                            <DeltaChip value={compare.countDiff} suffix={`${compare.countDiff > 0 ? '+' : ''}${compare.countDiff}（${compare.countPct > 0 ? '+' : ''}${compare.countPct || 0}%）`} />
+                                        </Box>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {translate('pos.sales.yesterday')} {compare.yesterday.count}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item xs={12} md={4}>
+                                        <Typography variant="body2" color="text.secondary">{translate('pos.sales.paid_amount')}</Typography>
+                                        <Box sx={{display: 'flex', alignItems: 'baseline', gap: 1.5, mt: 0.5}}>
+                                            <Typography variant="h5" sx={{fontWeight: 800}}>{money(compare.today.amount)}</Typography>
+                                            <DeltaChip value={compare.amountDiff} suffix={`${compare.amountPct > 0 ? '+' : ''}${compare.amountPct || 0}%`} />
+                                        </Box>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {translate('pos.sales.yesterday')} {money(compare.yesterday.amount)}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item xs={12} md={4}>
+                                        <Typography variant="body2" color="text.secondary">{translate('pos.sales.staff_rank')}</Typography>
+                                        <Typography sx={{fontWeight: 700, mt: 0.5}}>
+                                            {myRank && myRank.rank > 0
+                                                ? translate('pos.sales.my_rank', {count: myRank.count, rank: myRank.rank})
+                                                : translate('pos.sales.my_rank_none')}
+                                        </Typography>
+                                    </Grid>
+                                </Grid>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    <Grid item xs={12} md={4}>
+                        <DurationCard label={translate('pos.sales.pay_to_making')} stat={duration.payToMaking} />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                        <DurationCard label={translate('pos.sales.making_to_ready')} stat={duration.makingToReady} />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                        <DurationCard label={translate('pos.sales.pay_to_ready')} stat={duration.payToReady} />
+                    </Grid>
+
+                    <Grid item xs={12} md={5}>
+                        <Card elevation={0} sx={{border: '1px solid #eee', borderRadius: 2, height: '100%'}}>
+                            <CardContent>
+                                <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>{translate('pos.sales.staff_rank')}</Typography>
+                                {staff.length === 0 ? (
+                                    <Typography color="text.secondary">{translate('pos.sales.no_rank')}</Typography>
+                                ) : (
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell width={48}>#</TableCell>
+                                                <TableCell>{translate('pos.sales.staff_rank')}</TableCell>
+                                                <TableCell align="right">{translate('pos.sales.orders')}</TableCell>
+                                                <TableCell align="right">{translate('pos.sales.paid_amount')}</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {staff.map(item => (
+                                                <TableRow
+                                                    key={item.accountId}
+                                                    sx={item.isMe ? {bgcolor: 'rgba(25, 118, 210, 0.08)'} : undefined}
+                                                >
+                                                    <TableCell sx={{fontWeight: item.rank <= 3 ? 800 : 500, color: item.rank === 1 ? '#e65100' : 'inherit'}}>
+                                                        {item.rank}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {item.isMe ? `${translate('pos.sales.me')} · ${item.name}` : item.name}
+                                                    </TableCell>
+                                                    <TableCell align="right">{item.count}</TableCell>
+                                                    <TableCell align="right">{money(item.amount)}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    <Grid item xs={12} md={7}>
                         <Card elevation={0} sx={{border: '1px solid #eee', borderRadius: 2, height: 300}}>
                             <CardContent>
                                 <Typography variant="subtitle1" sx={{fontWeight: 700, mb: 1}}>{translate('pos.sales.weekly')}</Typography>
@@ -351,7 +539,9 @@ export default function MyDashboard() {
                                             <XAxis dataKey="label" />
                                             <YAxis />
                                             <ChartTooltip formatter={(value: number) => money(value)} />
-                                            <Line type="monotone" dataKey="amount" name={translate('pos.chart.amount')} stroke="#1976d2" strokeWidth={2} dot={false} />
+                                            <Legend />
+                                            <Line type="monotone" dataKey="amount" name={translate('pos.sales.today')} stroke="#1976d2" strokeWidth={2} dot={false} />
+                                            <Line type="monotone" dataKey="yesterdayAmount" name={translate('pos.sales.yesterday')} stroke="#90caf9" strokeWidth={2} strokeDasharray="5 4" dot={false} />
                                         </LineChart>
                                     </ResponsiveContainer>
                                 )}
