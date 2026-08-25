@@ -78,17 +78,17 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
 
     // getCombRequestItems
     const getCombRequestItems = (id: string): { id: string; quantity: number }[] => {
-        const item = categoryMap[id]; // 获取对应的 MenuData 对象
-        // return item.products; //
-        return [{
-            id: "67a96c87b96c9779260a17f0", // 木薯糖水
-            quantity: 1,
-        },
-            {
-                id: "677f3574f52225c3b0f82019", // 可乐
-                quantity: 1,
-            }
-        ]
+        const item = categoryMap[id];
+        const slots = item?.combo || [];
+        if (slots.length) {
+            return slots.flatMap((slot: any) =>
+                (slot.products || []).map((productId: string) => ({
+                    id: productId,
+                    quantity: slot.requires || 1,
+                })),
+            );
+        }
+        return (item?.products || []).map((productId: string) => ({id: productId, quantity: 1}));
     };
     const getCategoryId = (id: string): string => {
         const item = categoryMap[id]; // 获取对应的 MenuData 对象
@@ -122,7 +122,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         return () => {
             cancelled = true;
         };
-    }, [merchantId, fetchData]);
+    }, [merchantId, fetchData, catalogTick]);
 
     useEffect(() => {
         if (categories.length === 0) {
@@ -165,7 +165,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         return () => {
             cancelled = true;
         };
-    }, [activeTab, merchantId, fetchData]);
+    }, [activeTab, merchantId, fetchData, catalogTick]);
 
     const handleChipClick = (categoryId: string) => {
         setActiveTab(categoryId);
@@ -187,9 +187,10 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
 
         // 确保每个combIndex只有第一次赋值时才会创建
         if (!acc[combIndex]) {
+            const slots = categoryMap[activeTab]?.combo || [];
             acc[combIndex] = {
-                title: '粉类选择',  // 你可以根据需要调整title
-                maxLimit: item.maxLimit,  // 确保 item.maxLimit 是存在的，且有适当的值
+                title: slots[Number(combIndex)]?.combName || getCategoryName(activeTab) || '',
+                maxLimit: item.maxLimit || slots[Number(combIndex)]?.quantity || slots[Number(combIndex)]?.requires || 1,
             };
         }
 

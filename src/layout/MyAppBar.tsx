@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AppBar, useLocale } from 'react-admin';
+import { AppBar, Logout, UserMenu, useLocale } from 'react-admin';
 import {
     Box,
     useMediaQuery,
@@ -12,6 +12,14 @@ import { FormatCurrentTime } from "../utils/time";
 import MyShiftSwitch from "../common/MyShiftSwitch";
 import Version from "../common/Version"
 import AppearanceMenu from "./AppearanceMenu";
+import RefreshCatalogMenuItem from "./RefreshCatalogMenuItem";
+
+const CashierUserMenu = () => (
+    <UserMenu>
+        <RefreshCatalogMenuItem />
+        <Logout />
+    </UserMenu>
+);
 
 const MyAppBar = (props: any) => {
     const isLargeEnough = useMediaQuery<Theme>(theme =>
@@ -29,7 +37,7 @@ const MyAppBar = (props: any) => {
     }, [locale]);
 
     return (
-        <AppBar {...props} color="primary">
+        <AppBar {...props} color="primary" userMenu={<CashierUserMenu />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <MerchantSelect />
                 <MyShiftSwitch/>

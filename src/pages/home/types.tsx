@@ -18,52 +18,23 @@ interface Context {
     [key: string]: any;
 }
 
-interface ComboItem {
+export interface ComboItem {
     combName: string;
     price: number;
-    requires: number; // 需要选择的数量
-    products: string[]; // 可选商品列表
+    requires: number;
+    quantity?: number;
+    products: string[];
 }
 
 export interface ComboGroup {
-    _: {
-        meta: Meta;
-        context: Context;
-    };
     id: string;
-    is_show_backstage: number;
-    sort: number;
-    goods_type: number;
-    is_sell: boolean;
-    icon: string;
-    products: string[];
-    goods_list: null;
-    stores: null;
-    update_type: number;
-
-    name: string; // 套餐唯一标识
-    discount: number; // 套餐优惠金额
+    name: string;
     price: number;
-    combo: ComboItem[]; // 套餐包含的组合项
+    discount?: number;
+    icon?: string;
+    is_sell?: boolean;
+    products?: string[];
+    combo: ComboItem[];
 }
 
-export interface MatchedCombo {
-    groupId: string;
-    count: number;
-    matchedItems: {
-        comboName: string;
-        matchedProducts: string[];
-        requires: number;
-        price: number;
-    }[];
-    discount: number;
-    price: number;
-}
 
-export interface ComboMatchResult {
-    matchedGroups: MatchedCombo[]; // 匹配成功的套餐组
-    totalDiscount: number; // 总优惠金额
-    usedProductIds: Set<string>; // 已使用的商品ID（避免重复使用）
-    price: number;
-    count: number;
-}

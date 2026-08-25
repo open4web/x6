@@ -20,10 +20,9 @@ import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import TablePicker from "../../../common/TablePicker";
 import {readStoreTables, writeStoreTables} from "../../../utils/storeCache";
 import {Alert, FormControl, FormControlLabel, Radio, RadioGroup} from "@mui/material";
-import {ComboGroup, ComboMatchResult, MatchedCombo} from "../types";
-import {convertToOrderRequest} from "../../../utils/time";
 import {cartPanelWidth, useCartStyle} from "../../../layout/cartStyle";
 import {CartItemList} from "./CartItemLayouts";
+import {matchComboGroups, toOrderBuckets} from "../../../utils/comboMatch";
 
 import {
     Storefront,
@@ -66,122 +65,10 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
     const [pick, setPick] = React.useState(2); // 默认为堂食 (2)
 
-
-    // 初始化一个空的 Map<string, number>
-    const [numberMap, setNumberMap] = React.useState<Map<string, number>>(() => new Map());
-
-    // 添加或更新键值对
-    const addOrUpdateEntry = (key: string, value: number) => {
-
-        const old = getValue(key)
-        if (old != undefined ) {
-            // 如果存在则进行加1
-            value = old + 1
-        }
-
-        setNumberMap(prevMap => {
-            const newMap = new Map(prevMap);
-            newMap.set(key, value);
-            return newMap;
-        });
-    };
-
-    // 删除键值对
-    const removeEntry = (key: string) => {
-        setNumberMap(prevMap => {
-            const newMap = new Map(prevMap);
-            newMap.delete(key);
-            return newMap;
-        });
-    };
-
-    // 获取值
-    const getValue = (key: string) => {
-        return numberMap.get(key) ;
-    };
-
-
-    /**
-     * 匹配购物车中的套餐组合
-     * @param cartItems 购物车商品
-     * @param comboGroups 所有套餐配置
-     * @returns 匹配结果
-     */
-    function matchComboGroups(cartItems: CartItem[], comboGroups: ComboGroup[]): ComboMatchResult {
-        const inputProductIds = cartItems.map(item => item.id);
-        const result: ComboMatchResult = {
-            matchedGroups: [],
-            totalDiscount: 0,
-            usedProductIds: new Set<string>(),
-            price: 0,
-            count: 0,
-        };
-
-        // 按优惠金额降序排序，优先匹配优惠大的套餐
-        const sortedGroups = [...comboGroups].sort((a, b) => b.discount - a.discount);
-
-        for (const group of sortedGroups) {
-            const groupMatch: MatchedCombo = {
-                count: 0,
-                groupId: group.name,
-                matchedItems: [],
-                discount: group.discount,
-                price: group.price
-            };
-            let isGroupMatched = true;
-
-            // 检查套餐内每个combo是否满足
-            for (const combo of group.combo) {
-                // 找出未被使用且存在于购物车的商品
-                const availableProducts = combo.products.filter(
-                    productId => inputProductIds.includes(productId) &&
-                        !result.usedProductIds.has(productId)
-                );
-
-                // 检查是否满足数量要求
-                if (availableProducts.length >= combo.requires) {
-                    // 选择前requires个商品
-                    const matchedProducts = availableProducts.slice(0, combo.requires);
-                    // 如果商品匹配数量是0则不匹配任何套餐
-                    if (matchedProducts.length==0) {
-                        isGroupMatched = false
-                        continue 
-                    }
-                    groupMatch.matchedItems.push({
-                        comboName: combo.combName,
-                        matchedProducts,
-                        requires: combo.requires,
-                        price: combo.price
-                    });
-
-                    // 标记这些商品为已使用
-                    matchedProducts.forEach(id => result.usedProductIds.add(id));
-                } else {
-                    isGroupMatched = false;
-                    break;
-                }
-            }
-
-            // 如果套餐完全匹配，则加入结果
-            if (isGroupMatched) {
-                groupMatch.count+=1
-                result.matchedGroups.push(groupMatch);
-                result.totalDiscount += group.discount;
-                result.price += group.price;
-                // result.count += 1
-                addOrUpdateEntry(groupMatch.groupId, 1)
-            } else {
-                // 如果套餐不匹配，回滚已使用的商品
-                groupMatch.matchedItems.forEach(item => {
-                    item.matchedProducts.forEach(id => {
-                        result.usedProductIds.delete(id);
-                    });
-                });
-            }
-        }
-
-        return result;
-    }
+    const comboResult = React.useMemo(
+        () => matchComboGroups(cartItems, comboGroup),
+        [cartItems, comboGroup],
+    );
 
     const handlePickChange = (event: { target: { value: any; }; }) => {
         const next = Number(event.target.value);
@@ -223,7 +110,15 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
         const newOrderRequest = {
             at: localStorage.getItem("current_store_id") as string,
-            buckets: convertToOrderRequest(cartItems),
+            buckets: toOrderBuckets(cartItems, comboResult),
+            combos: comboResult.matches.map(hit => ({
+                id: hit.id,
+                name: hit.name,
+                count: hit.count,
+                price: hit.price,
+                discount: hit.discount,
+                items: hit.items,
+            })),
             seat: isTakeout ? '' : localStorage.getItem('ticketNumber'),
             phone,
             people: localStorage.getItem('peopleNumber'),
@@ -320,35 +215,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         localStorage.removeItem('peopleNumber');
     };
 
-    // 统计各个属性的单价
-    const totalPrice = cartItems.reduce((total, item) => {
-
-        // item.combPrice
-        // 从 desc 分隔出属性名称
-        const descNames = item.desc.split(",").map(name => name.trim());
-
-        // 从 propsOptions 中找到匹配的属性，并累加价格
-        const propsTotalPrice = descNames.reduce((propsTotal, name) => {
-            let matchedPrice = 0;
-
-            // 遍历 propsOptions 并查找 spiceOptions
-            item.spiceOptions.forEach((prop) => {
-                const matchedSpice = prop.spiceOptions.find(spice => spice.name === name);
-                if (matchedSpice) {
-                    matchedPrice += matchedSpice.price;
-                }
-            });
-
-            return propsTotal + matchedPrice;
-        }, 0);
-        // TODO 套餐不在这里进行加和
-        // 当前商品的总价（含属性价格）
-        const itemTotalPrice = (item.price + propsTotalPrice) * item.quantity;
-        // 累加到总价
-        return total + itemTotalPrice;
-    }, 0);
-
-    console.log("Total Price:", totalPrice);
+    const totalPrice = comboResult.payAmount;
 
     const bindPeople = () => {
         setOpenPeople(true)
@@ -404,10 +271,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         setCartItems([])
     }
 
-    const comboResult = React.useMemo(() => {
-        console.log("comboGroups-->", comboGroup)
-        return matchComboGroups(cartItems, comboGroup);
-    }, [cartItems]);
+
 
     const changeQty = (item: CartItem, delta: number) => {
         setCartItems(prevItems =>
@@ -483,39 +347,42 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                 <CartItemList
                     items={cartItems}
                     styleName={cartStyle}
+                    comboMarks={comboResult.lineMarks}
                     onInc={item => changeQty(item, 1)}
                     onDec={item => changeQty(item, -1)}
                     onRemove={removeItem}
                 />
             </Box>
             <Divider sx={{my: 2}}/>
-            {/* Display combo meal summaries if there are any */}
-            <div>
-                {comboResult.matchedGroups.map(group => (
-                    group.matchedItems.length > 0 ?
-                        <div key={group.groupId}>
-                            <h4>
-                                {group.groupId}: {group.price > 0 ? ` ¥${group.price}` : ''} x {getValue(group.groupId)}
-                                {group.discount > 0 ? ` (${translate('pos.cart.discount')}: ¥${group.discount})` : ''}
-                            </h4>
-                            {group.matchedItems.map((item, index) => (
-                                <div key={index}>
-                                    {/*这里可以选择展示商品名称*/}
-                                    <p>{item.comboName}: {item.matchedProducts.join(", ")}</p>
-                                </div>
+            {comboResult.matches.length > 0 && (
+                <Box sx={{px: 0.5, mb: 1}}>
+                    {comboResult.matches.map(hit => (
+                        <Box key={hit.id} sx={{mb: 1, p: 1, borderRadius: 1, bgcolor: '#fff8e1'}}>
+                            <Typography sx={{fontWeight: 800, fontSize: 14}}>
+                                {translate('pos.cart.combo_match')} · {hit.name} ×{hit.count}
+                                <Box component="span" sx={{float: 'right', color: '#d32f2f'}}>
+                                    ¥{(hit.price * hit.count).toFixed(2)}
+                                </Box>
+                            </Typography>
+                            {hit.items.map((item, index) => (
+                                <Typography key={`${item.id}-${index}`} variant="caption" sx={{display: 'block', color: '#5d4037'}}>
+                                    {item.comboName ? `${item.comboName} · ` : ''}{item.name} ×{item.quantity}
+                                </Typography>
                             ))}
-                        </div>
-
-                        : <div></div>
-                ))
-                }
-
-                {
-                    comboResult.totalDiscount > 0 && (
-                        <p>{translate('pos.cart.total_discount')}: ¥{comboResult.totalDiscount}</p>
-                    )
-                }
-            </div>
+                            {hit.discount > 0 && (
+                                <Typography variant="caption" sx={{color: '#2e7d32', fontWeight: 700}}>
+                                    {translate('pos.cart.discount')}: ¥{hit.discount.toFixed(2)}
+                                </Typography>
+                            )}
+                        </Box>
+                    ))}
+                    {comboResult.totalDiscount > 0 && (
+                        <Typography variant="body2" sx={{textAlign: 'right', color: '#2e7d32', fontWeight: 700}}>
+                            {translate('pos.cart.total_discount')}: ¥{comboResult.totalDiscount.toFixed(2)}
+                        </Typography>
+                    )}
+                </Box>
+            )}
             <Divider sx={{my: 2}}/>
 
             <Typography variant="h6" sx={{
@@ -528,6 +395,11 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                 borderRadius: docked ? 1 : 0,
                 mt: docked ? 1 : 0,
             }}>
+                {comboResult.totalDiscount > 0 && (
+                    <Box component="span" sx={{color: docked ? '#bcaaa4' : '#9e9e9e', textDecoration: 'line-through', mr: 1, fontSize: '0.9rem', fontWeight: 500}}>
+                        ¥{comboResult.originalAmount.toFixed(2)}
+                    </Box>
+                )}
                 {translate('pos.cart.total')}: ¥{totalPrice.toFixed(2)}
             </Typography>
 

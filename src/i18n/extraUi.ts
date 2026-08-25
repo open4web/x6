@@ -30,6 +30,7 @@ export const extraUi = pack(
             pick_table: '选择台号/桌位', view_seats: '查看桌位',
             need_address: '外卖请填写配送地址', address: '配送地址',
             receiver: '收件人', address_ph: '小区 / 门牌号',
+            combo_match: '已凑成套餐',
         },
         seat: {
             empty: '空闲', busy: '使用中', reserved: '预定', disabled: '禁用',
@@ -100,6 +101,7 @@ export const extraUi = pack(
         chart: {qty: '销量', amount: '金额'},
         time: {sec: '秒', min: '分钟', hour: '小时', day: '天'},
         store: {current: '当前门店'},
+        catalog: {refresh: '刷新菜谱缓存', refreshed: '菜谱已重新加载'},
         card_style: {
             title: '产品卡片',
             classic: '经典', poster: '海报', compact: '横排',
@@ -177,6 +179,7 @@ export const extraUi = pack(
             pick_table: 'Table / seat', view_seats: 'Tables',
             need_address: 'Enter a delivery address', address: 'Address',
             receiver: 'Recipient', address_ph: 'Building / unit',
+            combo_match: 'Combo matched',
         },
         seat: {
             empty: 'Free', busy: 'In use', reserved: 'Reserved', disabled: 'Off',
@@ -247,6 +250,7 @@ export const extraUi = pack(
         chart: {qty: 'Qty', amount: 'Amount'},
         time: {sec: 's', min: 'min', hour: 'h', day: 'd'},
         store: {current: 'Store'},
+        catalog: {refresh: 'Reload catalog', refreshed: 'Catalog reloaded'},
         card_style: {
             title: 'Product card',
             classic: 'Classic', poster: 'Poster', compact: 'Row',

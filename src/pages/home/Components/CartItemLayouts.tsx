@@ -19,7 +19,12 @@ type LineHandlers = {
     onInc: (item: CartItem) => void;
     onDec: (item: CartItem) => void;
     onRemove: (item: CartItem) => void;
+    comboMarks?: Record<string, string>;
 };
+
+function markOf(item: CartItem, marks?: Record<string, string>) {
+    return marks?.[`${item.id}::${item.desc || ''}`] || '';
+}
 
 function QtyStepper({item, onInc, onDec, compact}: {item: CartItem; onInc: () => void; onDec: () => void; compact?: boolean}) {
     return (
@@ -37,19 +42,19 @@ function QtyStepper({item, onInc, onDec, compact}: {item: CartItem; onInc: () =>
     );
 }
 
-function KindLabel({item}: {item: CartItem}) {
-    const label = item.combName || item.kindName;
+function KindLabel({item, comboName}: {item: CartItem; comboName?: string}) {
+    const label = comboName || item.combName || item.kindName;
     if (!label) {
         return null;
     }
     return (
-        <Typography variant="caption" sx={{fontWeight: 700, color: item.combName ? '#d32f2f' : 'gray', display: 'block', lineHeight: 1.2}}>
-            {label}
+        <Typography variant="caption" sx={{fontWeight: 700, color: comboName || item.combName ? '#d32f2f' : 'gray', display: 'block', lineHeight: 1.2}}>
+            {comboName ? label : label}
         </Typography>
     );
 }
 
-function ClassicLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineHandlers) {
+function ClassicLines({items, onInc, onDec, onRemove, comboMarks}: {items: CartItem[]} & LineHandlers) {
     return (
         <List>
             {items.map(item => (
@@ -57,7 +62,7 @@ function ClassicLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & Lin
                     <ListItemText
                         primary={
                             <Box>
-                                <KindLabel item={item} />
+                                <KindLabel item={item} comboName={markOf(item, comboMarks)} />
                                 <Typography variant="body1">{item.name}</Typography>
                             </Box>
                         }
@@ -80,14 +85,14 @@ function ClassicLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & Lin
     );
 }
 
-function TicketLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineHandlers) {
+function TicketLines({items, onInc, onDec, onRemove, comboMarks}: {items: CartItem[]} & LineHandlers) {
     return (
         <Box sx={{px: 1.5, py: 0.5, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace'}}>
             {items.map(item => (
                 <Box key={`${item.id}-${item.desc}`} sx={{borderBottom: '1px dashed #d7ccc8', py: 0.75}}>
                     <Box sx={{display: 'flex', justifyContent: 'space-between', gap: 1}}>
                         <Box sx={{minWidth: 0}}>
-                            <KindLabel item={item} />
+                            <KindLabel item={item} comboName={markOf(item, comboMarks)} />
                             <Typography noWrap sx={{fontWeight: 700, fontSize: 14}}>{item.name}</Typography>
                             {item.desc && <Typography variant="caption" color="text.secondary" noWrap>{item.desc}</Typography>}
                         </Box>
@@ -129,7 +134,7 @@ function DenseLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineH
     );
 }
 
-function TileLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineHandlers) {
+function TileLines({items, onInc, onDec, onRemove, comboMarks}: {items: CartItem[]} & LineHandlers) {
     return (
         <Box sx={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, p: 1}}>
             {items.map(item => (
@@ -142,7 +147,7 @@ function TileLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineHa
                             {(item.name || '?').slice(0, 1)}
                         </Avatar>
                         <Box sx={{minWidth: 0}}>
-                            <KindLabel item={item} />
+                            <KindLabel item={item} comboName={markOf(item, comboMarks)} />
                             <Typography sx={{fontWeight: 700, fontSize: 13, lineHeight: 1.2}} noWrap>{item.name}</Typography>
                         </Box>
                     </Box>
@@ -157,7 +162,7 @@ function TileLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineHa
     );
 }
 
-function BoardLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineHandlers) {
+function BoardLines({items, onInc, onDec, onRemove, comboMarks}: {items: CartItem[]} & LineHandlers) {
     return (
         <Box sx={{p: 1, display: 'flex', flexDirection: 'column', gap: 1}}>
             {items.map(item => (
@@ -166,7 +171,7 @@ function BoardLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineH
                         {item.quantity}
                     </Box>
                     <Box sx={{flex: 1, minWidth: 0}}>
-                        <KindLabel item={item} />
+                        <KindLabel item={item} comboName={markOf(item, comboMarks)} />
                         <Typography noWrap sx={{fontWeight: 700}}>{item.name}</Typography>
                         {item.desc && <Typography variant="caption" color="text.secondary" noWrap>{item.desc}</Typography>}
                     </Box>
@@ -210,23 +215,24 @@ function DockLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineHa
     );
 }
 
-export function CartItemList({items, styleName, onInc, onDec, onRemove}: {items: CartItem[]; styleName: CartStyle} & LineHandlers) {
+export function CartItemList({items, styleName, onInc, onDec, onRemove, comboMarks}: {items: CartItem[]; styleName: CartStyle} & LineHandlers) {
     if (items.length === 0) {
         return null;
     }
+    const handlers = {onInc, onDec, onRemove, comboMarks};
     switch (styleName) {
         case 'ticket':
-            return <TicketLines items={items} onInc={onInc} onDec={onDec} onRemove={onRemove} />;
+            return <TicketLines items={items} {...handlers} />;
         case 'dense':
-            return <DenseLines items={items} onInc={onInc} onDec={onDec} onRemove={onRemove} />;
+            return <DenseLines items={items} {...handlers} />;
         case 'tile':
-            return <TileLines items={items} onInc={onInc} onDec={onDec} onRemove={onRemove} />;
+            return <TileLines items={items} {...handlers} />;
         case 'board':
-            return <BoardLines items={items} onInc={onInc} onDec={onDec} onRemove={onRemove} />;
+            return <BoardLines items={items} {...handlers} />;
         case 'dock':
-            return <DockLines items={items} onInc={onInc} onDec={onDec} onRemove={onRemove} />;
+            return <DockLines items={items} {...handlers} />;
         case 'classic':
         default:
-            return <ClassicLines items={items} onInc={onInc} onDec={onDec} onRemove={onRemove} />;
+            return <ClassicLines items={items} {...handlers} />;
     }
 }
