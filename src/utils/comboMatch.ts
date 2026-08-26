@@ -42,6 +42,28 @@ export type ComboMatchResult = {
     lineMarks: Record<string, string>;
 };
 
+export function resolveUnitPrice(item?: {price?: number; origin_price?: number} | null): number {
+    const origin = Number(item?.origin_price) || 0;
+    if (origin > 0) {
+        return origin;
+    }
+    return Number(item?.price) || 0;
+}
+
+export function withUnitPrices(items: CartItem[], lookup?: (id: string) => number): CartItem[] {
+    return (items || []).map(item => {
+        const unit = resolveUnitPrice(item) || lookup?.(item.id) || 0;
+        if (unit <= 0) {
+            return item;
+        }
+        return {
+            ...item,
+            origin_price: item.origin_price || unit,
+            price: Number(item.price) > 0 ? item.price : unit,
+        };
+    });
+}
+
 function spiceOf(item: CartItem): number {
     if (!item?.desc || !item.spiceOptions?.length) {
         return 0;
@@ -190,7 +212,7 @@ export function matchComboGroups(cartItems: CartItem[], comboGroups: ComboGroup[
     cartItems.forEach(item => {
         pool[item.id] = (pool[item.id] || 0) + (item.quantity || 0);
         names[item.id] = item.name;
-        prices[item.id] = Number(item.price) || 0;
+        prices[item.id] = resolveUnitPrice(item);
         spiceById[item.id] = spiceOf(item);
     });
 
@@ -249,7 +271,7 @@ export function matchComboGroups(cartItems: CartItem[], comboGroups: ComboGroup[
         });
     });
 
-    const originalAmount = cartItems.reduce((sum, item) => sum + (item.price + spiceOf(item)) * item.quantity, 0);
+    const originalAmount = cartItems.reduce((sum, item) => sum + (resolveUnitPrice(item) + spiceOf(item)) * item.quantity, 0);
     let comboBase = 0;
     let matchedSpice = 0;
     hits.forEach(hit => {
@@ -266,7 +288,7 @@ export function matchComboGroups(cartItems: CartItem[], comboGroups: ComboGroup[
         usedLeft[item.id] = (usedLeft[item.id] || 0) - used;
         const rest = item.quantity - used;
         if (rest > 0) {
-            remainderPay += (item.price + spiceOf(item)) * rest;
+            remainderPay += (resolveUnitPrice(item) + spiceOf(item)) * rest;
         }
     });
 
@@ -312,8 +334,9 @@ export function toOrderBuckets(cartItems: CartItem[], result: ComboMatchResult) 
             qty[item.id] -= used;
         }
         const rest = item.quantity - used;
-        const pay = comboPay + rest * item.price + spiceOf(item) * item.quantity;
-        const unit = item.quantity > 0 ? pay / item.quantity : item.price;
+        const unitPrice = resolveUnitPrice(item);
+        const pay = comboPay + rest * unitPrice + spiceOf(item) * item.quantity;
+        const unit = item.quantity > 0 ? pay / item.quantity : unitPrice;
         return {
             ID: item.id,
             Number: item.quantity,

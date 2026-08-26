@@ -11,6 +11,9 @@ import PayCodeDisplay from "./PayCodeInput";
 import MemberBalancePay from './MemberBalancePay';
 import {useTranslate} from 'react-admin';
 import {orderWsUrl, readAuthToken} from '../utils/authToken';
+import {readStoreTables, resolvePayChannels} from '../utils/storeCache';
+
+type PayTabKey = 'auto' | 'scan' | 'cash' | 'balance';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -44,11 +47,32 @@ function a11yProps(index: number) {
 
 export default function PayChannel({setCart, price, setOpen, orderID, at, offers, onSuccess, originalPrice}: any) {
     const translate = useTranslate();
-    const [value, setValue] = React.useState(0);
+    const {merchantId, setOrderDrawerOpen, startPaymentWatch, notifyOrderPaid} = useCartContext();
+    const storeId = merchantId || localStorage.getItem('current_store_id') || '';
+    const channels = resolvePayChannels(readStoreTables(storeId));
+    const tabs = React.useMemo(() => {
+        const list: {key: PayTabKey; icon: string; labelKey: string}[] = [];
+        if (channels.wechat) {
+            list.push({key: 'auto', icon: '🤖', labelKey: 'pos.pay.auto'});
+            list.push({key: 'scan', icon: '📷', labelKey: 'pos.pay.scan'});
+        }
+        if (channels.cash) {
+            list.push({key: 'cash', icon: '💵', labelKey: 'pos.pay.cash'});
+        }
+        if (channels.balance) {
+            list.push({key: 'balance', icon: '💰', labelKey: 'pos.pay.balance'});
+        }
+        if (!list.length) {
+            list.push({key: 'cash', icon: '💵', labelKey: 'pos.pay.cash'});
+        }
+        return list;
+    }, [channels]);
+    const cashIndex = Math.max(0, tabs.findIndex(tab => tab.key === 'cash'));
+    const [value, setValue] = React.useState(cashIndex);
+    const currentKey = tabs[value]?.key || 'cash';
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
-    const [cash, setCash] = React.useState(false);
-    const {setDrawerOpen, setOrderDrawerOpen, startPaymentWatch, notifyOrderPaid} = useCartContext();
+    const [cash, setCash] = React.useState(currentKey === 'cash');
     const [isScanning, setIsScanning] = React.useState(true);
     const [isWeChatTab, setIsWeChatTab] = useState(true); // 是否启用扫码枪逻辑
     const {fetchData, alertComponent} = useFetchData();
@@ -123,11 +147,20 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
     //     };
     // }, [orderID]);
 
-    const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    React.useEffect(() => {
+        if (value >= tabs.length) {
+            setValue(0);
+        }
+    }, [tabs.length, value]);
+
+    React.useEffect(() => {
+        setIsWeChatTab(currentKey === 'auto');
+        setIsScanning(currentKey === 'scan');
+        setCash(currentKey === 'cash');
+    }, [currentKey]);
+
+    const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
         setValue(newValue);
-        setIsWeChatTab(newValue === 0); // 判断是否是 "微信" Tab
-        setIsScanning(newValue === 1);
-        setCash(newValue === 2);
     };
 
     const handleResetInput = () => setCode('');
@@ -251,7 +284,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
     };
 
     useEffect(() => {
-        if (value !== 3) return;
+        if (currentKey !== 'balance') return;
 
         if (phoneSuffix.length !== 4) {
             setMemberList([]);
@@ -263,7 +296,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [phoneSuffix, value]);
+    }, [phoneSuffix, currentKey]);
 
 
     return (
@@ -296,58 +329,69 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                         }
                     }}
                 >
-                    <Tab icon="🤖" iconPosition="start" label={translate('pos.pay.auto')} {...a11yProps(0)} />
-                    <Tab icon="📷" iconPosition="start" label={translate('pos.pay.scan')} {...a11yProps(1)} />
-                    <Tab icon="💵" iconPosition="start" label={translate('pos.pay.cash')} {...a11yProps(2)} />
-                    <Tab icon="💰" iconPosition="start" label={translate('pos.pay.balance')} {...a11yProps(3)} />
+                    {tabs.map((tab, index) => (
+                        <Tab
+                            key={tab.key}
+                            icon={tab.icon}
+                            iconPosition="start"
+                            label={translate(tab.labelKey)}
+                            {...a11yProps(index)}
+                        />
+                    ))}
                 </Tabs>
             </Box>
-            <CustomTabPanel key={0} value={value} index={0}>
-                {<PayCodeDisplay
-                    value={code}
-                    verified={verified}
-                    onReset={handleResetInput}
-                />}
-            </CustomTabPanel>
-            <CustomTabPanel key={1} value={value} index={1}>
-                <QRScanner
-                    onScanSuccess={(scannedCode: string) => {
-                        if (isScanning) {
-                            setIsScanning(false);
-                            submitPay(scannedCode).finally(() => setIsScanning(true));
-                        }
-                    }}
-                    onScanLimitReached={() => {
-                        toast.warning(translate('pos.pay.scan_limit'), {
-                            position: "top-center",
-                            autoClose: 5000
-                        });
-                    }}
-                />
-            </CustomTabPanel>
-            <CustomTabPanel key={2} value={value} index={2}>
-                <NumericKeyboardDialog open={cash} setOpen={setCash} onSave={handlePayByCash} title={translate('pos.pay.enter_cash')}
-                                       min={1} max={999} defaultValue={price} confirmText={translate('pos.pay.confirm_cash')}
-                                       type="money"
-                                       clearText={translate('pos.pay.free')}
-                                       inline={true}
-                />
-
-            </CustomTabPanel>
-            <CustomTabPanel value={value} index={3}>
-                <MemberBalancePay
-                    value={value}
-                    index={3}
-                    price={price}
-                    originalPrice={originalPrice || price}
-                    orderID={orderID}
-                    fetchData={fetchData}
-                    setCart={setCart}
-                    setOpen={setOpen}
-                    setOrderDrawerOpen={setOrderDrawerOpen}
-                    offers={offers}
-                />
-            </CustomTabPanel>
+            {tabs.map((tab, index) => (
+                <CustomTabPanel key={tab.key} value={value} index={index}>
+                    {tab.key === 'auto' && (
+                        <PayCodeDisplay value={code} verified={verified} onReset={handleResetInput} />
+                    )}
+                    {tab.key === 'scan' && (
+                        <QRScanner
+                            onScanSuccess={(scannedCode: string) => {
+                                if (isScanning) {
+                                    setIsScanning(false);
+                                    submitPay(scannedCode).finally(() => setIsScanning(true));
+                                }
+                            }}
+                            onScanLimitReached={() => {
+                                toast.warning(translate('pos.pay.scan_limit'), {
+                                    position: 'top-center',
+                                    autoClose: 5000,
+                                });
+                            }}
+                        />
+                    )}
+                    {tab.key === 'cash' && (
+                        <NumericKeyboardDialog
+                            open={cash}
+                            setOpen={setCash}
+                            onSave={handlePayByCash}
+                            title={translate('pos.pay.enter_cash')}
+                            min={1}
+                            max={999}
+                            defaultValue={price}
+                            confirmText={translate('pos.pay.confirm_cash')}
+                            type="money"
+                            clearText={translate('pos.pay.free')}
+                            inline
+                        />
+                    )}
+                    {tab.key === 'balance' && (
+                        <MemberBalancePay
+                            value={value}
+                            index={index}
+                            price={price}
+                            originalPrice={originalPrice || price}
+                            orderID={orderID}
+                            fetchData={fetchData}
+                            setCart={setCart}
+                            setOpen={setOpen}
+                            setOrderDrawerOpen={setOrderDrawerOpen}
+                            offers={offers}
+                        />
+                    )}
+                </CustomTabPanel>
+            ))}
 
         </Box>
     );

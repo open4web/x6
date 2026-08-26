@@ -12,6 +12,8 @@ import GradingIcon from '@mui/icons-material/Grading';
 import TablePicker from "../../common/TablePicker";
 import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 import {CartItem} from "../../common/types";
+import {lookupProductUnitPrice} from "../../utils/catalogCache";
+import {resolveUnitPrice} from "../../utils/comboMatch";
 import {useCallback, useEffect, useRef, useState} from "react";
 import MyDataDrawer from "./MyDataDrawer";
 import RechargeCardSelector from "../../common/RechargeCardSelector";
@@ -48,8 +50,15 @@ export const MyHome = () => {
         }
         setDrawerOpen(true);
 
+        const unit = resolveUnitPrice(item) || lookupProductUnitPrice(merchantId, item.id);
+        const priced: CartItem = {
+            ...item,
+            origin_price: item.origin_price || unit,
+            price: Number(item.price) > 0 ? item.price : unit,
+        };
+
         // 检查购物车中是否已存在该商品
-        const existingItem = cartItems.find((cartItem: CartItem) => cartItem.id === item.id && cartItem.desc === item.desc);
+        const existingItem = cartItems.find((cartItem: CartItem) => cartItem.id === priced.id && cartItem.desc === priced.desc);
 
         if (existingItem ) {
 
@@ -57,16 +66,16 @@ export const MyHome = () => {
             // 商品已存在，增加数量
             setCartItems((prevCart) =>
                 prevCart.map((cartItem: CartItem) =>
-                    cartItem.id === item.id && cartItem.desc === item.desc
-                        ? { ...cartItem, quantity: (cartItem.quantity || 1) + 1 }
+                    cartItem.id === priced.id && cartItem.desc === priced.desc
+                        ? { ...cartItem, quantity: (cartItem.quantity || 1) + 1, price: cartItem.price || priced.price, origin_price: cartItem.origin_price || priced.origin_price }
                         : cartItem
                 )
             );
             console.log("increment quantity", cartItems)
-            toast.success(translate('pos.cart.qty_up', {name: item.name}), { position: "top-center", autoClose: 2000 });
+            toast.success(translate('pos.cart.qty_up', {name: priced.name}), { position: "top-center", autoClose: 2000 });
         } else {
             // 商品不存在，首次添加到购物车
-            setCartItems([...cartItems, { ...item, quantity: 1 }]);
+            setCartItems([...cartItems, { ...priced, quantity: 1 }]);
             toast.success(translate('pos.cart.added'), { position: "top-center", autoClose: 2000 });
         }
     };

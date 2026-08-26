@@ -14,6 +14,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {CartItem} from '../../../common/types';
 import {CartStyle} from '../../../layout/cartStyle';
+import {resolveUnitPrice} from '../../../utils/comboMatch';
 
 type LineHandlers = {
     onInc: (item: CartItem) => void;
@@ -71,7 +72,7 @@ function ClassicLines({items, onInc, onDec, onRemove, comboMarks}: {items: CartI
                     <Box sx={{display: 'flex', alignItems: 'center'}}>
                         <QtyStepper item={item} onInc={() => onInc(item)} onDec={() => onDec(item)} />
                         <Typography variant="h6" sx={{fontWeight: 'bold', color: 'darkorange', fontFamily: 'monospace', minWidth: 60, textAlign: 'right'}}>
-                            {item.price.toFixed(2)}
+                            {resolveUnitPrice(item).toFixed(2)}
                         </Typography>
                     </Box>
                     <ListItemSecondaryAction>
@@ -97,7 +98,7 @@ function TicketLines({items, onInc, onDec, onRemove, comboMarks}: {items: CartIt
                             {item.desc && <Typography variant="caption" color="text.secondary" noWrap>{item.desc}</Typography>}
                         </Box>
                         <Typography sx={{fontWeight: 800, color: '#d32f2f', flexShrink: 0}}>
-                            ¥{(item.price * item.quantity).toFixed(2)}
+                            ¥{(resolveUnitPrice(item) * item.quantity).toFixed(2)}
                         </Typography>
                     </Box>
                     <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -123,7 +124,7 @@ function DenseLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineH
                     </Box>
                     <QtyStepper item={item} onInc={() => onInc(item)} onDec={() => onDec(item)} compact />
                     <Typography sx={{fontWeight: 800, color: 'darkorange', minWidth: 48, textAlign: 'right', fontSize: 13}}>
-                        {item.price.toFixed(2)}
+                        {resolveUnitPrice(item).toFixed(2)}
                     </Typography>
                     <IconButton size="small" onClick={() => onRemove(item)}>
                         <DeleteIcon fontSize="small" color="error" />
@@ -154,7 +155,7 @@ function TileLines({items, onInc, onDec, onRemove, comboMarks}: {items: CartItem
                     {item.desc && <Typography variant="caption" color="text.secondary" noWrap sx={{display: 'block', mb: 0.5}}>{item.desc}</Typography>}
                     <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                         <QtyStepper item={item} onInc={() => onInc(item)} onDec={() => onDec(item)} compact />
-                        <Typography sx={{fontWeight: 800, color: '#d32f2f'}}>¥{item.price.toFixed(2)}</Typography>
+                        <Typography sx={{fontWeight: 800, color: '#d32f2f'}}>¥{resolveUnitPrice(item).toFixed(2)}</Typography>
                     </Box>
                 </Box>
             ))}
@@ -176,7 +177,7 @@ function BoardLines({items, onInc, onDec, onRemove, comboMarks}: {items: CartIte
                         {item.desc && <Typography variant="caption" color="text.secondary" noWrap>{item.desc}</Typography>}
                     </Box>
                     <Box sx={{textAlign: 'right'}}>
-                        <Typography sx={{fontWeight: 800, color: '#d32f2f'}}>¥{(item.price * item.quantity).toFixed(2)}</Typography>
+                        <Typography sx={{fontWeight: 800, color: '#d32f2f'}}>¥{(resolveUnitPrice(item) * item.quantity).toFixed(2)}</Typography>
                         <Box sx={{display: 'flex', justifyContent: 'flex-end'}}>
                             <QtyStepper item={item} onInc={() => onInc(item)} onDec={() => onDec(item)} compact />
                             <IconButton size="small" onClick={() => onRemove(item)}>
@@ -203,7 +204,7 @@ function DockLines({items, onInc, onDec, onRemove}: {items: CartItem[]} & LineHa
                         <Typography variant="caption" color="text.secondary" noWrap>{item.desc || item.combName || item.kindName}</Typography>
                     </Box>
                     <Typography sx={{fontWeight: 800, color: 'darkorange', minWidth: 52, textAlign: 'right'}}>
-                        ¥{item.price.toFixed(2)}
+                        ¥{resolveUnitPrice(item).toFixed(2)}
                     </Typography>
                     <QtyStepper item={item} onInc={() => onInc(item)} onDec={() => onDec(item)} compact />
                     <IconButton size="small" onClick={() => onRemove(item)}>

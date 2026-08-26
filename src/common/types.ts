@@ -41,6 +41,7 @@ export interface CartItem {
     id: string;
     name: string;
     price: number;
+    origin_price?: number;
     quantity: number;
     propsOptions: MyProductProps[];
     spiceOptions: PropsOptions[];

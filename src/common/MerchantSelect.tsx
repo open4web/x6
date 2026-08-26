@@ -7,7 +7,7 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import {useFetchData} from "./FetchData";
 import {useCartContext} from "../dataProvider/MyCartProvider";
 import {useTranslate} from 'react-admin';
-import {writeStores} from '../utils/storeCache';
+import {unwrapStoreList, writeStores} from '../utils/storeCache';
 
 type SelectStoreProps = {
     refreshAfterSelect?: boolean;
@@ -34,7 +34,7 @@ export default function MerchantSelect({ refreshAfterSelect = true }: SelectStor
 
     React.useEffect(() => {
         fetchData('/v1/hlj/store/list', (response) => {
-            const list = Array.isArray(response) ? response : [];
+            const list = unwrapStoreList(response);
             setStores(list);
             writeStores(list);
         });

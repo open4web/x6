@@ -81,11 +81,12 @@ function CartCount({count}: {count: number}) {
 function PriceBlock({item, size = 'md'}: {item: ProductItem; size?: 'sm' | 'md' | 'lg'}) {
     const priceSize = size === 'lg' ? '1.35rem' : size === 'sm' ? '1rem' : '1.2rem';
     const originSize = size === 'sm' ? '0.7rem' : '0.8rem';
+    const unitPrice = Number(item.origin_price) > 0 ? Number(item.origin_price) : Number(item.price) || 0;
     if (item.combPrice !== 0) {
         return (
             <Box>
                 <Typography sx={{fontSize: originSize, textDecoration: 'line-through', color: 'text.secondary'}} noWrap>
-                    ¥{item?.price || 0}
+                    ¥{unitPrice}
                 </Typography>
                 <Typography sx={{fontSize: priceSize, fontWeight: 'bold', color: 'darkorange'}} noWrap>
                     ¥{item?.combPrice}
@@ -95,7 +96,7 @@ function PriceBlock({item, size = 'md'}: {item: ProductItem; size?: 'sm' | 'md' 
     }
     return (
         <Typography sx={{fontSize: priceSize, fontWeight: 'bold', color: 'darkorange'}} noWrap>
-            ¥{item?.price}
+            ¥{unitPrice}
         </Typography>
     );
 }

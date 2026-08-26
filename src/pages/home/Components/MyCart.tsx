@@ -22,7 +22,8 @@ import {readStoreTables, writeStoreTables} from "../../../utils/storeCache";
 import {Alert, FormControl, FormControlLabel, Radio, RadioGroup} from "@mui/material";
 import {cartPanelWidth, useCartStyle} from "../../../layout/cartStyle";
 import {CartItemList} from "./CartItemLayouts";
-import {matchComboGroups, toOrderBuckets} from "../../../utils/comboMatch";
+import {matchComboGroups, toOrderBuckets, withUnitPrices} from "../../../utils/comboMatch";
+import {lookupProductUnitPrice} from "../../../utils/catalogCache";
 
 import {
     Storefront,
@@ -45,7 +46,7 @@ export const pickTypes = [
 export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProps) {
     const translate = useTranslate();
     const [, setSidebarOpen] = useSidebarState();
-    const {setHoldOrders, ready, triggerOrderFly, setDrawerOpen} = useCartContext();
+    const {setHoldOrders, ready, triggerOrderFly, setDrawerOpen, merchantId} = useCartContext();
     const [price, setPrice] = React.useState(0);
     const [openPayChannel, setOpenPayChannel] = React.useState(false);
     const [orderID, setOrderID] = React.useState("");
@@ -65,9 +66,13 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
     const [pick, setPick] = React.useState(2); // 默认为堂食 (2)
 
+    const pricedItems = React.useMemo(
+        () => withUnitPrices(cartItems, id => lookupProductUnitPrice(merchantId, id)),
+        [cartItems, merchantId],
+    );
     const comboResult = React.useMemo(
-        () => matchComboGroups(cartItems, comboGroup),
-        [cartItems, comboGroup],
+        () => matchComboGroups(pricedItems, comboGroup),
+        [pricedItems, comboGroup],
     );
 
     const handlePickChange = (event: { target: { value: any; }; }) => {
@@ -110,7 +115,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
         const newOrderRequest = {
             at: localStorage.getItem("current_store_id") as string,
-            buckets: toOrderBuckets(cartItems, comboResult),
+            buckets: toOrderBuckets(pricedItems, comboResult),
             combos: comboResult.matches.map(hit => ({
                 id: hit.id,
                 name: hit.name,
@@ -345,7 +350,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             </Typography>
             <Box sx={{flex: 1, overflowY: 'auto'}}>
                 <CartItemList
-                    items={cartItems}
+                    items={pricedItems}
                     styleName={cartStyle}
                     comboMarks={comboResult.lineMarks}
                     onInc={item => changeQty(item, 1)}

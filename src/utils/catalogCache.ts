@@ -181,6 +181,28 @@ export function applyStock(merchantId: string, products: ProductItem[]): Product
     return applyStockToProducts(merchantId, products);
 }
 
+export function lookupProductUnitPrice(merchantId: string, productId: string): number {
+    if (!merchantId || !productId) {
+        return 0;
+    }
+    let best = 0;
+    const catalog = ensureStore(merchantId);
+    Object.values(catalog.productsByMenu).forEach(entry => {
+        (entry?.data || []).forEach(product => {
+            if (product.id !== productId) {
+                return;
+            }
+            const origin = Number(product.origin_price) || 0;
+            const price = Number(product.price) || 0;
+            const unit = origin > 0 ? origin : price;
+            if (unit > best) {
+                best = unit;
+            }
+        });
+    });
+    return best;
+}
+
 /** Overlay live stock without touching the catalog TTL. Ready for websocket patches. */
 export function patchStock(
     merchantId: string,

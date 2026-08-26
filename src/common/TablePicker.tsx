@@ -104,10 +104,12 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
     const billedSeatRef = React.useRef<StoreSeat | null>(null);
 
     const applySeats = (list: StoreSeat[], keepId?: string) => {
+        const cached = readStoreTables(storeId) || store;
         const next = {
+            ...cached,
             id: storeId,
-            name: store?.name || '',
-            layout: store?.layout,
+            name: cached?.name || store?.name || '',
+            layout: cached?.layout || store?.layout,
             seats: list,
         };
         writeStoreTables(storeId, next);

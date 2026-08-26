@@ -23,13 +23,47 @@ export type StoreLayout = {
     rows?: number;
 };
 
+export type PayChannels = {
+    cash?: boolean;
+    wechat?: boolean;
+    balance?: boolean;
+};
+
 export type CachedStore = {
     id: string;
     name: string;
     status?: number;
     layout?: StoreLayout;
     seats?: StoreSeat[];
+    pay_channels?: PayChannels;
 };
+
+export function unwrapStoreList(payload: any): CachedStore[] {
+    if (Array.isArray(payload)) {
+        return payload;
+    }
+    if (Array.isArray(payload?.data)) {
+        return payload.data;
+    }
+    if (Array.isArray(payload?.list)) {
+        return payload.list;
+    }
+    return [];
+}
+
+export function resolvePayChannels(store?: CachedStore | null): {cash: boolean; wechat: boolean; balance: boolean} {
+    const channels = store?.pay_channels;
+    if (!channels) {
+        return {cash: true, wechat: false, balance: false};
+    }
+    const cash = channels.cash !== false;
+    const wechat = !!channels.wechat;
+    const balance = !!channels.balance;
+    if (!cash && !wechat && !balance) {
+        return {cash: true, wechat: false, balance: false};
+    }
+    return {cash, wechat, balance};
+}
 
 const KEY = (storeId: string) => `storeTables:${storeId}`;
 
@@ -37,7 +71,18 @@ export function writeStoreTables(storeId: string, store: CachedStore) {
     if (!storeId) {
         return;
     }
-    localStorage.setItem(KEY(storeId), JSON.stringify({...store, cachedAt: Date.now()}));
+    const prev = readStoreTables(storeId);
+    const next: CachedStore = {
+        ...prev,
+        ...store,
+        id: store.id || prev?.id || storeId,
+        name: store.name || prev?.name || '',
+        status: store.status ?? prev?.status,
+        layout: store.layout ?? prev?.layout,
+        seats: store.seats ?? prev?.seats,
+        pay_channels: store.pay_channels ?? prev?.pay_channels,
+    };
+    localStorage.setItem(KEY(storeId), JSON.stringify({...next, cachedAt: Date.now()}));
 }
 
 export function readStoreTables(storeId: string): CachedStore | null {
@@ -53,7 +98,7 @@ export function readStoreTables(storeId: string): CachedStore | null {
 }
 
 export function writeStores(stores: CachedStore[]) {
-    (stores || []).forEach(store => {
+    unwrapStoreList(stores).forEach(store => {
         if (store?.id) {
             writeStoreTables(store.id, store);
         }

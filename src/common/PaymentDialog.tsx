@@ -108,16 +108,19 @@ export default function PaymentDialog({
 
             <DialogContent>
                 <CheckoutOfferBar offers={offers} showTickets={offers.tickets.length > 0} />
-                <PayChannel
-                    price={payAmount}
-                    originalPrice={price}
-                    orderID={orderID}
-                    fetchData={fetchData}
-                    setCart={setCart}
-                    setOpen={onClose}
-                    onSuccess={handlePaySuccess}
-                    offers={offers}
-                />
+                {open ? (
+                    <PayChannel
+                        key={orderID}
+                        price={payAmount}
+                        originalPrice={price}
+                        orderID={orderID}
+                        fetchData={fetchData}
+                        setCart={setCart}
+                        setOpen={onClose}
+                        onSuccess={handlePaySuccess}
+                        offers={offers}
+                    />
+                ) : null}
             </DialogContent>
         </Dialog>
     );
