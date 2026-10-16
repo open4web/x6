@@ -13,7 +13,7 @@ export const posExtra = {
             need_duty: '请先开始值班后再交接',
             end_hint: '结束本班，办理交接',
             title: '交接班',
-            subtitle: '核对账目后交给下一班。不想交了可以直接取消。',
+            subtitle: '核对账目后，用 @ 指定下一班管理员。不想交了可以直接取消。',
         },
         lock: {
             title: '尚未开始值班',

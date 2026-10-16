@@ -17,6 +17,33 @@ export interface Order {
     create_time: string;
 }
 
+export interface Assignee {
+    id: string;
+    name: string;
+    avatar?: string;
+    role: string;
+    titles?: string[];
+    category?: string;
+    phone_suffix?: string;
+    online?: boolean;
+}
+
+export function filterAssignees(people: Assignee[], raw: string, exclude: string[] = []): Assignee[] {
+    const blocked = new Set(exclude.filter(Boolean));
+    const query = raw.trim().replace(/^@+/g, '').toLowerCase();
+    return people.filter(person => {
+        if (blocked.has(person.id)) {
+            return false;
+        }
+        if (!query) {
+            return true;
+        }
+        const name = (person.name || '').toLowerCase();
+        const phone = (person.phone_suffix || '').toLowerCase();
+        return name.startsWith(query) || (phone !== '' && phone.startsWith(query));
+    });
+}
+
 export interface ShiftHandover {
     handover_id: string;
     start_time: string;
@@ -36,6 +63,7 @@ export interface ShiftHandover {
     cash_difference: number;
 
     payment_summary: Record<string, number>;
+    payment_live?: boolean;
     open_orders: Order[];
     low_stock_items: string[];
     special_notes: string;
