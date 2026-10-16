@@ -34,10 +34,41 @@ export type CachedStore = {
     id: string;
     name: string;
     status?: number;
+    hours?: string;
+    phone?: string;
+    area?: string;
+    address?: string;
+    category?: string;
     layout?: StoreLayout;
     seats?: StoreSeat[];
     pay_channels?: PayChannels;
 };
+
+export function storePlace(store?: Pick<CachedStore, 'area' | 'address'> | null) {
+    const area = String(store?.area || '').trim();
+    const address = String(store?.address || '').trim();
+    if (area && address) {
+        return address.includes(area) ? address : `${area} · ${address}`;
+    }
+    return area || address;
+}
+
+export function storeSeatCounts(seats?: Array<Pick<StoreSeat, 'status'>> | null) {
+    const list = seats || [];
+    let busy = 0;
+    let reserved = 0;
+    let free = 0;
+    for (const seat of list) {
+        if (seat.status === 1) {
+            busy += 1;
+        } else if (seat.status === 2) {
+            reserved += 1;
+        } else if (seat.status !== 3) {
+            free += 1;
+        }
+    }
+    return {total: list.length, busy, reserved, free};
+}
 
 export function unwrapStoreList(payload: any): CachedStore[] {
     if (Array.isArray(payload)) {
@@ -79,6 +110,11 @@ export function writeStoreTables(storeId: string, store: CachedStore) {
         id: store.id || prev?.id || storeId,
         name: store.name || prev?.name || '',
         status: store.status ?? prev?.status,
+        hours: store.hours || prev?.hours,
+        phone: store.phone || prev?.phone,
+        area: store.area || prev?.area,
+        address: store.address || prev?.address,
+        category: store.category || prev?.category,
         layout: store.layout ?? prev?.layout,
         seats: store.seats ?? prev?.seats,
         pay_channels: store.pay_channels ?? prev?.pay_channels,

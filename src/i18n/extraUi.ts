@@ -111,7 +111,12 @@ export const extraUi = pack(
         combo: {max: '已经达到了最大选择数量'},
         chart: {qty: '销量', amount: '金额'},
         time: {sec: '秒', min: '分钟', hour: '小时', day: '天'},
-        store: {current: '当前门店'},
+        store: {
+            current: '当前门店',
+            status_0: '休息', status_1: '运营', status_2: '自动运营', status_unknown: '状态未知',
+            seats: '%{count} 桌', busy: '在用 %{count}', reserved: '预定 %{count}', free: '空闲',
+            pay_cash: '现金', pay_wechat: '微信', pay_balance: '余额',
+        },
         catalog: {refresh: '刷新菜谱缓存', refreshed: '菜谱已重新加载'},
         card_style: {
             title: '产品卡片',
@@ -271,7 +276,12 @@ export const extraUi = pack(
         combo: {max: 'Selection limit reached'},
         chart: {qty: 'Qty', amount: 'Amount'},
         time: {sec: 's', min: 'min', hour: 'h', day: 'd'},
-        store: {current: 'Store'},
+        store: {
+            current: 'Store',
+            status_0: 'Closed', status_1: 'Open', status_2: 'Auto', status_unknown: 'Unknown',
+            seats: '%{count} tables', busy: '%{count} busy', reserved: '%{count} held', free: 'Free',
+            pay_cash: 'Cash', pay_wechat: 'WeChat', pay_balance: 'Balance',
+        },
         catalog: {refresh: 'Reload catalog', refreshed: 'Catalog reloaded'},
         card_style: {
             title: 'Product card',
@@ -343,7 +353,7 @@ export const extraUi = pack(
             combo: {max: '已達到最大選擇數量'},
             chart: {qty: '銷量', amount: '金額'},
             time: {sec: '秒', min: '分鐘', hour: '小時', day: '天'},
-            store: {current: '目前門店'},
+            store: {current: '目前門店', status_0: '休息', status_1: '營運', status_2: '自動營運', status_unknown: '狀態未知', seats: '%{count} 桌', busy: '使用 %{count}', reserved: '預定 %{count}', free: '空閒', pay_cash: '現金', pay_wechat: '微信', pay_balance: '餘額'},
             card_style: {title: '產品卡片', classic: '經典', poster: '海報', compact: '橫排', tile: '磁貼', board: '菜單', ticket: '小票'},
             order_style: {title: '訂單卡片', classic: '經典', ticket: '小票', kanban: '看板', queue: '叫號', strip: '橫條', ledger: '賬單'},
             cart_style: {title: '購物車', classic: '經典', ticket: '小票', dense: '緊湊', tile: '磁貼', board: '看板', dock: '底欄'},
