@@ -21,7 +21,7 @@ import MyOrderDetail, {OpenReason} from './MyOrderDetail';
 import {useFetchData} from './FetchData';
 import {useCartContext} from '../dataProvider/MyCartProvider';
 import {Order} from '../pages/home/Components/types';
-import {formatElapsed, liveElapsed, readStoreTables, seatLabel, StoreSeat, writeStoreTables} from '../utils/storeCache';
+import {formatElapsed, liveElapsed, readStoreTables, seatLabel, seatZone, StoreSeat, writeStoreTables} from '../utils/storeCache';
 
 export type TableSaveValue = {
     tableNo: string;
@@ -163,7 +163,7 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
     }, [seats, cols, rows, tick]);
 
     const bindSeat = (seat: StoreSeat, intent: TableSaveValue['intent']) => {
-        const tableNo = seatLabel(seat);
+        const tableNo = seatLabel(seat, store?.layout?.qr_display);
         localStorage.setItem('selectedSeatId', seat.id);
         localStorage.setItem('ticketNumber', tableNo);
         if (seat.capacity && !localStorage.getItem('peopleNumber')) {
@@ -195,7 +195,7 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
             }
             return true;
         } catch {
-            toast.error(translate('pos.common.failed', {text: seatLabel(seat)}), {position: 'top-center', autoClose: 1800});
+            toast.error(translate('pos.common.failed', {text: seatLabel(seat, store?.layout?.qr_display)}), {position: 'top-center', autoClose: 1800});
             return false;
         } finally {
             setActing(false);
@@ -203,7 +203,7 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
     };
 
     const fetchOrderForSeat = async (seat: StoreSeat) => {
-        const tableNo = seatLabel(seat);
+        const tableNo = seatLabel(seat, store?.layout?.qr_display);
         if (seat.order_no) {
             try {
                 const response = await axios.get(`/v1/hlj/order/pos/${seat.order_no}`, {headers: authHeaders()});
@@ -340,11 +340,11 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
                                                 }}
                                             >
                                                 <Typography sx={{fontWeight: 800, fontSize: '1rem'}} noWrap>
-                                                    {seatLabel(seat)}
+                                                    {seatLabel(seat, store?.layout?.qr_display)}
                                                 </Typography>
                                                 <Typography variant="caption" sx={{display: 'block', opacity: 0.92}}>
                                                     {translate('pos.seat.capacity', {count: seat.capacity || 2})}
-                                                    {seat.area ? ` · ${seat.area}` : ''}
+                                                    {seatZone(seat.area) ? ` · ${seatZone(seat.area)}` : ''}
                                                 </Typography>
                                                 {(seat.status === 1 || seat.status === 2) && (
                                                     <Typography variant="caption" sx={{display: 'block', fontWeight: 700}}>

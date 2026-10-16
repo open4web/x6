@@ -21,6 +21,7 @@ export type StoreSeat = {
 export type StoreLayout = {
     cols?: number;
     rows?: number;
+    qr_display?: string;
 };
 
 export type PayChannels = {
@@ -105,11 +106,55 @@ export function writeStores(stores: CachedStore[]) {
     });
 }
 
-export function seatLabel(seat?: StoreSeat | null) {
+const SIZE_PREFIX: Record<string, string> = {large: 'A', middle: 'B', small: 'C'};
+
+function clipPrefix(value?: string) {
+    return String(value || '').replace(/[|\r\n]/g, '').trim().slice(0, 8);
+}
+
+export function splitQrDisplay(value?: string) {
+    const raw = String(value || '').trim();
+    const cut = raw.indexOf('|');
+    const modeRaw = (cut >= 0 ? raw.slice(0, cut) : raw).trim();
+    const prefix = cut >= 0 ? clipPrefix(raw.slice(cut + 1)) : '';
+    const mode = modeRaw === 'name' || modeRaw === 'id' || modeRaw === 'table_no' ? modeRaw : 'table_no';
+    return {mode, prefix};
+}
+
+export function readSeatPrefix(area?: string) {
+    const raw = String(area || '');
+    return raw.startsWith('p:') ? clipPrefix(raw.slice(2)) : '';
+}
+
+export function seatZone(area?: string) {
+    const raw = String(area || '').trim();
+    return raw.startsWith('p:') ? '' : raw;
+}
+
+function resolveSeatPrefix(storePrefix?: string, area?: string, seatType?: string) {
+    const raw = readSeatPrefix(area) || clipPrefix(storePrefix);
+    if (!raw || raw === 'table' || raw === '桌号') return '桌号';
+    if (raw === 'none' || raw === '-') return '';
+    if (raw === 'size') return SIZE_PREFIX[String(seatType || '').trim()] || '桌号';
+    return raw;
+}
+
+export function seatLabel(seat?: StoreSeat | null, qrDisplay?: string) {
     if (!seat) {
         return '';
     }
-    return seat.table_no || seat.name || seat.id;
+    const {mode, prefix} = splitQrDisplay(qrDisplay);
+    const tableNo = String(seat.table_no || '').trim();
+    const name = String(seat.name || '').trim();
+    const id = String(seat.id || '').trim();
+    let body = tableNo || name || id;
+    if (mode === 'id') body = id || body;
+    else if (mode === 'name') body = name || tableNo || id;
+    const word = resolveSeatPrefix(prefix, seat.area, seat.type);
+    if (!body) return word === '桌号' ? '' : word;
+    if (!word || word === '桌号') return body;
+    if (body === word || body.startsWith(`${word} `)) return body;
+    return `${word} ${body}`;
 }
 
 export function formatElapsed(seconds?: number) {
