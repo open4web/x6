@@ -47,6 +47,7 @@ function StoreOption({store, selected}: {store: CachedStore; selected?: boolean}
     const payLabels = [
         pays.cash ? translate('pos.store.pay_cash', {_: 'Cash'}) : '',
         pays.wechat ? translate('pos.store.pay_wechat', {_: 'WeChat'}) : '',
+        pays.lakala ? translate('pos.store.pay_lakala', {_: 'Lakala'}) : '',
         pays.balance ? translate('pos.store.pay_balance', {_: 'Balance'}) : '',
     ].filter(Boolean);
 

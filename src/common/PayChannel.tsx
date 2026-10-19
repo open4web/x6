@@ -1,7 +1,8 @@
 import * as React from 'react';
 import {useEffect, useRef, useState} from 'react';
-import {Box, Tab, Tabs,} from "@mui/material";
+import {Box, Button, Tab, Tabs, Typography} from "@mui/material";
 import {toast} from "react-toastify";
+import QRCode from "qrcode";
 import QRScanner from "./ScanCode";
 import {useFetchData} from "./FetchData";
 import {useCartContext} from "../dataProvider/MyCartProvider";
@@ -13,7 +14,21 @@ import {useTranslate} from 'react-admin';
 import {orderWsUrl, readAuthToken} from '../utils/authToken';
 import {readStoreTables, resolvePayChannels} from '../utils/storeCache';
 
-type PayTabKey = 'auto' | 'scan' | 'cash' | 'balance';
+type PayTabKey = 'auto' | 'scan' | 'lakala' | 'lakala_qr' | 'cash' | 'balance';
+
+function tabIndexFor(tabs: {key: string}[], preferred?: string) {
+    const mapped = preferred === 'wechat' ? 'auto' : (preferred || '');
+    if (!mapped) {
+        const cashIndex = tabs.findIndex(tab => tab.key === 'cash');
+        return cashIndex >= 0 ? cashIndex : 0;
+    }
+    const index = tabs.findIndex(tab => tab.key === mapped);
+    if (index >= 0) {
+        return index;
+    }
+    console.warn('pay channel default not in tabs', preferred);
+    return 0;
+}
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -50,11 +65,16 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
     const {merchantId, setOrderDrawerOpen, startPaymentWatch, notifyOrderPaid} = useCartContext();
     const storeId = merchantId || localStorage.getItem('current_store_id') || '';
     const channels = resolvePayChannels(readStoreTables(storeId));
+    const channelKey = `${channels.cash}:${channels.wechat}:${channels.lakala}:${channels.balance}:${channels.default}`;
     const tabs = React.useMemo(() => {
         const list: {key: PayTabKey; icon: string; labelKey: string}[] = [];
         if (channels.wechat) {
             list.push({key: 'auto', icon: '🤖', labelKey: 'pos.pay.auto'});
             list.push({key: 'scan', icon: '📷', labelKey: 'pos.pay.scan'});
+        }
+        if (channels.lakala) {
+            list.push({key: 'lakala', icon: '🧾', labelKey: 'pos.pay.lakala'});
+            list.push({key: 'lakala_qr', icon: '🔳', labelKey: 'pos.pay.lakala_qr'});
         }
         if (channels.cash) {
             list.push({key: 'cash', icon: '💵', labelKey: 'pos.pay.cash'});
@@ -66,9 +86,8 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             list.push({key: 'cash', icon: '💵', labelKey: 'pos.pay.cash'});
         }
         return list;
-    }, [channels]);
-    const cashIndex = Math.max(0, tabs.findIndex(tab => tab.key === 'cash'));
-    const [value, setValue] = React.useState(cashIndex);
+    }, [channelKey]);
+    const [value, setValue] = React.useState(() => tabIndexFor(tabs, channels.default));
     const currentKey = tabs[value]?.key || 'cash';
     const [code, setCode] = React.useState('');
     const [verified, setVerified] = React.useState(false);
@@ -76,6 +95,11 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
     const [isScanning, setIsScanning] = React.useState(true);
     const [isWeChatTab, setIsWeChatTab] = useState(true); // 是否启用扫码枪逻辑
     const {fetchData, alertComponent} = useFetchData();
+    const finished = useRef(false);
+    const finishPaidRef = useRef<() => Promise<void>>(async () => undefined);
+    const [qrImage, setQrImage] = useState('');
+    const tabRef = useRef(currentKey);
+    tabRef.current = currentKey;
     // ================= 余额模块 =================
     const [phoneSuffix, setPhoneSuffix] = useState('');
     const [memberList, setMemberList] = useState<any[]>([]);
@@ -112,9 +136,12 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             try {
                 const msg = JSON.parse(event.data);
                 console.log('支付 WS 消息:', msg);
-                const paid = msg.order_id === orderID &&
-                    (msg.status === 1 || msg.type === 'payment_success' || msg.pay_status === 'success');
-                if (!paid) {
+                const paid = msg.order_no === orderID && String(msg.stage) === '1';
+                if (!paid || finished.current) {
+                    return;
+                }
+                if (tabRef.current === 'lakala' || tabRef.current === 'lakala_qr') {
+                    void finishPaidRef.current();
                     return;
                 }
                 if (setCart) {
@@ -137,25 +164,24 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
         ws.onerror = (err) => console.error('支付 WebSocket 错误', err);
     };
 
-    // useEffect(() => {
-    //     connectPaymentWS();
-    //
-    //     return () => {
-    //         if (wsRef.current) {
-    //             wsRef.current.close();
-    //         }
-    //     };
-    // }, [orderID]);
+    useEffect(() => {
+        finished.current = false;
+        connectPaymentWS();
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
+            }
+        };
+    }, [orderID]);
 
     React.useEffect(() => {
-        if (value >= tabs.length) {
-            setValue(0);
-        }
-    }, [tabs.length, value]);
+        setValue(tabIndexFor(tabs, channels.default));
+    }, [channelKey]);
 
     React.useEffect(() => {
         setIsWeChatTab(currentKey === 'auto');
-        setIsScanning(currentKey === 'scan');
+        setIsScanning(currentKey === 'scan' || currentKey === 'lakala');
         setCash(currentKey === 'cash');
     }, [currentKey]);
 
@@ -164,6 +190,23 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
     };
 
     const handleResetInput = () => setCode('');
+
+    const finishPaid = async () => {
+        if (finished.current) {
+            return;
+        }
+        finished.current = true;
+        await offers?.redeem?.(orderID);
+        onSuccess?.();
+        if (setCart) {
+            setCart([]);
+        }
+        setOpen(false);
+        notifyOrderPaid(orderID);
+        startPaymentWatch(orderID);
+    };
+    finishPaidRef.current = finishPaid;
+
     const submitPay = async (scannedCode: string) => {
 
         // if (payingRef.current) return;
@@ -179,14 +222,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                 at,
                 code: scannedCode,
             });
-            await offers?.redeem?.(orderID);
-            onSuccess?.();
-
-            if (setCart) {
-                setCart([]);
-            }
-            setOpen(false);
-            startPaymentWatch(orderID);
+            await finishPaid();
 
         } catch {
             toast.error(translate('pos.pay.failed'));
@@ -215,7 +251,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
         } else {
             let interval: NodeJS.Timeout | null = null;
 
-            if (code.length === 18) {
+            if (currentKey !== 'lakala' && code.length === 18) {
                 submitPay(code).then(() => {
                     setCode('');
                     setVerified(false);
@@ -233,7 +269,142 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                 }
             };
         }
-    }, [isWeChatTab, code, price]);
+    }, [isWeChatTab, code, price, currentKey]);
+
+    const submitLakala = async (scannedCode: string) => {
+        try {
+            const body = await fetchData('/v1/pay/scan/pay', () => {
+            }, 'POST', {
+                channel: ChannelType.KalaPay,
+                order_id: orderID,
+                desc: translate('pos.pay.desc'),
+                amount: price,
+                at,
+                code: scannedCode,
+            }, true);
+            if (body?.result_code === 'PAY_SUCCESS') {
+                await finishPaid();
+                return;
+            }
+            if (body?.result_code === 'PAYING') {
+                toast.info(translate('pos.pay.paying'));
+                return;
+            }
+            toast.error(translate('pos.pay.failed'));
+        } catch {
+            toast.error(translate('pos.pay.failed'));
+        }
+    };
+
+    const submitLakalaRef = useRef(submitLakala);
+    submitLakalaRef.current = submitLakala;
+
+    useEffect(() => {
+        if (currentKey !== 'lakala' || price <= 0) {
+            return;
+        }
+        let buf = '';
+        let timer: number | undefined;
+        const flush = () => {
+            if (timer) {
+                window.clearTimeout(timer);
+                timer = undefined;
+            }
+            const next = buf;
+            buf = '';
+            setCode('');
+            if (next) {
+                void submitLakalaRef.current(next);
+            }
+        };
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                flush();
+                return;
+            }
+            if (event.key.length !== 1) {
+                return;
+            }
+            buf += event.key;
+            setCode(buf);
+            if (timer) {
+                window.clearTimeout(timer);
+            }
+            if (buf.length >= 16 && buf.length <= 32) {
+                timer = window.setTimeout(flush, 300);
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => {
+            window.removeEventListener('keydown', onKey);
+            if (timer) {
+                window.clearTimeout(timer);
+            }
+        };
+    }, [currentKey, price]);
+
+    useEffect(() => {
+        if (currentKey !== 'lakala_qr' || !orderID || !(Number(price) > 0)) {
+            return;
+        }
+        let cancel = false;
+        setQrImage('');
+        const load = async () => {
+            try {
+                const body = await fetchData('/v1/pay/lakala/qr', () => {
+                }, 'POST', {
+                    order_id: orderID,
+                    desc: translate('pos.pay.desc'),
+                    amount: price,
+                    at,
+                }, true);
+                if (cancel) {
+                    return;
+                }
+                const resultCode = String(body?.result_code || '');
+                if (resultCode === 'PAY_SUCCESS') {
+                    await finishPaidRef.current();
+                    return;
+                }
+                if (resultCode === 'CREATE_FAIL' || resultCode === 'PAY_FAIL' || resultCode === 'CLOSED') {
+                    toast.error(translate('pos.pay.qr_failed'));
+                    return;
+                }
+                let img = String(body?.qrcode_img || '');
+                if (!img && body?.code_url) {
+                    img = await QRCode.toDataURL(String(body.code_url));
+                }
+                if (cancel) {
+                    return;
+                }
+                if (!img) {
+                    toast.error(translate('pos.pay.qr_failed'));
+                    return;
+                }
+                setQrImage(img);
+                startPaymentWatch(orderID);
+            } catch {
+                if (!cancel) {
+                    toast.error(translate('pos.pay.qr_failed'));
+                }
+            }
+        };
+        void load();
+        return () => {
+            cancel = true;
+        };
+    }, [currentKey, orderID, price, at]);
+
+    const abandonLakalaQr = async () => {
+        try {
+            await fetchData('/v1/pay/scan/closed', () => {
+            }, 'POST', {order_id: orderID}, true);
+        } catch {
+            // 已支付的关单会失败，收银仍可离开二维码。
+        }
+        setOpen(false);
+    };
 
     const handlePayByCash = async (value: string) => {
         const amount = parseFloat(value);
@@ -250,18 +421,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                 amount: amount,
                 remark: translate('pos.pay.cash_remark'),
             });
-            await offers?.redeem?.(orderID);
-            onSuccess?.();
-
-            // 清空购物车
-            if (setCart) {
-                setCart([]);
-            }
-
-            // 关闭支付弹窗
-            setOpen(false);
-
-            startPaymentWatch(orderID);
+            await finishPaid();
 
         } catch (error) {
             toast.error(translate('pos.pay.cash_failed'), {position: "top-center"});
@@ -342,8 +502,24 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             </Box>
             {tabs.map((tab, index) => (
                 <CustomTabPanel key={tab.key} value={value} index={index}>
-                    {tab.key === 'auto' && (
+                    {(tab.key === 'auto' || tab.key === 'lakala') && (
                         <PayCodeDisplay value={code} verified={verified} onReset={handleResetInput} />
+                    )}
+                    {tab.key === 'lakala' && (
+                        <QRScanner
+                            onScanSuccess={(scannedCode: string) => {
+                                if (isScanning) {
+                                    setIsScanning(false);
+                                    submitLakala(scannedCode).finally(() => setIsScanning(true));
+                                }
+                            }}
+                            onScanLimitReached={() => {
+                                toast.warning(translate('pos.pay.scan_limit'), {
+                                    position: 'top-center',
+                                    autoClose: 5000,
+                                });
+                            }}
+                        />
                     )}
                     {tab.key === 'scan' && (
                         <QRScanner
@@ -360,6 +536,17 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                                 });
                             }}
                         />
+                    )}
+                    {tab.key === 'lakala_qr' && (
+                        <Box sx={{textAlign: 'center'}}>
+                            {qrImage ? (
+                                <Box component="img" alt="" src={qrImage} sx={{width: 240, height: 240, objectFit: 'contain'}} />
+                            ) : null}
+                            <Typography sx={{mt: 1}}>{translate('pos.pay.qr_wait')}</Typography>
+                            <Button sx={{mt: 2}} variant="outlined" onClick={() => void abandonLakalaQr()}>
+                                {translate('pos.pay.close_qr')}
+                            </Button>
+                        </Box>
                     )}
                     {tab.key === 'cash' && (
                         <NumericKeyboardDialog

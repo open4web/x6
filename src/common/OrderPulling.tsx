@@ -1,6 +1,5 @@
 import {useEffect} from 'react';
 import axios from 'axios';
-import {useCartContext} from '../dataProvider/MyCartProvider';
 
 const POLL_INTERVAL_MS = 1500;
 const MAX_ATTEMPTS = 20;
@@ -73,13 +72,15 @@ function listHasOrder(list: any[], orderNo: string) {
     return list.some(order => order?.identity?.order_no === orderNo || order?.id === orderNo);
 }
 
-export function OrderListWatcher() {
-    const {
-        syncingOrderNo,
-        markOrderListReady,
-        setOrderSyncProgress,
-    } = useCartContext();
-
+export function OrderListWatcher({
+    syncingOrderNo,
+    markOrderListReady,
+    setOrderSyncProgress,
+}: {
+    syncingOrderNo: string;
+    markOrderListReady: (orderNo: string) => void;
+    setOrderSyncProgress: (value: number) => void;
+}) {
     useEffect(() => {
         if (!syncingOrderNo) {
             return;
@@ -129,9 +130,13 @@ export function OrderListWatcher() {
     return null;
 }
 
-export function PaymentWatcher() {
-    const {watchingOrderNo, notifyOrderPaid} = useCartContext();
-
+export function PaymentWatcher({
+    watchingOrderNo,
+    notifyOrderPaid,
+}: {
+    watchingOrderNo: string;
+    notifyOrderPaid: (orderNo: string) => void;
+}) {
     useEffect(() => {
         if (!watchingOrderNo) {
             return;
@@ -175,12 +180,3 @@ export function PaymentWatcher() {
 
     return null;
 }
-
-export const useOrderPolling = (_fetchData: any, _setOrderDrawerOpen: any) => {
-    const {startPaymentWatch} = useCartContext();
-    return {
-        pollOrder: async (orderID: string) => {
-            startPaymentWatch(orderID);
-        },
-    };
-};

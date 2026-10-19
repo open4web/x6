@@ -2,6 +2,7 @@ import React, {createContext, useCallback, useContext, useRef, useState, ReactNo
 import {toast} from 'react-toastify';
 import {tPos} from '../i18n/t';
 import {CartItem, CartItemHolder} from "../common/types";
+import {OrderListWatcher, PaymentWatcher} from "../common/OrderPulling";
 
 export type OrderSyncStatus = 'idle' | 'syncing' | 'ready';
 
@@ -65,6 +66,23 @@ type CartContextType = {
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
+
+const CartWatchers = () => {
+    const context = useContext(CartContext);
+    if (!context) {
+        return null;
+    }
+    return (
+        <>
+            <PaymentWatcher watchingOrderNo={context.watchingOrderNo} notifyOrderPaid={context.notifyOrderPaid} />
+            <OrderListWatcher
+                syncingOrderNo={context.syncingOrderNo}
+                markOrderListReady={context.markOrderListReady}
+                setOrderSyncProgress={context.setOrderSyncProgress}
+            />
+        </>
+    );
+};
 
 export const useCartContext = () => {
     const context = useContext(CartContext);
@@ -208,6 +226,7 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
             markOrderListReady,
             resetOrderSync,
         }}>
+            <CartWatchers />
             {children}
         </CartContext.Provider>
     );

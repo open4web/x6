@@ -28,6 +28,16 @@ export type PayChannels = {
     cash?: boolean;
     wechat?: boolean;
     balance?: boolean;
+    lakala?: boolean;
+    default?: string;
+};
+
+export type ResolvedPayChannels = {
+    cash: boolean;
+    wechat: boolean;
+    balance: boolean;
+    lakala: boolean;
+    default: 'cash' | 'wechat' | 'lakala' | 'balance';
 };
 
 export type CachedStore = {
@@ -83,18 +93,29 @@ export function unwrapStoreList(payload: any): CachedStore[] {
     return [];
 }
 
-export function resolvePayChannels(store?: CachedStore | null): {cash: boolean; wechat: boolean; balance: boolean} {
+const CHANNEL_ORDER = ['cash', 'wechat', 'lakala', 'balance'] as const;
+
+export function resolvePayChannels(store?: CachedStore | null): ResolvedPayChannels {
     const channels = store?.pay_channels;
     if (!channels) {
-        return {cash: true, wechat: false, balance: false};
+        return {cash: true, wechat: false, balance: false, lakala: false, default: 'cash'};
     }
-    const cash = channels.cash !== false;
-    const wechat = !!channels.wechat;
-    const balance = !!channels.balance;
-    if (!cash && !wechat && !balance) {
-        return {cash: true, wechat: false, balance: false};
+    const flags = {
+        cash: channels.cash !== false,
+        wechat: !!channels.wechat,
+        lakala: !!channels.lakala,
+        balance: !!channels.balance,
+    };
+    const enabled = CHANNEL_ORDER.filter((key) => flags[key]);
+    if (!enabled.length) {
+        return {cash: true, wechat: false, balance: false, lakala: false, default: 'cash'};
     }
-    return {cash, wechat, balance};
+    const requested = String(channels.default || '');
+    const fallback = enabled[0];
+    const picked = enabled.length === 1 || !enabled.includes(requested as typeof CHANNEL_ORDER[number])
+        ? fallback
+        : requested;
+    return {...flags, default: picked as ResolvedPayChannels['default']};
 }
 
 const KEY = (storeId: string) => `storeTables:${storeId}`;

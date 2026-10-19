@@ -19,7 +19,6 @@ import MyDataDrawer from "./MyDataDrawer";
 import RechargeCardSelector from "../../common/RechargeCardSelector";
 import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
 import HandoverPageDrawer from "../Shift/Handover";
-import {OrderListWatcher, PaymentWatcher} from "../../common/OrderPulling";
 import OrderFlyOverlay from "../home/Components/OrderFlyOverlay";
 
 export const MyHome = () => {
@@ -114,8 +113,6 @@ export const MyHome = () => {
         <Grid container spacing={2} mt={1}>
             <Grid item xs={12} md={12}>
                 <React.Fragment>
-                    <PaymentWatcher />
-                    <OrderListWatcher />
                     <MyCartDrawer />
                     <MyOrderDrawer/>
                     <MyDataDrawer/>

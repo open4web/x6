@@ -27,7 +27,8 @@ export const useFetchData = () => {
             path: string,
             setResponse: (response: any) => void,
             method: Method = 'GET',
-            data?: any
+            data?: any,
+            quiet = false,
         ) => {
             try {
                 const config = {
@@ -46,11 +47,14 @@ export const useFetchData = () => {
                 if (response.status === 200 || response.status === 201) {
                     console.log(`Data fetched from ${path}:`, response.data);
                     setResponse(response.data);
-                    showAlert(tPos('common.success'), 'success');
-                } else {
-                    console.error(`Unexpected response status from ${path}:`, response.status);
-                    showAlert(tPos('common.server'), 'warning');
+                    if (!quiet) {
+                        showAlert(tPos('common.success'), 'success');
+                    }
+                    return response.data;
                 }
+                console.error(`Unexpected response status from ${path}:`, response.status);
+                showAlert(tPos('common.server'), 'warning');
+                throw new Error(`unexpected status ${response.status}`);
             } catch (error) {
                 console.error(`Error fetching data from ${path}:`, error);
                 if (axios.isAxiosError(error) && error.response) {
@@ -62,9 +66,10 @@ export const useFetchData = () => {
                     } else {
                         showAlert(tPos('common.failed', {text: error.response.statusText}), 'error');
                     }
-                } else {
+                } else if (!(error instanceof Error) || !String(error.message).startsWith('unexpected status')) {
                     showAlert(tPos('common.network'), 'error');
                 }
+                throw error;
             }
         },
         [cookie, navigate]
