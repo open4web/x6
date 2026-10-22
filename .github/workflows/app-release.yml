@@ -1,0 +1,51 @@
+# 触发 open4web/release 构建「智点收银」Android Pad 与 Windows 外壳应用。
+# 外壳只是固定网址的浏览器，网页功能更新不需要重新发版；只有图标、名称、拦截规则等外壳变化时才需要运行。
+#
+# 需要在本仓库配置 secret RELEASE_TOKEN：fine-grained PAT，仅授权 open4web/release，
+# 权限 Contents: Read and write。未配置时本 workflow 只打印手动发布方法，不会失败。
+name: App shell release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '外壳版本号（如 1.0.1），留空则自动 +1'
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'app-v*'
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 触发 open4web/release 构建
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          EVENT: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          IN_VER: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          VER="${IN_VER:-}"
+          if [ "$EVENT" = "push" ]; then VER="${REF_NAME#app-v}"; fi
+          if [ -z "${GH_TOKEN:-}" ]; then
+            {
+              echo "### 未配置 RELEASE_TOKEN，未自动触发"
+              echo
+              echo "请到 https://github.com/open4web/release/actions/workflows/build-apps.yml 点 Run workflow，应用选 x6，版本号填 ${VER:-（留空自动 +1）}。"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::未配置 RELEASE_TOKEN，请到 open4web/release 手动运行 Build x5 / x6 apps（app=x6）"
+            exit 0
+          fi
+          jq -n --arg v "$VER" '{event_type:"build-app", client_payload:{app:"x6", version:$v}}' \
+            | gh api repos/open4web/release/dispatches --input -
+          {
+            echo "### 已触发 智点收银（x6）构建"
+            echo
+            echo "版本：${VER:-自动 +1}，进度见 https://github.com/open4web/release/actions/workflows/build-apps.yml"
+          } >> "$GITHUB_STEP_SUMMARY"
