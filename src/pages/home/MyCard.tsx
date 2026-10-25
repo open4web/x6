@@ -8,6 +8,7 @@ import {useCartContext} from "../../dataProvider/MyCartProvider";
 import {useTranslate} from 'react-admin';
 import {ProductCardFace} from "./Components/ProductCardLayouts";
 import {useProductCardStyle} from "../../layout/productCardStyle";
+import {playPosSound} from "../../utils/touchSound";
 
 interface Props {
     item: ProductItem;
@@ -24,7 +25,11 @@ interface Props {
 
 const MyCard = (props: Props) => {
     const translate = useTranslate();
-    const {cartItems, showProductImage} = useCartContext();
+    const {cartItems, showProductImage, ready} = useCartContext();
+    const cardRef = React.useRef<HTMLDivElement>(null);
+    const floatSeq = React.useRef(0);
+    const [floats, setFloats] = React.useState<number[]>([]);
+    const [ring, setRing] = React.useState(0);
     const [cardStyle] = useProductCardStyle();
     const {item, handleClick, kindName, kindColor, clearCartSignal, backgroundColor, combID} = props;
     // const [expanded, setExpanded] = React.useState(false);
@@ -99,6 +104,36 @@ const MyCard = (props: Props) => {
         // }, 0); // 延迟 0 毫秒，确保同步完成
     };
 
+    const flashCard = (kind: 'pos-added' | 'pos-denied') => {
+        const node = cardRef.current;
+        if (!node) {
+            return;
+        }
+        node.classList.remove('pos-added', 'pos-denied');
+        void node.offsetWidth;
+        node.classList.add(kind);
+    };
+
+    const pressAdd = (withoutProp: boolean) => {
+        if (soldOut || !ready) {
+            playPosSound('deny');
+            flashCard('pos-denied');
+            if (!soldOut) {
+                handleAddToCart(withoutProp);
+            }
+            return;
+        }
+        playPosSound('add');
+        flashCard('pos-added');
+        const id = ++floatSeq.current;
+        setFloats((prev) => [...prev, id]);
+        setRing((value) => value + 1);
+        window.setTimeout(() => {
+            setFloats((prev) => prev.filter((itemId) => itemId !== id));
+        }, 680);
+        handleAddToCart(withoutProp);
+    };
+
     const handleAddToCart = (withoutProp: boolean) => {
 
         // 将类型名称赋值
@@ -141,20 +176,26 @@ const MyCard = (props: Props) => {
 
     return (
         <>
-            <ProductCardFace
-                styleName={cardStyle}
-                item={item}
-                kindName={kindName}
-                kindColor={kindColor}
-                backgroundColor={backgroundColor}
-                showProductImage={showProductImage}
-                cartCount={showProductImage ? 0 : cartCount}
-                stockLabel={stockLabel}
-                soldOut={soldOut}
-                onAdd={() => handleAddToCart(true)}
-                onExpand={handleExpandClick2}
-                expanded={expanded2}
-            />
+            <Box ref={cardRef} className="pos-order-card">
+                {ring > 0 && <span key={ring} className="pos-tap-ring" />}
+                {floats.map((id) => (
+                    <span key={id} className="pos-plus-float">+1</span>
+                ))}
+                <ProductCardFace
+                    styleName={cardStyle}
+                    item={item}
+                    kindName={kindName}
+                    kindColor={kindColor}
+                    backgroundColor={backgroundColor}
+                    showProductImage={showProductImage}
+                    cartCount={showProductImage ? 0 : cartCount}
+                    stockLabel={stockLabel}
+                    soldOut={soldOut}
+                    onAdd={() => pressAdd(true)}
+                    onExpand={handleExpandClick2}
+                    expanded={expanded2}
+                />
+            </Box>
 
             <Modal
                 open={expanded2}
@@ -180,7 +221,7 @@ const MyCard = (props: Props) => {
                             productID={item.id}
                             items={item.spiceOptions}
                             onSelectionChange={handlePropsChange}
-                            onAddToCart={() => handleAddToCart(false)} // 正确：点击时调用函数并传递参数
+                            onAddToCart={() => pressAdd(false)}
                             resetTrigger={resetTrigger}
                             setResetTrigger={setResetTrigger}
                             setExpanded={setExpanded2}

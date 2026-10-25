@@ -67,3 +67,115 @@
     @apply bg-background text-foreground;
   }
 }
+
+button,
+.MuiButton-root,
+.MuiIconButton-root,
+.MuiTab-root,
+.MuiCardActionArea-root,
+.MuiChip-clickable {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.MuiButton-root,
+.MuiIconButton-root,
+.MuiTab-root,
+.MuiCardActionArea-root,
+.MuiChip-clickable {
+  transition: transform 90ms ease, filter 90ms ease;
+}
+
+.MuiButton-root:active:not(:disabled):not(.Mui-disabled),
+.MuiIconButton-root:active:not(:disabled):not(.Mui-disabled),
+.MuiTab-root:active,
+.MuiCardActionArea-root:active,
+.MuiChip-clickable:active {
+  transform: scale(0.96);
+  filter: brightness(0.97);
+}
+
+.pos-order-card {
+  position: relative;
+}
+
+.pos-order-card.pos-added {
+  animation: posCardPop 420ms ease;
+}
+
+.pos-order-card.pos-denied {
+  animation: posCardDeny 380ms ease;
+}
+
+.pos-plus-float {
+  position: absolute;
+  right: 18px;
+  top: 16px;
+  z-index: 4;
+  pointer-events: none;
+  font-weight: 800;
+  font-size: 1.45rem;
+  color: #e65100;
+  text-shadow: 0 1px 0 #fff;
+  animation: posPlusFloat 640ms ease forwards;
+}
+
+.pos-tap-ring {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 152, 0, 0.9);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 3;
+  animation: posTapRing 480ms ease forwards;
+}
+
+@keyframes posCardPop {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.95); }
+  70% { transform: scale(1.025); }
+  100% { transform: scale(1); }
+}
+
+@keyframes posCardDeny {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(7px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes posPlusFloat {
+  0% { opacity: 0; transform: translateY(6px) scale(0.8); }
+  25% { opacity: 1; transform: translateY(0) scale(1.12); }
+  100% { opacity: 0; transform: translateY(-42px) scale(1); }
+}
+
+@keyframes posTapRing {
+  to {
+    width: 168px;
+    height: 168px;
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .MuiButton-root:active,
+  .MuiIconButton-root:active,
+  .MuiTab-root:active,
+  .MuiCardActionArea-root:active,
+  .MuiChip-clickable:active,
+  .pos-order-card.pos-added,
+  .pos-order-card.pos-denied,
+  .pos-plus-float,
+  .pos-tap-ring {
+    animation: none;
+    transform: none;
+  }
+}

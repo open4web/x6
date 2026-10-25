@@ -20,6 +20,7 @@ export const extraUi = pack(
             original: '原价', pay_amount: '实付', eta_pct: '%{pct}% 预计等待',
             remark_coupon: '余额+优惠券', remark_campaign: '余额+活动满减', remark_balance: '余额支付',
             confirm_balance: '确认余额支付', input: '输入',
+            seat: '座位号', received: '实收', change: '找零', short: '还差',
         },
         keypad: {
             title: '请输入数字', save: '保存', clear: '清空', delete: '删除', cancel: '取消',
@@ -147,6 +148,10 @@ export const extraUi = pack(
             status_ok: '已验证', status_no: '未验证',
             role_owner: '所有者', role_admin: '管理员', role_user: '员工',
             verify_ok: '验证成功', verify_fail: '验证失败',
+            kicker: '前台点餐', subtitle: '触控屏收银登录',
+        },
+        sound: {
+            title: '提示音', on: '开', off: '关',
         },
         detail: {
             title: '订单详情', fast_cancel: '快速取消订单', cancel_order: '取消订单',
@@ -188,6 +193,7 @@ export const extraUi = pack(
             original: 'Original', pay_amount: 'Due', eta_pct: '%{pct}% wait',
             remark_coupon: 'Balance + coupon', remark_campaign: 'Balance + offer', remark_balance: 'Balance pay',
             confirm_balance: 'Confirm balance pay', input: 'Enter',
+            seat: 'Seat', received: 'Received', change: 'Change', short: 'Still due',
         },
         keypad: {
             title: 'Enter a number', save: 'Save', clear: 'Clear', delete: 'Del', cancel: 'Cancel',
@@ -315,6 +321,10 @@ export const extraUi = pack(
             status_ok: 'Verified', status_no: 'Unverified',
             role_owner: 'Owner', role_admin: 'Admin', role_user: 'User',
             verify_ok: 'Verified', verify_fail: 'Verification failed',
+            kicker: 'Counter', subtitle: 'Touchscreen sign in',
+        },
+        sound: {
+            title: 'Sounds', on: 'On', off: 'Off',
         },
         detail: {
             title: 'Order detail', fast_cancel: 'Quick cancel', cancel_order: 'Cancel order',

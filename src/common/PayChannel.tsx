@@ -12,6 +12,7 @@ import PayCodeDisplay from "./PayCodeInput";
 import MemberBalancePay from './MemberBalancePay';
 import {useTranslate} from 'react-admin';
 import {orderWsUrl, readAuthToken} from '../utils/authToken';
+import {playPosSound} from '../utils/touchSound';
 import {readStoreTables, resolvePayChannels} from '../utils/storeCache';
 
 type PayTabKey = 'auto' | 'scan' | 'lakala' | 'lakala_qr' | 'cash' | 'balance';
@@ -45,7 +46,7 @@ function CustomTabPanel({children, value, index}: TabPanelProps) {
             aria-labelledby={`tab-${index}`}
         >
             {value === index && (
-                <Box sx={{p: 3}}>
+                <Box sx={{px: {xs: 0.5, sm: 1.5}, py: 1.5}}>
                     {children}
                 </Box>
             )}
@@ -60,7 +61,7 @@ function a11yProps(index: number) {
     };
 }
 
-export default function PayChannel({setCart, price, setOpen, orderID, at, offers, onSuccess, originalPrice}: any) {
+export default function PayChannel({setCart, price, setOpen, orderID, at, offers, onSuccess, originalPrice, seat}: any) {
     const translate = useTranslate();
     const {merchantId, setOrderDrawerOpen, startPaymentWatch, notifyOrderPaid} = useCartContext();
     const storeId = merchantId || localStorage.getItem('current_store_id') || '';
@@ -144,6 +145,8 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                     void finishPaidRef.current();
                     return;
                 }
+                finished.current = true;
+                playPosSound('ok');
                 if (setCart) {
                     setCart([]);
                 }
@@ -196,6 +199,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             return;
         }
         finished.current = true;
+        playPosSound('ok');
         await offers?.redeem?.(orderID);
         onSuccess?.();
         if (setCart) {
@@ -410,6 +414,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
         const amount = parseFloat(value);
 
         if (!amount || amount <= 0) {
+            playPosSound('warn');
             toast.error(translate('pos.pay.invalid_amount'), {position: "top-center"});
             return;
         }
@@ -424,6 +429,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             await finishPaid();
 
         } catch (error) {
+            playPosSound('warn');
             toast.error(translate('pos.pay.cash_failed'), {position: "top-center"});
         }
     };
@@ -555,11 +561,13 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                             onSave={handlePayByCash}
                             title={translate('pos.pay.enter_cash')}
                             min={1}
-                            max={999}
+                            max={99999}
                             defaultValue={price}
                             confirmText={translate('pos.pay.confirm_cash')}
                             type="money"
-                            clearText={translate('pos.pay.free')}
+                            due={price}
+                            seat={seat}
+                            wide
                             inline
                         />
                     )}

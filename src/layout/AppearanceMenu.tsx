@@ -12,6 +12,9 @@ import {
 import TuneIcon from '@mui/icons-material/Tune';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import {isPosSoundOn, setPosSoundOn} from '../utils/touchSound';
 import {supportedLocales} from '../i18n/locales';
 import {themes, ThemeName} from '../themes/themes';
 import {PRODUCT_CARD_STYLES, ProductCardStyle, useProductCardStyle} from './productCardStyle';
@@ -260,6 +263,7 @@ export function AppearancePanel() {
     const [cardStyle, setCardStyle] = useProductCardStyle();
     const [orderStyle, setOrderStyle] = useOrderCardStyle();
     const [cartStyle, setCartPanelStyle] = useCartStyle();
+    const [soundOn, setSoundOn] = useState(isPosSoundOn);
 
     const setMode = (light: boolean) => {
         setIsLight(light);
@@ -292,6 +296,24 @@ export function AppearancePanel() {
                         onClick={() => setLocale(item.locale)}
                     />
                 ))}
+            </Box>
+
+            <Divider sx={{mb: 1.5}} />
+            <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 700}}>
+                {translate('pos.sound.title', {_: '提示音'})}
+            </Typography>
+            <Box sx={{display: 'flex', gap: 1, mb: 2}}>
+                <Chip
+                    icon={soundOn ? <VolumeUpIcon /> : <VolumeOffIcon />}
+                    label={soundOn ? translate('pos.sound.on', {_: '开'}) : translate('pos.sound.off', {_: '关'})}
+                    color={soundOn ? 'primary' : 'default'}
+                    variant={soundOn ? 'filled' : 'outlined'}
+                    onClick={() => {
+                        const next = !soundOn;
+                        setSoundOn(next);
+                        setPosSoundOn(next);
+                    }}
+                />
             </Box>
 
             <Divider sx={{mb: 1.5}} />

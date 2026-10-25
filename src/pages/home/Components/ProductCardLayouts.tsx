@@ -195,9 +195,15 @@ function shellSx(soldOut: boolean, clickable: boolean, extra?: object) {
     return {
         width: '100%',
         position: 'relative' as const,
-        cursor: clickable ? 'pointer' : 'default',
+        cursor: clickable && !soldOut ? 'pointer' : 'default',
         opacity: soldOut ? 0.72 : 1,
         overflow: 'hidden',
+        WebkitTapHighlightColor: 'transparent',
+        touchAction: 'manipulation',
+        transition: 'transform 110ms ease, box-shadow 110ms ease',
+        '@media (prefers-reduced-motion: no-preference)': {
+            '&:active': clickable ? {transform: 'scale(0.97)'} : undefined,
+        },
         ...extra,
     };
 }

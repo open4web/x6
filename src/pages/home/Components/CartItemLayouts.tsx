@@ -28,15 +28,16 @@ function markOf(item: CartItem, marks?: Record<string, string>) {
 }
 
 function QtyStepper({item, onInc, onDec, compact}: {item: CartItem; onInc: () => void; onDec: () => void; compact?: boolean}) {
+    const side = compact ? 44 : 48;
     return (
         <Box sx={{display: 'flex', alignItems: 'center', gap: compact ? 0 : 0.25}}>
-            <IconButton onClick={onDec} size="small">
+            <IconButton onClick={onDec} sx={{width: side, height: side}}>
                 <RemoveIcon fontSize={compact ? 'small' : 'medium'} />
             </IconButton>
-            <Typography sx={{minWidth: compact ? 18 : 24, textAlign: 'center', fontWeight: 700, fontSize: compact ? 13 : 15}}>
+            <Typography sx={{minWidth: compact ? 22 : 28, textAlign: 'center', fontWeight: 800, fontSize: compact ? 16 : 18}}>
                 {item.quantity}
             </Typography>
-            <IconButton onClick={onInc} size="small">
+            <IconButton onClick={onInc} sx={{width: side, height: side}}>
                 <AddCircleIcon fontSize={compact ? 'small' : 'medium'} />
             </IconButton>
         </Box>

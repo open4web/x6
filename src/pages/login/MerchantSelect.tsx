@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { useNotify, useTranslate } from "react-admin";
 import {tPos} from '../../i18n/t';
+import {playPosSound} from '../../utils/touchSound';
 
 interface Merchant {
     merchant_id: string;
@@ -167,9 +168,11 @@ const MerchantSelector: React.FC<Props> = ({ merchants, onSelect }) => {
                             <CardActionArea
                                 onClick={() => {
                                     if (m.enabled === false) {
+                                        playPosSound('deny');
                                         notify(tPos('common.server'), { type: "warning" });
                                         return;
                                     }
+                                    playPosSound('tap');
                                     onSelect(m);
                                 }}
                             >
@@ -178,6 +181,7 @@ const MerchantSelector: React.FC<Props> = ({ merchants, onSelect }) => {
                                         display: "flex",
                                         alignItems: "center",
                                         p: 2,
+                                        minHeight: 92,
                                         borderRadius: 2,
 
                                         background: m.enabled === false ? "#111827" : "#1e293b",

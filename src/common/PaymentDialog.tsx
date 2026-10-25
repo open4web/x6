@@ -24,6 +24,9 @@ interface PaymentDialogProps {
     orderCount?: number;
     totalItems?: number;
     estimatedWait?: number;
+    seat?: string;
+    people?: string;
+    seatNote?: string;
     fetchData: any;
     setCart?: (cart: any[]) => void;
     onSuccess?: () => void;
@@ -42,6 +45,9 @@ export default function PaymentDialog({
     orderCount = 0,
     totalItems = 0,
     estimatedWait = 0,
+    seat = '',
+    people = '',
+    seatNote = '',
     fetchData,
     setCart,
     onSuccess,
@@ -61,25 +67,50 @@ export default function PaymentDialog({
         <Dialog
             open={open}
             fullWidth
-            maxWidth="sm"
+            maxWidth="md"
             TransitionComponent={Transition}
             keepMounted
             onClose={onClose}
         >
             <DialogTitle>
-                <Typography variant="h6" align="center">
+                <Typography variant="body2" align="center" color="text.secondary">
                     {translate('pos.pay.order_no')}: {orderID}
                 </Typography>
-                {offers.totalBenefit > 0 ? (
-                    <Typography variant="subtitle1" align="center" color="text.secondary">
-                        {translate('pos.pay.original')} <span style={{ textDecoration: 'line-through' }}>¥{price.toFixed(2)}</span>
-                        {' '}{translate('pos.pay.pay_amount')} <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>¥{payAmount.toFixed(2)}</span>
-                    </Typography>
-                ) : (
-                    <Typography variant="subtitle1" align="center" color="text.secondary">
-                        {translate('pos.pay.wait_pay')}: <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>¥{price.toFixed(2)}</span>
-                    </Typography>
-                )}
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1.3fr 1fr',
+                        gap: 1.25,
+                        mt: 1.5,
+                    }}
+                >
+                    <Box sx={{p: 1.5, borderRadius: 2, bgcolor: 'action.hover', minWidth: 0}}>
+                        <Typography variant="caption" color="text.secondary">
+                            {translate('pos.pay.wait_pay')}
+                        </Typography>
+                        <Typography sx={{fontSize: {xs: 32, sm: 40}, fontWeight: 800, color: '#d32f2f', lineHeight: 1.05}}>
+                            ¥{payAmount.toFixed(2)}
+                        </Typography>
+                        {offers.totalBenefit > 0 && (
+                            <Typography variant="body2" color="text.secondary" sx={{textDecoration: 'line-through'}}>
+                                {translate('pos.pay.original')} ¥{price.toFixed(2)}
+                            </Typography>
+                        )}
+                    </Box>
+                    <Box sx={{p: 1.5, borderRadius: 2, bgcolor: 'action.hover', minWidth: 0}}>
+                        <Typography variant="caption" color="text.secondary">
+                            {translate('pos.pay.seat', {_: '座位号'})}
+                        </Typography>
+                        <Typography noWrap sx={{fontSize: {xs: 28, sm: 36}, fontWeight: 800, lineHeight: 1.1}}>
+                            {seat || seatNote || '—'}
+                        </Typography>
+                        {people ? (
+                            <Typography variant="body2" color="text.secondary">
+                                {translate('pos.cart.people')} {people}
+                            </Typography>
+                        ) : null}
+                    </Box>
+                </Box>
 
                 <LinearProgress
                     variant="buffer"
@@ -114,6 +145,7 @@ export default function PaymentDialog({
                         price={payAmount}
                         originalPrice={price}
                         orderID={orderID}
+                        seat={seat}
                         fetchData={fetchData}
                         setCart={setCart}
                         setOpen={onClose}

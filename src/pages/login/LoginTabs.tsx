@@ -5,7 +5,6 @@ import TabContext from '@mui/lab/TabContext';
 import TabPanel from '@mui/lab/TabPanel';
 import LoginCard from './LoginCard';
 import Login2FACardCard from './Login2FA';
-import {Button, Card, Dialog, DialogActions, DialogContent, DialogTitle, Typography} from '@mui/material';
 import GenerateOTP from "./GenerateOTP";
 import {useCartContext} from "../../dataProvider/MyCartProvider";
 import MerchantSelector from './MerchantSelect';
@@ -114,29 +113,26 @@ const LoginTabs: React.FC<LoginTabsProps> = ({loading}) => {
     // @ts-ignore
     return (
         <>
-        <Card sx={{minWidth: 400, marginTop: "6em", borderRadius: 2}}>
-            <Box
-            >
-                <TabContext value={currentLoginStep}>
-                    <TabPanel value="password">
-                        <LoginCard loading={loading} color={"info.main"}/>
-                    </TabPanel>
-                    <TabPanel value="mch">
-                        <MerchantSelector
-                            merchants={merchants}
-                            onSelect={handleSelectMerchant}
-                        />
-                    </TabPanel>
-                    <TabPanel value="mfa-bind">
-                        <GenerateOTP loading={loading} myOtpUrl={myOtpUrl}/>
-                    </TabPanel>
-                    <TabPanel value="mfa">
-                        <Login2FACardCard
-                            loading={loading} color={"info.main"}/>
-                    </TabPanel>
-                </TabContext>
-            </Box>
-        </Card>
+        <Box sx={{width: "100%"}}>
+            <TabContext value={currentLoginStep}>
+                <TabPanel value="password" sx={{p: 0}}>
+                    <LoginCard loading={loading} color={"info.main"}/>
+                </TabPanel>
+                <TabPanel value="mch" sx={{p: 0}}>
+                    <MerchantSelector
+                        merchants={merchants}
+                        onSelect={handleSelectMerchant}
+                    />
+                </TabPanel>
+                <TabPanel value="mfa-bind" sx={{p: 0}}>
+                    <GenerateOTP loading={loading} myOtpUrl={myOtpUrl}/>
+                </TabPanel>
+                <TabPanel value="mfa" sx={{p: 0}}>
+                    <Login2FACardCard
+                        loading={loading} color={"info.main"}/>
+                </TabPanel>
+            </TabContext>
+        </Box>
         </>
     );
 }

@@ -22,6 +22,7 @@ import {useFetchData} from './FetchData';
 import {useCartContext} from '../dataProvider/MyCartProvider';
 import {Order} from '../pages/home/Components/types';
 import {formatElapsed, liveElapsed, readStoreTables, seatLabel, seatZone, StoreSeat, writeStoreTables} from '../utils/storeCache';
+import {playPosSound} from '../utils/touchSound';
 
 export type TableSaveValue = {
     tableNo: string;
@@ -327,16 +328,27 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
                                         return (
                                             <Box
                                                 key={seat.id}
-                                                onClick={() => !off && setSelected(seat)}
+                                                onClick={() => {
+                                                    if (off) {
+                                                        playPosSound('deny');
+                                                        return;
+                                                    }
+                                                    playPosSound('tap');
+                                                    setSelected(seat);
+                                                }}
                                                 sx={{
-                                                    minHeight: 92,
-                                                    p: 1,
-                                                    borderRadius: 1.5,
+                                                    minHeight: 108,
+                                                    p: 1.25,
+                                                    borderRadius: 2,
                                                     cursor: off ? 'not-allowed' : 'pointer',
                                                     bgcolor: statusColor[Number(seat.status) || 0],
                                                     color: '#fff',
                                                     outline: active ? '3px solid #111' : 'none',
+                                                    outlineOffset: 2,
                                                     opacity: off ? 0.45 : 1,
+                                                    transition: 'transform 90ms ease',
+                                                    WebkitTapHighlightColor: 'transparent',
+                                                    '&:active': off ? undefined : {transform: 'scale(0.96)'},
                                                 }}
                                             >
                                                 <Typography sx={{fontWeight: 800, fontSize: '1rem'}} noWrap>
@@ -378,6 +390,7 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
                             title={translate('pos.cart.table_no')}
                             min={1}
                             max={999}
+                            wide
                             inline
                         />
                     )}
@@ -465,6 +478,7 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
                     onClose={() => setPayOrder(null)}
                     price={payOrder?.price?.pay_price || 0}
                     orderID={payOrder.identity?.order_no}
+                    seat={seatLabel(billedSeatRef.current, store?.layout?.qr_display) || payOrder.identity?.table_no || ''}
                     fetchData={fetchData}
                     storeId={payOrder?.merchant?.id || storeId}
                     onSuccess={() => {

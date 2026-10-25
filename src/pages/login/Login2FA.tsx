@@ -3,6 +3,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import OtpInput from 'react-otp-input';
 import { Avatar, Box, Button, Card, CardActions, CircularProgress, Typography } from '@mui/material';
 import { authApi } from '../../utils/axios';
+import {playPosSound} from '../../utils/touchSound';
 import React, { useRef, useState } from 'react';
 import Countdown from 'react-countdown';
 
@@ -40,6 +41,7 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                 login_id: loginId,
             });
 
+            playPosSound('ok');
             notify(translate('pos.login.verify_ok'), { type: 'success' });
 
             const keysToRemove = [
@@ -63,12 +65,12 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
         } catch (error: any) {
             const status = error?.response?.status;
 
+            playPosSound('warn');
             if (status === 502) {
-                // 502：清空输入，等待重新输入
                 setOtp('');
                 notify(translate('pos.common.server'), { type: 'warning' });
             } else {
-                setOtp(''); // 验证失败也清空，方便重新输入
+                setOtp('');
                 notify(translate('pos.login.verify_fail'), { type: 'error' });
             }
         } finally {
@@ -102,7 +104,7 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
     const isLoading = loading || submitting;
 
     return (
-        <Card sx={{ minWidth: 400, padding: 3 }}>
+        <Card elevation={0} sx={{ width: '100%', padding: {xs: 1, sm: 2}, boxShadow: 'none' }}>
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 2 }}>
                 <Avatar sx={{ width: 50, height: 50 }}>
                     <LockIcon fontSize="large" color="success" />
@@ -128,13 +130,13 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
             <Box sx={{ display: 'flex', justifyContent: 'center', marginBottom: 3 }}>
                 <OtpInput
                     inputStyle={{
-                        fontSize: 20,
-                        width: 50,
-                        height: 50,
-                        borderRadius: 5,
-                        border: '1px solid #ccc',
+                        fontSize: 28,
+                        width: 56,
+                        height: 64,
+                        borderRadius: 10,
+                        border: '2px solid #ccc',
                         textAlign: 'center',
-                        margin: '0 5px',
+                        margin: '0 4px',
                     }}
                     value={otp}
                     onChange={handleOtpChange}
@@ -152,7 +154,7 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                     size="large"
                     onClick={handleSubmit}
                     disabled={isLoading || otp.length !== 6}
-                    sx={{ width: '100%' }}
+                    sx={{ width: '100%', minHeight: 64, fontSize: 20, fontWeight: 800 }}
                 >
                     {isLoading && <CircularProgress size={25} thickness={2} sx={{ marginRight: 2 }} />}
                     {translate('pos.auth.validate')}

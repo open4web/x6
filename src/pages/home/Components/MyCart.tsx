@@ -1,7 +1,6 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Divider from '@mui/material/Divider';
@@ -15,7 +14,7 @@ import {FormatDate} from "../../../common/MyDatetime";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
-import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
+import {playPosSound} from "../../../utils/touchSound";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import TablePicker from "../../../common/TablePicker";
 import {readStoreTables, writeStoreTables} from "../../../utils/storeCache";
@@ -34,6 +33,61 @@ import {
 } from '@mui/icons-material';
 import MemberSelector from "../../../common/MemberSelector";
 import {useSidebarState, useTranslate} from 'react-admin';
+
+const actionBtnSx = {minHeight: 56, fontSize: 16, fontWeight: 800, borderRadius: 2};
+
+function MetaTile({
+    icon,
+    label,
+    value,
+    empty,
+    onClick,
+    alert,
+    wide,
+}: {
+    icon: React.ReactNode;
+    label: string;
+    value: string;
+    empty: string;
+    onClick: () => void;
+    alert?: boolean;
+    wide?: boolean;
+}) {
+    return (
+        <Box
+            role="button"
+            onClick={onClick}
+            sx={{
+                gridColumn: wide ? '1 / -1' : 'auto',
+                minHeight: 76,
+                px: 1.25,
+                py: 1,
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: alert ? 'error.main' : 'divider',
+                bgcolor: alert ? 'rgba(211,47,47,0.08)' : 'action.hover',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                cursor: 'pointer',
+                userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'transform 90ms ease',
+                '&:active': {transform: 'scale(0.97)'},
+            }}
+        >
+            <Box sx={{color: alert ? 'error.main' : 'text.secondary', display: 'flex'}}>{icon}</Box>
+            <Box sx={{minWidth: 0}}>
+                <Typography variant="caption" color="text.secondary" sx={{display: 'block', lineHeight: 1.2}}>
+                    {label}
+                </Typography>
+                <Typography noWrap sx={{fontWeight: 800, fontSize: 22, lineHeight: 1.2}}>
+                    {value || empty}
+                </Typography>
+            </Box>
+        </Box>
+    );
+}
 
 export const pickTypes = [
     {id: 0, nameKey: 'pos.cart.pickup_self', color: 'primary', icon: <Storefront />},
@@ -65,6 +119,14 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     const {fetchData, alertComponent} = useFetchData();
 
     const [pick, setPick] = React.useState(2); // 默认为堂食 (2)
+    const readMeta = () => ({
+        ticket: localStorage.getItem('ticketNumber') || '',
+        people: localStorage.getItem('peopleNumber') || '',
+        phone: localStorage.getItem('phoneNumber') || '',
+    });
+    const [meta, setMeta] = React.useState(readMeta);
+    const [payMeta, setPayMeta] = React.useState({seat: '', people: '', note: ''});
+    const refreshMeta = () => setMeta(readMeta());
 
     const pricedItems = React.useMemo(
         () => withUnitPrices(cartItems, id => lookupProductUnitPrice(merchantId, id)),
@@ -94,8 +156,13 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         const phone = localStorage.getItem('phoneNumber') || '';
         const deliveryAddress = address.trim();
 
+        const seatForOrder = isTakeout ? '' : (ticketNumber || '');
+        const peopleForOrder = localStorage.getItem('peopleNumber') || '';
+        const noteForOrder = isTakeout ? translate('pos.cart.pickup_takeout') : '';
+
         if (isTakeout) {
             if (!deliveryAddress) {
+                playPosSound('warn');
                 setNeedAddress(true);
                 return;
             }
@@ -106,6 +173,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             setNeedAddress(false);
             setHasNotTicket(false);
         } else if (!ticketNumber || ticketNumber.trim() === "") {
+            playPosSound('warn');
             setHasNotTicket(true);
             setOpenTicket(true);
             return;
@@ -140,6 +208,8 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             const createdOrderNo = response?.identity?.order_no || "";
             setPrice(response?.price || 0);
             setOrderID(createdOrderNo);
+            setPayMeta({seat: seatForOrder, people: peopleForOrder, note: noteForOrder});
+            playPosSound('tap');
             setOpenPayChannel(true);
             if (!isTakeout && seatId) {
                 occupyCurrentSeat(createdOrderNo, seatId);
@@ -162,6 +232,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         localStorage.removeItem('phoneNumber');
         localStorage.removeItem('peopleNumber');
         setCartItems([]);
+        refreshMeta();
     };
 
     const occupyCurrentSeat = (orderNo: string, seatId: string) => {
@@ -218,6 +289,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         localStorage.removeItem('selectedSeatId');
         localStorage.removeItem('phoneNumber');
         localStorage.removeItem('peopleNumber');
+        refreshMeta();
     };
 
     const totalPrice = comboResult.payAmount;
@@ -249,6 +321,8 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         if (typeof value !== 'string' && value.people && !localStorage.getItem('peopleNumber')) {
             localStorage.setItem('peopleNumber', String(value.people));
         }
+        refreshMeta();
+        playPosSound('ok');
         setHasNotTicket(false);
         if (typeof value !== 'string' && value.intent === 'add') {
             return;
@@ -262,10 +336,13 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     const handleSavePhoneResult = (value: string) => {
         console.log("保存的数字是:", value);
         localStorage.setItem("phoneNumber", value);
+        refreshMeta();
     };
     const handleSavePeopleResult = (value: string) => {
         console.log("保存的数字是:", value);
         localStorage.setItem("peopleNumber", value);
+        refreshMeta();
+        playPosSound('ok');
     };
 
     const resetCart = () => {
@@ -274,11 +351,14 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         localStorage.removeItem('phoneNumber')
         localStorage.removeItem('peopleNumber')
         setCartItems([])
+        refreshMeta();
+        playPosSound('tap');
     }
 
 
 
     const changeQty = (item: CartItem, delta: number) => {
+        playPosSound('key');
         setCartItems(prevItems =>
             prevItems.map(it =>
                 it.id === item.id && it.desc === item.desc
@@ -289,6 +369,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     };
 
     const removeItem = (item: CartItem) => {
+        playPosSound('tap');
         setCartItems(prevItems =>
             prevItems.filter(it => !(it.id === item.id && it.desc === item.desc))
         );
@@ -301,6 +382,9 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                 onClose={() => setOpenPayChannel(false)}
                 price={price}
                 orderID={orderID}
+                seat={payMeta.seat}
+                people={payMeta.people}
+                seatNote={payMeta.note}
                 orderCount={orderCount}
                 totalItems={totalItems}
                 estimatedWait={estimatedWait}
@@ -408,43 +492,46 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                 {translate('pos.cart.total')}: ¥{totalPrice.toFixed(2)}
             </Typography>
 
-            {/*选择就餐人数*/}
             <Divider sx={{my: 2}}/>
             <Box sx={{
-                m: 1, // 外边距
-                display: 'flex', // 启用 flex 布局
-                justifyContent: 'flex-start', // 水平方向从左到右排列
-                alignItems: 'center', // 垂直居中
-                gap: 2, // 子元素间距
-                flexWrap: 'nowrap', // 禁止换行
-                overflowX: 'auto', // 横向滚动
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 1,
             }}>
-                <IconButton aria-label="bindTicket">
-                    <NumbersIcon onClick={bindTicket}/>
-                    <Typography variant="body1" sx={{ml: 1}} onClick={bindTicket}>
-                        {localStorage.getItem('ticketNumber') || "-"} {/* 默认显示"未选择" */}
-                    </Typography>
-                </IconButton>
-                <IconButton aria-label="bindPeople">
-                    <EmojiPeopleIcon onClick={bindPeople}/>
-                    <Typography variant="body1" sx={{ml: 1}} onClick={bindPeople}>
-                        {localStorage.getItem('peopleNumber') || "-"} {/* 默认显示"未选择" */}
-                    </Typography>
-                </IconButton>
-                <IconButton aria-label="bindPhone">
-                    <PhoneIphoneIcon onClick={bindPhone}/>
-                    <Typography variant="body1" sx={{ml: 1}} onClick={bindPhone}>
-                        {localStorage.getItem('phoneNumber')
-                            ? localStorage.getItem('phoneNumber')?.slice(-4) // 仅展示后 4 位
-                            : "-"} {/* 默认显示"未选择" */}
-                    </Typography>
-                </IconButton>
-                <IconButton aria-label="bindPeople" disabled={true}>
-                    <CardGiftcardIcon onClick={bindPeople}/>
-                    <Typography variant="body1" sx={{ml: 1}} onClick={bindPeople}>
-                        {localStorage.getItem('peopleNumber') || "-"} {/* 默认显示"未选择" */}
-                    </Typography>
-                </IconButton>
+                <MetaTile
+                    icon={<NumbersIcon />}
+                    label={translate('pos.pay.seat', {_: '座位号'})}
+                    value={meta.ticket}
+                    empty={translate('pos.detail.unset')}
+                    alert={hasNotTicket && !isTakeout}
+                    onClick={() => {
+                        playPosSound('tap');
+                        bindTicket();
+                    }}
+                />
+                <MetaTile
+                    icon={<EmojiPeopleIcon />}
+                    label={translate('pos.cart.people')}
+                    value={meta.people}
+                    empty={translate('pos.detail.unset')}
+                    onClick={() => {
+                        playPosSound('tap');
+                        bindPeople();
+                    }}
+                />
+                <MetaTile
+                    icon={<PhoneIphoneIcon />}
+                    label={translate('pos.auth.phone')}
+                    value={meta.phone ? meta.phone.slice(-4) : ''}
+                    empty={translate('pos.detail.unset')}
+                    wide
+                    onClick={() => {
+                        playPosSound('tap');
+                        bindPhone();
+                    }}
+                />
+            </Box>
+            <Box>
                 <TablePicker
                     open={openTicket}
                     setOpen={setOpenTicket}
@@ -462,7 +549,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     onClose={() => setOpenPhone(false)}
                     onSuccess={() => {
                         setOpenPhone(false);
-                        // 其他成功逻辑...
+                        refreshMeta();
                     }}
                 />
 
@@ -546,13 +633,14 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
             <Divider sx={{my: 2}}/>
 
-            <Box sx={{display: "flex", justifyContent: "space-between", gap: 2}}>
+            <Box sx={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1}}>
                 <Button
                     variant="outlined"
                     color="warning"
                     fullWidth
                     onClick={resetCart}
                     disabled={cartItems.length === 0}
+                    sx={actionBtnSx}
                 >
                     {translate('pos.cart.clear')}
                 </Button>
@@ -562,6 +650,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     fullWidth
                     onClick={holdOrder}
                     disabled={!ready || cartItems.length === 0}
+                    sx={actionBtnSx}
                 >
                     {translate('pos.cart.hold')}
                 </Button>
@@ -571,6 +660,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     fullWidth
                     onClick={handlePlaceOrder}
                     disabled={!ready || cartItems.length === 0}
+                    sx={actionBtnSx}
                 >
                     {translate('pos.cart.checkout')}
                 </Button>
@@ -580,8 +670,11 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                 variant="outlined"
                 color="primary"
                 fullWidth
-                sx={{mt: 1.5}}
-                onClick={() => setOpenSeatBoard(true)}
+                sx={{mt: 1.5, minHeight: 52, fontWeight: 700}}
+                onClick={() => {
+                    playPosSound('tap');
+                    setOpenSeatBoard(true);
+                }}
             >
                 {translate('pos.cart.view_seats')}
             </Button>
@@ -597,6 +690,11 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                     if (value.seatId) {
                         localStorage.setItem('selectedSeatId', value.seatId);
                     }
+                    if (value.people && !localStorage.getItem('peopleNumber')) {
+                        localStorage.setItem('peopleNumber', String(value.people));
+                    }
+                    refreshMeta();
+                    playPosSound('ok');
                 }}
             />
             {getDialog()}
