@@ -3,6 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import react from '@vitejs/plugin-react';
 
+const appVersion = JSON.parse(fs.readFileSync(path.resolve(__dirname, './package.json'), 'utf-8')).version;
+
 const packages = fs.readdirSync(path.resolve(__dirname, './packages'));
 const aliases = packages.reduce((acc, dirName) => {
     const packageJson = require(path.resolve(
@@ -24,6 +26,7 @@ export default defineConfig({
     plugins: [react()],
     define: {
         'process.env': process.env,
+        __APP_VERSION__: JSON.stringify(appVersion),
     },
     server: { // 开发服务器配置
         port: 8000, // 开发服务器端口
