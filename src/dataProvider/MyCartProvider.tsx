@@ -65,7 +65,16 @@ type CartContextType = {
     resetOrderSync: () => void;
 };
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+// Vite can reload this module without remounting the provider. A new createContext()
+// then makes every consumer throw, including the store selector in the app bar.
+const cartContextKey = '__x6PosCartContext';
+const cartContextHost = globalThis as typeof globalThis & {
+    [cartContextKey]?: React.Context<CartContextType | undefined>;
+};
+if (!cartContextHost[cartContextKey]) {
+    cartContextHost[cartContextKey] = createContext<CartContextType | undefined>(undefined);
+}
+const CartContext = cartContextHost[cartContextKey];
 
 const CartWatchers = () => {
     const context = useContext(CartContext);

@@ -5,7 +5,6 @@ import {
     DialogTitle,
     DialogContent,
     Typography,
-    LinearProgress,
     Box,
 } from '@mui/material';
 import { TransitionProps } from '@mui/material/transitions';
@@ -43,7 +42,6 @@ export default function PaymentDialog({
     price,
     orderID,
     orderCount = 0,
-    totalItems = 0,
     estimatedWait = 0,
     seat = '',
     people = '',
@@ -112,29 +110,31 @@ export default function PaymentDialog({
                     </Box>
                 </Box>
 
-                <LinearProgress
-                    variant="buffer"
-                    value={totalItems}
-                    valueBuffer={30}
-                    sx={{ mt: 2 }}
-                />
-
-                <Box sx={{ minWidth: 35, mt: 0.5 }}>
-                    <Typography variant="body2" color="text.secondary" align="center">
-                        {translate('pos.pay.eta_pct', {pct: Math.round(orderCount)})}
-                    </Typography>
-                </Box>
-
-                <Typography variant="subtitle1" align="center" color="text.secondary" sx={{ mt: 1 }}>
-                    {translate('pos.pay.eta')}: <span style={{ color: '#dfff2f', fontWeight: 'bold' }}>
-                        ⏳{FormatNanoseconds(estimatedWait, {
-                            sec: translate('pos.time.sec'),
-                            min: translate('pos.time.min'),
-                            hour: translate('pos.time.hour'),
-                            day: translate('pos.time.day'),
-                        })}
-                    </span>
-                </Typography>
+                {(orderCount > 0 || estimatedWait > 0) && (
+                    <Box
+                        sx={{
+                            mt: 1.5,
+                            px: 2,
+                            py: 1.25,
+                            borderRadius: 2,
+                            textAlign: 'center',
+                            bgcolor: '#ffb300',
+                            color: '#3e2723',
+                        }}
+                    >
+                        <Typography sx={{fontSize: {xs: 22, sm: 28}, fontWeight: 800, lineHeight: 1.15, color: 'inherit'}}>
+                            {translate('pos.pay.eta')}: {FormatNanoseconds(estimatedWait, {
+                                sec: translate('pos.time.sec'),
+                                min: translate('pos.time.min'),
+                                hour: translate('pos.time.hour'),
+                                day: translate('pos.time.day'),
+                            })}
+                        </Typography>
+                        <Typography sx={{mt: 0.25, fontSize: {xs: 16, sm: 20}, fontWeight: 700, color: 'inherit'}}>
+                            {translate('pos.pay.ahead', {count: Math.max(0, Math.round(orderCount))})}
+                        </Typography>
+                    </Box>
+                )}
             </DialogTitle>
 
             <DialogContent>
