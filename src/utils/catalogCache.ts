@@ -2,7 +2,8 @@ import {useEffect, useState} from 'react';
 import {MenuData, ProductItem} from '../pages/home/Components/Type';
 import {ComboGroup} from '../pages/home/types';
 
-export const CATALOG_TTL_MS = 15 * 60 * 1000;
+/** Soft freshness for instant paint; MyProducts always revalidates on load. */
+export const CATALOG_TTL_MS = 2 * 60 * 1000;
 const STORAGE_PREFIX = 'posCatalog:';
 
 type CacheEntry<T> = {

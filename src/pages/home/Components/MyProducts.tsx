@@ -106,10 +106,8 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         } else {
             applyMenus([]);
         }
-        if (cached?.fresh) {
-            return;
-        }
 
+        // 后台改商品/库存后，浏览器刷新也要重新拉；缓存只用于首屏闪现。
         let cancelled = false;
         fetchData('/v1/hlj/product/pos/menu', (response) => {
             const menus = response || [];
@@ -146,10 +144,8 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         } else {
             setRawData([]);
         }
-        if (cached?.fresh) {
-            return;
-        }
 
+        // 始终回源：POS 库存来自 Redis 日库存，后台改库存后必须立刻看到新值。
         let cancelled = false;
         fetchData('/v1/hlj/product/pos/products', (response) => {
             const products = response || [];
