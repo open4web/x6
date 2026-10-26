@@ -92,11 +92,6 @@ jobs:
         id: push_start_time
         run: echo "PUSH_START_TIME=$(date +%s)" >> $GITHUB_ENV
 
-      - name: Push Docker Image
-        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          docker push ${{ vars.DOCKER_IMAGE_NAME }}
-
       - name: End Push Timer
         id: push_end_time
         run: echo "PUSH_END_TIME=$(date +%s)" >> $GITHUB_ENV
