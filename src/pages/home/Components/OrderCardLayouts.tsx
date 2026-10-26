@@ -21,6 +21,7 @@ import {FormatTimestampAsTime} from '../../../utils/time';
 import {orderStatusMap} from '../../../common/orderStatus';
 import {OrderCardStyle} from '../../../layout/orderCardStyle';
 import {Bucket, Order} from './types';
+import {formatOrderYuan, orderYuan} from '../../../utils/orderMoney';
 
 export type OrderCardHandlers = {
     order: Order;
@@ -46,8 +47,9 @@ const statusTone: Record<number, string> = {
     17: '#0277bd',
 };
 
-function money(value?: number) {
-    return `¥${(Number(value) || 0).toFixed(2)}`;
+function money(price?: {real_price?: number; pay_price?: number} | number) {
+    if (typeof price === 'number') return `¥${(Number(price) || 0).toFixed(2)}`;
+    return formatOrderYuan(price);
 }
 
 function itemCount(buckets?: Bucket[]) {
@@ -171,7 +173,7 @@ function ClassicCard(props: OrderCardHandlers) {
                 </Typography>
                 <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, gap: 0.5}}>
                     <Typography variant="body2" noWrap sx={{fontWeight: 'bold', color: '#d32f2f'}}>
-                        {translate('pos.cart.total')}: {money(order.price?.pay_price)}
+                        {translate('pos.cart.total')}: {money(order.price)}
                     </Typography>
                     <StatusChip status={order.status} />
                     <Typography variant="body2" noWrap sx={{color: '#6d4c41'}}>
@@ -235,7 +237,7 @@ function TicketCard(props: OrderCardHandlers) {
                 </Box>
                 <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <StatusChip status={order.status} />
-                    <Typography sx={{fontWeight: 800, color: '#d32f2f'}}>{money(order.price?.pay_price)}</Typography>
+                    <Typography sx={{fontWeight: 800, color: '#d32f2f'}}>{money(order.price)}</Typography>
                 </Box>
             </CardContent>
             <CardActions sx={{justifyContent: 'center', pt: 0}}>
@@ -273,7 +275,7 @@ function KanbanCard(props: OrderCardHandlers) {
                         <StatusChip status={order.status} />
                     </Box>
                     <Typography sx={{fontWeight: 800, color: '#d32f2f', fontSize: '1.15rem', mb: 0.75}}>
-                        {money(order.price?.pay_price)}
+                        {money(order.price)}
                         <Typography component="span" sx={{ml: 1, color: '#6d4c41', fontWeight: 500, fontSize: 12}}>
                             {translate('pos.list.items', {count: itemCount(order.buckets)})}
                         </Typography>
@@ -326,7 +328,7 @@ function QueueCard(props: OrderCardHandlers) {
             </Box>
             <CardContent sx={{py: 1, px: 1.25, textAlign: 'center'}}>
                 <Typography sx={{fontWeight: 800, color: '#d32f2f', mb: 0.5}}>
-                    {money(order.price?.pay_price)}
+                    {money(order.price)}
                 </Typography>
                 <Box sx={{minHeight: 64, textAlign: 'left'}}>
                     {(order.buckets || []).slice(0, 3).map((bucket, index) => (
@@ -370,7 +372,7 @@ function StripCard(props: OrderCardHandlers) {
                     <StatusChip status={order.status} />
                 </Box>
                 <Typography sx={{fontWeight: 800, color: '#d32f2f', fontSize: '1.2rem'}}>
-                    {money(order.price?.pay_price)}
+                    {money(order.price)}
                 </Typography>
                 <Typography variant="caption" sx={{display: 'block', color: '#5d4037', minHeight: 32}} noWrap>
                     {names || translate('pos.list.items', {count: 0})}
@@ -413,7 +415,7 @@ function LedgerCard(props: OrderCardHandlers) {
                         {tableLabel(order) ? `${translate('pos.detail.table')} ${tableLabel(order)}` : translate('pos.detail.unset')}
                     </Typography>
                     <Typography sx={{fontWeight: 800, fontSize: '1.15rem', color: '#ffcc80'}}>
-                        {money(order.price?.pay_price)}
+                        {money(order.price)}
                     </Typography>
                 </Box>
             </Box>

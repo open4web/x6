@@ -28,6 +28,7 @@ const toAmount = (value: unknown) => {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
     if (value && typeof value === 'object') {
         const row = value as { real_price?: number; pay_price?: number; price?: number };
+        // B-16: real_price (yuan) first; pay_price is rounded yuan, not fen
         const n = Number(row.real_price ?? row.pay_price ?? row.price ?? 0);
         return Number.isFinite(n) ? n : 0;
     }

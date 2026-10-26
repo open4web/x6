@@ -23,6 +23,7 @@ import {isOrderExpired} from "../utils/expireStore";
 import {useFetchData} from "./FetchData";
 import {getPlatformInfo} from "./payMethod";
 import {useTranslate} from 'react-admin';
+import {formatOrderYuan, orderYuan} from '../utils/orderMoney';
 
 interface MyOrderDetailProps {
     open: boolean;
@@ -356,7 +357,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                         ))}
                     </div>
                     <div className="item-total">
-                        {translate('pos.detail.total')}: ¥{orderData.price.pay_price.toFixed(2)}
+                        {translate('pos.detail.total')}: {formatOrderYuan(orderData.price)}
                     </div>
                 </div>
 
@@ -462,7 +463,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                     <CardContent>
                         <Box display="flex" flexDirection="row" gap={2} justifyContent="space-between">
                             <Box display="flex" flexDirection="column" gap={1} flex="1">
-                                <Typography>{translate('pos.detail.pay_amount')}: ¥{orderData.price.pay_price}</Typography>
+                                <Typography>{translate('pos.detail.pay_amount')}: {formatOrderYuan(orderData.price)}</Typography>
                                 <Typography>{translate('pos.detail.pay_status')}: {orderData.pay.status === 0 ? translate('pos.detail.unpaid') : translate('pos.detail.paid')}</Typography>
                             </Box>
                             <Box display="flex" flexDirection="column" gap={1} flex="1">
