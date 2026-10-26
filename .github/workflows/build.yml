@@ -26,6 +26,15 @@ jobs:
       - name: Build Project
         run: yarn build
 
+      - name: Stamp version.json into dist
+        run: |
+          test -d dist
+          short=$(printf '%s' "${{ github.sha }}" | cut -c1-7)
+          ver=$(jq -r .version package.json)
+          ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          printf '{\n  "version": "%s",\n  "gitHash": "%s",\n  "gitBranch": "%s",\n  "buildTime": "%s",\n  "tag": "v%s"\n}\n' \
+            "$ver" "$short" "${{ github.ref_name }}" "$ts" "$ver" | tee dist/version.json public/version.json
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
