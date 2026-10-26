@@ -146,6 +146,7 @@ export default function PaymentDialog({
                         originalPrice={price}
                         orderID={orderID}
                         seat={seat}
+                        at={storeId}
                         fetchData={fetchData}
                         setCart={setCart}
                         setOpen={onClose}

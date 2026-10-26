@@ -64,7 +64,7 @@ function a11yProps(index: number) {
 export default function PayChannel({setCart, price, setOpen, orderID, at, offers, onSuccess, originalPrice, seat}: any) {
     const translate = useTranslate();
     const {merchantId, setOrderDrawerOpen, startPaymentWatch, notifyOrderPaid} = useCartContext();
-    const storeId = merchantId || localStorage.getItem('current_store_id') || '';
+    const storeId = at || merchantId || localStorage.getItem('current_store_id') || '';
     const channels = resolvePayChannels(readStoreTables(storeId));
     const channelKey = `${channels.cash}:${channels.wechat}:${channels.lakala}:${channels.balance}:${channels.default}`;
     const tabs = React.useMemo(() => {
@@ -223,7 +223,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                 order_id: orderID,
                 desc: translate('pos.pay.desc'),
                 amount: price,
-                at,
+                at: storeId,
                 code: scannedCode,
             });
             await finishPaid();
@@ -283,7 +283,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                 order_id: orderID,
                 desc: translate('pos.pay.desc'),
                 amount: price,
-                at,
+                at: storeId,
                 code: scannedCode,
             }, true);
             if (body?.result_code === 'PAY_SUCCESS') {
@@ -361,7 +361,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                     order_id: orderID,
                     desc: translate('pos.pay.desc'),
                     amount: price,
-                    at,
+                    at: storeId,
                 }, true);
                 if (cancel) {
                     return;
@@ -398,7 +398,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
         return () => {
             cancel = true;
         };
-    }, [currentKey, orderID, price, at]);
+    }, [currentKey, orderID, price, storeId]);
 
     const abandonLakalaQr = async () => {
         try {

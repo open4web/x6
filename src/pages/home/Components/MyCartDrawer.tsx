@@ -5,14 +5,14 @@ import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {useEffect, useState} from "react";
 import {useFetchData} from "../../../common/FetchData";
 import {ComboGroup} from "../types";
-import {readCombs, useCatalogTick, writeCombs} from "../../../utils/catalogCache";
+import {readCombs, useCatalogRefresh, writeCombs} from "../../../utils/catalogCache";
 
 
 export default function MyCartDrawer() {
     const {fetchData, alertComponent} = useFetchData();
 
     const { cartItems, setCartItems, drawerOpen, setDrawerOpen, merchantId, ready } = useCartContext();
-    const catalogTick = useCatalogTick();
+    const refreshTick = useCatalogRefresh();
     const [comboGroups, setCombs] = useState<ComboGroup[]>(() => readCombs(merchantId)?.data ?? []);
 
     useEffect(() => {
@@ -43,12 +43,12 @@ export default function MyCartDrawer() {
             if (!cancelled) {
                 setCombs(combs);
             }
-        }, "POST", {merchantId});
+        }, "POST", {merchantId}, true);
 
         return () => {
             cancelled = true;
         };
-    }, [merchantId, fetchData, catalogTick]);
+    }, [merchantId, fetchData, refreshTick]);
 
 
     const toggleDrawer = (newOpen: boolean) => () => {

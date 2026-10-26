@@ -13,6 +13,7 @@ import {isOrderExpired} from "../../../utils/expireStore";
 import {MyOrderSkeleton} from "../../../common/MyOrderSkeleton";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {orderCardWidth, useOrderCardStyle} from '../../../layout/orderCardStyle';
+import {readStoreTables} from '../../../utils/storeCache';
 import {OrderCardFace} from './OrderCardLayouts';
 
 interface MyOrderProps {
@@ -58,6 +59,29 @@ function generateQueryParams({ orderNo, status, startDate, endDate, source , onl
     }
 
     return queryParams;
+}
+
+function savedSeat(order: Order) {
+    return order?.identity?.table_no || '';
+}
+
+function savedPeople(order: Order) {
+    const orderNo = order?.identity?.order_no || '';
+    if (!orderNo) {
+        return '';
+    }
+    const storeIds = [order?.merchant?.id, localStorage.getItem('current_store_id') || ''];
+    for (const storeId of storeIds) {
+        if (!storeId) {
+            continue;
+        }
+        const people = readStoreTables(storeId)?.seats?.find(item => item.order_no === orderNo)?.people;
+        const count = Number(people || 0);
+        if (count > 0) {
+            return String(count);
+        }
+    }
+    return '';
 }
 
 function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onlyMyOrder, setTotalRecord , saleStatus}: MyOrderProps) {
@@ -198,6 +222,8 @@ function MyOrder({ orderNo, phoneNumber, status, startDate, endDate, source, onl
                     onClose={handleClosePayChannel}
                     price={selectedOrder?.price?.pay_price || 0}
                     orderID={selectedOrder.identity?.order_no}
+                    seat={savedSeat(selectedOrder)}
+                    people={savedPeople(selectedOrder)}
                     fetchData={fetchData}
                     storeId={selectedOrder?.merchant?.id}
                 />

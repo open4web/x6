@@ -11,6 +11,7 @@ import {
     applyStock,
     readMenus,
     readProducts,
+    useCatalogRefresh,
     useCatalogTick,
     writeMenus,
     writeProducts,
@@ -33,6 +34,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     const {showProductImage, merchantId} = useCartContext();
     const [cardStyle] = useProductCardStyle();
     const catalogTick = useCatalogTick();
+    const refreshTick = useCatalogRefresh();
     const [activeTab, setActiveTab] = useState(localStorage.getItem("current_category") || '');
     const [rawData, setRawData] = useState<ProductItem[]>(() => {
         const menuId = localStorage.getItem("current_category") || '';
@@ -107,7 +109,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             applyMenus([]);
         }
 
-        // 后台改商品/库存后，浏览器刷新也要重新拉；缓存只用于首屏闪现。
+        // 进页面或手动刷新时回源一次。写缓存不能再触发这次请求。
         let cancelled = false;
         fetchData('/v1/hlj/product/pos/menu', (response) => {
             const menus = response || [];
@@ -115,12 +117,12 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             if (!cancelled) {
                 applyMenus(menus);
             }
-        }, "POST", {merchantId});
+        }, "POST", {merchantId}, true);
 
         return () => {
             cancelled = true;
         };
-    }, [merchantId, fetchData, catalogTick]);
+    }, [merchantId, fetchData, refreshTick]);
 
     useEffect(() => {
         if (categories.length === 0) {
@@ -145,7 +147,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             setRawData([]);
         }
 
-        // 始终回源：POS 库存来自 Redis 日库存，后台改库存后必须立刻看到新值。
+        // 切分类、进页面、手动刷新时回源一次，拿到当日库存。
         let cancelled = false;
         fetchData('/v1/hlj/product/pos/products', (response) => {
             const products = response || [];
@@ -156,12 +158,12 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         }, "POST", {
             merchantId,
             menuId: activeTab,
-        });
+        }, true);
 
         return () => {
             cancelled = true;
         };
-    }, [activeTab, merchantId, fetchData, catalogTick]);
+    }, [activeTab, merchantId, fetchData, refreshTick]);
 
     const handleChipClick = (categoryId: string) => {
         setActiveTab(categoryId);

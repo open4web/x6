@@ -27,6 +27,8 @@ type ReadResult<T> = {
 
 let memory: MerchantCatalog | null = null;
 let catalogTick = 0;
+// Only explicit invalidation. Cache writes must not bump this, or menu/products refetch forever.
+let refreshTick = 0;
 const listeners = new Set<() => void>();
 
 function todayKey(): string {
@@ -232,6 +234,7 @@ export function invalidateCatalog(merchantId?: string): void {
     } else {
         memory = null;
     }
+    refreshTick += 1;
     notify();
 }
 
@@ -246,4 +249,15 @@ export function useCatalogTick(): number {
     const [tick, setTick] = useState(catalogTick);
     useEffect(() => subscribeCatalog(() => setTick(catalogTick)), []);
     return tick;
+}
+
+/** Changes only when the catalog is invalidated, not when a fetch writes the cache. */
+export function useCatalogRefresh(): number {
+    const [tick, setTick] = useState(refreshTick);
+    useEffect(() => subscribeCatalog(() => setTick(refreshTick)), []);
+    return tick;
+}
+
+export function catalogGenerations(): { catalog: number; refresh: number } {
+    return {catalog: catalogTick, refresh: refreshTick};
 }
