@@ -14,6 +14,7 @@ import Version from "../common/Version"
 import AppearanceMenu from "./AppearanceMenu";
 import RefreshCatalogMenuItem from "./RefreshCatalogMenuItem";
 import {MyAccessDialog, MyAccessMenuItem} from "./MyAccessDialog";
+import {LinkSignal} from "./LinkSignal";
 
 const CashierUserMenu = () => {
     const [accessOpen, setAccessOpen] = React.useState(false);
@@ -66,8 +67,9 @@ const MyAppBar = (props: any) => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <MyPrinter />
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Version />
+                <LinkSignal />
             </Box>
         </AppBar>
     );
