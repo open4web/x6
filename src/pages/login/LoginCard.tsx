@@ -112,28 +112,27 @@ const LoginCard = ({ loading, color, onLogin }: LoginCardProps) => {
                 </Box>
             </Box>
             <Box>
+                {/* disabled 会把表单值清成空，输入框上的手机号还在，再提交会被判无效。 */}
                 <TextInput
                     autoFocus
                     size="medium"
                     source="phone"
                     label={translate("pos.auth.phone")}
-                    disabled={loading}
                     validate={validatePhone}
                     fullWidth
                     name="phone"
                     sx={fieldSx}
-                    inputProps={{inputMode: "numeric", autoComplete: "username"}}
+                    inputProps={{inputMode: "numeric", autoComplete: "username", readOnly: loading}}
                 />
                 <TextInput
                     source="password"
                     label={translate("ra.auth.password")}
                     type="password"
-                    disabled={loading}
                     validate={validatePassword}
                     fullWidth
                     name="password"
                     sx={fieldSx}
-                    inputProps={{autoComplete: "current-password"}}
+                    inputProps={{autoComplete: "current-password", readOnly: loading}}
                 />
                 <Controller
                     name="remember"

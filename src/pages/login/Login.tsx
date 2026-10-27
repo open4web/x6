@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import {useLocation} from 'react-router-dom';
 
@@ -12,7 +12,7 @@ import {
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import LoginTabs from './LoginTabs';
-import {LoginInput} from "./types";
+import {LoginInput, LoginSubmitResult} from "./types";
 import {useCartContext} from "../../dataProvider/MyCartProvider";
 import AppearanceMenu from "../../layout/AppearanceMenu";
 import {playPosSound} from "../../utils/touchSound";
@@ -27,13 +27,17 @@ const Login = () => {
     const translate = useTranslate();
     const { setLoginStep } = useCartContext();
 
-    const handleSubmit = (auth: LoginInput) => {
+    const loadingRef = useRef(false);
+    const submitLogin = (auth: LoginInput): Promise<LoginSubmitResult> => {
+        if (loadingRef.current) return Promise.resolve({ok: false});
+        loadingRef.current = true;
         setLoading(true);
         auth.step = loginType;
         const nextPath = location.state ? (location.state as any).nextPathname : "/";
         return login(auth, nextPath).then(
             () => ({ok: true}),
             (error: Error) => {
+                loadingRef.current = false;
                 setLoading(false);
                 setLoginStep(Date.now().toString());
                 if (takeLoginPending()) {
@@ -63,8 +67,11 @@ const Login = () => {
         );
     };
 
+    // Form 会把 onSubmit 的返回值当成字段错误。{ ok: false } 会留在未注册的 ok 上，改密码再提交仍判无效。
+    const handleFormSubmit = (auth: LoginInput) => submitLogin(auth).then(() => undefined);
+
     return (
-        <Form onSubmit={handleSubmit} noValidate>
+        <Form onSubmit={handleFormSubmit} noValidate>
             <Box
                 sx={{
                     position: "relative",
@@ -130,7 +137,7 @@ const Login = () => {
                                 {translate('pos.login.title')}
                             </Typography>
                         </Box>
-                        <LoginTabs loading={loading} onLogin={handleSubmit}/>
+                        <LoginTabs loading={loading} onLogin={submitLogin}/>
                     </Box>
                 </Box>
             </Box>
