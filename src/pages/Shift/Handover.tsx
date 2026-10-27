@@ -19,6 +19,7 @@ import {
 } from 'antd';
 import {PrinterOutlined, WarningOutlined} from '@ant-design/icons';
 import axios from 'axios';
+import {clearLocalDuty, dutyErrorMessage, dutyUserId, isNotStartedMessage} from '../../common/shiftDuty';
 import type {ColumnsType} from 'antd/es/table';
 import dayjs from 'dayjs';
 import Drawer from '@mui/material/Drawer';
@@ -116,7 +117,7 @@ const HandoverPageDrawer: React.FC = () => {
     const [people, setPeople] = useState<Assignee[]>([]);
     const [peopleLoading, setPeopleLoading] = useState(false);
     const [peopleError, setPeopleError] = useState('');
-    const {shiftOpen, setShiftOpen, merchantId, setReady} = useCartContext();
+    const {shiftOpen, setShiftOpen, merchantId, setReady, setStartReady} = useCartContext();
     const {fetchData} = useFetchData();
     const translate = useTranslate();
     const nextCashierId = Form.useWatch('next_cashier_id', form);
@@ -143,8 +144,17 @@ const HandoverPageDrawer: React.FC = () => {
                     ack_open: false,
                 });
             }, 'GET', {});
-        } catch {
-            toast.error(translate('pos.handover.load_failed'));
+        } catch (error) {
+            const message = axios.isAxiosError(error) ? dutyErrorMessage(error.response?.data) : '';
+            if (isNotStartedMessage(message)) {
+                clearLocalDuty(dutyUserId(), merchantId);
+                setStartReady(0);
+                setReady(false);
+                setShiftOpen(false);
+                toast.warning(translate('pos.handover.need_duty'));
+            } else {
+                toast.error(message || translate('pos.handover.load_failed'));
+            }
         } finally {
             setLoading(false);
         }
@@ -190,8 +200,8 @@ const HandoverPageDrawer: React.FC = () => {
         };
 
         await fetchData('/v1/hlj/finance/shift/' + merchantId, () => {
-            localStorage.removeItem('shiftReadyTime:' + merchantId);
-            localStorage.removeItem('shiftReady:' + merchantId);
+            clearLocalDuty(dutyUserId(), merchantId);
+            setStartReady(0);
             setReady(false);
             setShiftOpen(false);
             setCurrentShift(null);

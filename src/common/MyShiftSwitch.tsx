@@ -13,6 +13,14 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import {useTranslate} from 'react-admin';
 import {useFetchData} from './FetchData';
 import {useCartContext} from '../dataProvider/MyCartProvider';
+import {
+    clearLocalDuty,
+    dutyUserId,
+    elapsedSeconds,
+    parseStartMs,
+    readDutyPayload,
+    writeLocalDuty,
+} from './shiftDuty';
 
 const formatShiftTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -28,58 +36,80 @@ export default function MyShiftSwitch() {
     const [elapsedTime, setElapsedTime] = React.useState(0);
     const [confirmOpen, setConfirmOpen] = React.useState(false);
     const [starting, setStarting] = React.useState(false);
-    const intervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+    const syncRef = React.useRef(0);
+    const startMs = parseStartMs(startReady);
+    const onDuty = ready && startMs > 0;
+
+    const applyDuty = React.useCallback((nextReady: boolean, start: number) => {
+        const userId = dutyUserId();
+        if (nextReady && start > 0) {
+            writeLocalDuty(userId, merchantId, start);
+            setStartReady(start);
+            setReady(true);
+            return;
+        }
+        clearLocalDuty(userId, merchantId);
+        setStartReady(0);
+        setReady(false);
+    }, [merchantId, setReady, setStartReady]);
 
     React.useEffect(() => {
-        if (ready && startReady) {
-            let serverStartMs: number;
-            if (typeof startReady === 'string') {
-                serverStartMs = new Date(startReady).getTime();
-            } else if (typeof startReady === 'number' && startReady > 0) {
-                serverStartMs = startReady < 1e12 ? startReady * 1000 : startReady;
-            } else {
-                serverStartMs = Date.now();
-            }
-            setElapsedTime(Math.max(0, Math.floor((Date.now() - serverStartMs) / 1000)));
-        } else if (!ready) {
+        if (!onDuty) {
             setElapsedTime(0);
+            return;
         }
-    }, [ready, startReady]);
+        const tick = () => setElapsedTime(elapsedSeconds(startMs, Date.now()));
+        tick();
+        const timer = window.setInterval(tick, 1000);
+        return () => window.clearInterval(timer);
+    }, [onDuty, startMs]);
 
     React.useEffect(() => {
-        if (ready) {
-            intervalRef.current = setInterval(() => {
-                setElapsedTime(prev => prev + 1);
-            }, 1000);
+        if (!merchantId) {
+            applyDuty(false, 0);
+            return;
         }
+        const ticket = ++syncRef.current;
+        let cancelled = false;
+        fetchData(`/v1/hlj/finance/shift/state/${merchantId}`, () => undefined, 'GET', {}, true)
+            .then((body) => {
+                if (cancelled || ticket !== syncRef.current) {
+                    return;
+                }
+                const duty = readDutyPayload(body);
+                if (!duty) {
+                    return;
+                }
+                applyDuty(duty.ready, duty.start);
+            })
+            .catch(() => {
+                // 读不到服务端时保留本机缓存，避免一次网络失败把正在值班的计时清掉。
+            });
         return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-            }
+            cancelled = true;
         };
-    }, [ready]);
+    }, [merchantId, fetchData, applyDuty]);
 
     const startShift = async () => {
+        const ticket = ++syncRef.current;
         setStarting(true);
         try {
-            await fetchData(
+            const body = await fetchData(
                 `/v1/hlj/finance/shift/start/${merchantId}`,
-                (res: any) => {
-                    const serverStart = res.start || res.data?.start;
-                    if (setStartReady) {
-                        setStartReady(serverStart);
-                    }
-                    localStorage.setItem(`shiftReady:${merchantId}`, JSON.stringify(true));
-                    if (serverStart) {
-                        localStorage.setItem(`shiftReadyTime:${merchantId}`, JSON.stringify(serverStart));
-                    }
-                    setReady(true);
-                    setConfirmOpen(false);
-                },
+                () => undefined,
                 'POST',
                 {},
             );
+            if (ticket !== syncRef.current) {
+                return;
+            }
+            const duty = readDutyPayload(body);
+            if (!duty?.start) {
+                applyDuty(false, 0);
+                return;
+            }
+            applyDuty(true, duty.start);
+            setConfirmOpen(false);
         } catch (err) {
             console.error('Failed to start shift:', err);
         } finally {
@@ -88,7 +118,7 @@ export default function MyShiftSwitch() {
     };
 
     const handleClick = () => {
-        if (ready) {
+        if (onDuty) {
             setShiftOpen(true);
             return;
         }
@@ -98,27 +128,27 @@ export default function MyShiftSwitch() {
     return (
         <>
             <Button
-                variant={ready ? 'contained' : 'outlined'}
-                color={ready ? 'success' : 'inherit'}
+                variant={onDuty ? 'contained' : 'outlined'}
+                color={onDuty ? 'success' : 'inherit'}
                 onClick={handleClick}
                 disableElevation
                 sx={{
-                    minWidth: ready ? 168 : 112,
+                    minWidth: onDuty ? 168 : 112,
                     height: 34,
                     px: 1.5,
                     borderRadius: 5,
                     textTransform: 'none',
                     fontWeight: 700,
-                    color: ready ? '#fff' : 'inherit',
-                    borderColor: ready ? 'transparent' : 'rgba(255,255,255,0.55)',
-                    bgcolor: ready ? '#2e7d32' : 'rgba(255,255,255,0.08)',
+                    color: onDuty ? '#fff' : 'inherit',
+                    borderColor: onDuty ? 'transparent' : 'rgba(255,255,255,0.55)',
+                    bgcolor: onDuty ? '#2e7d32' : 'rgba(255,255,255,0.08)',
                     '&:hover': {
-                        bgcolor: ready ? '#256628' : 'rgba(255,255,255,0.16)',
-                        borderColor: ready ? 'transparent' : '#fff',
+                        bgcolor: onDuty ? '#256628' : 'rgba(255,255,255,0.16)',
+                        borderColor: onDuty ? 'transparent' : '#fff',
                     },
                 }}
             >
-                {ready ? (
+                {onDuty ? (
                     <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                         <Box
                             sx={{

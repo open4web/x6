@@ -3,6 +3,7 @@ import {toast} from 'react-toastify';
 import {tPos} from '../i18n/t';
 import {CartItem, CartItemHolder} from "../common/types";
 import {OrderListWatcher, PaymentWatcher} from "../common/OrderPulling";
+import {dutyUserId, readLocalDuty} from "../common/shiftDuty";
 
 export type OrderSyncStatus = 'idle' | 'syncing' | 'ready';
 
@@ -110,15 +111,9 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
     const [dataDrawerOpen, setDataDrawerOpen] = useState(false);
     const [loginStep, setLoginStep] = useState<string>('password')
     const [shiftOpen, setShiftOpen] = useState(false);
-    // ==================== ready 本地存储初始化 ====================
-    const [ready, setReady] = useState<boolean>(() => {
-        const savedReady = localStorage.getItem("shiftReady:" + merchantId); // key 必须是与门店绑定
-        return savedReady !== null ? JSON.parse(savedReady) : false;
-    });
-    const [startReady, setStartReady] = useState<number>(() => {
-        const savedReady = localStorage.getItem("shiftReadyTime:" + merchantId); // key 必须是与门店绑定
-        return savedReady !== null ? JSON.parse(savedReady) : false;
-    });
+    // 只读当前账号在当前门店的缓存。真正是否开班以服务端核对为准。
+    const [ready, setReady] = useState<boolean>(() => readLocalDuty(dutyUserId(), merchantId).ready);
+    const [startReady, setStartReady] = useState<number>(() => readLocalDuty(dutyUserId(), merchantId).start);
 
     // 从 localStorage 初始化 holdOrders 列表
     const [holdOrders, setHoldOrders] = useState<CartItemHolder[]>(

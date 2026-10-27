@@ -9,6 +9,7 @@ export const X6_REQUIRED_APIS = [
     '/v1/hlj/finance/shift',
     '/v1/hlj/finance/shift/assignees',
     '/v1/hlj/finance/shift/start',
+    '/v1/hlj/finance/shift/state',
     '/v1/hlj/member/account',
     '/v1/hlj/member/account/search',
     '/v1/hlj/member/search',
