@@ -13,13 +13,21 @@ import MyShiftSwitch from "../common/MyShiftSwitch";
 import Version from "../common/Version"
 import AppearanceMenu from "./AppearanceMenu";
 import RefreshCatalogMenuItem from "./RefreshCatalogMenuItem";
+import {MyAccessDialog, MyAccessMenuItem} from "./MyAccessDialog";
 
-const CashierUserMenu = () => (
-    <UserMenu>
-        <RefreshCatalogMenuItem />
-        <Logout />
-    </UserMenu>
-);
+const CashierUserMenu = () => {
+    const [accessOpen, setAccessOpen] = React.useState(false);
+    return (
+        <>
+            <UserMenu>
+                <MyAccessMenuItem onOpen={() => setAccessOpen(true)} />
+                <RefreshCatalogMenuItem />
+                <Logout />
+            </UserMenu>
+            <MyAccessDialog open={accessOpen} onClose={() => setAccessOpen(false)} />
+        </>
+    );
+};
 
 const MyAppBar = (props: any) => {
     const isLargeEnough = useMediaQuery<Theme>(theme =>
