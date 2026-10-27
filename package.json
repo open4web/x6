@@ -1,6 +1,6 @@
 {
     "name": "x6",
-    "version": "0.0.22",
+    "version": "0.0.23",
     "private": true,
     "dependencies": {
         "@ant-design/plots": "^2.6.8",
