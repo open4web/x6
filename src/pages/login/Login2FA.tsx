@@ -1,11 +1,11 @@
 import { useNotify, useRedirect, useTranslate } from 'react-admin';
 import LockIcon from '@mui/icons-material/Lock';
-import OtpInput from 'react-otp-input';
 import { Avatar, Box, Button, Card, CardActions, CircularProgress, Typography } from '@mui/material';
 import { authApi } from '../../utils/axios';
 import {playPosSound} from '../../utils/touchSound';
 import React, { useRef, useState } from 'react';
 import Countdown from 'react-countdown';
+import OtpKeypad from './OtpKeypad';
 
 interface Login2FACardProps {
     loading: boolean;
@@ -127,25 +127,14 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
                 </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'center', marginBottom: 3 }}>
-                <OtpInput
-                    inputStyle={{
-                        fontSize: 28,
-                        width: 56,
-                        height: 64,
-                        borderRadius: 10,
-                        border: '2px solid #ccc',
-                        textAlign: 'center',
-                        margin: '0 4px',
-                    }}
-                    value={otp}
-                    onChange={handleOtpChange}
-                    numInputs={6}
-                    renderSeparator={<span>-</span>}
-                    renderInput={(props) => <input {...props} disabled={isLoading} />}
-                    shouldAutoFocus
-                />
-            </Box>
+            <OtpKeypad
+                value={otp}
+                onChange={handleOtpChange}
+                disabled={isLoading}
+                onPress={() => playPosSound('key')}
+                deleteLabel={translate('pos.login.otp_delete', {_: '删除'})}
+                clearLabel={translate('pos.login.otp_clear', {_: '清空'})}
+            />
 
             <CardActions sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Button

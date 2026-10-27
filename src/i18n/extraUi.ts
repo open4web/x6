@@ -197,6 +197,13 @@ export const extraUi = pack(
             role_owner: '所有者', role_admin: '管理员', role_user: '员工',
             verify_ok: '验证成功', verify_fail: '验证失败',
             kicker: '前台点餐', subtitle: '触控屏收银登录',
+            remember7: '本机记住 7 天，换班只输动态码',
+            remember7_hint: '密码只留在这台机器上。每次成功登录再顺延 7 天。',
+            remembered_phone: '已记住 %{phone}',
+            remembered_until: '有效至 %{time}，换班只输动态码',
+            remembered_go: '继续，只输动态码',
+            remembered_switch: '换一个账号',
+            otp_delete: '删除', otp_clear: '清空',
         },
         sound: {
             title: '提示音', on: '开', off: '关',

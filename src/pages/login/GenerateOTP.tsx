@@ -9,15 +9,19 @@ import {useEffect, useState} from "react";
 import {Avatar, Box, CircularProgress} from "@mui/material";
 import {useNotify, useRedirect, useTranslate} from "react-admin";
 import {authApi} from "../../utils/axios";
-import OtpInput from "react-otp-input";
 import TokenIcon from '@mui/icons-material/Token';
 import {useCartContext} from "../../dataProvider/MyCartProvider";
 import {tPos} from '../../i18n/t';
+import OtpKeypad from './OtpKeypad';
+import {playPosSound} from '../../utils/touchSound';
+import {useRef} from 'react';
 
 // @ts-ignore
 export default function GenerateOTP({loading, myOtpUrl}) {
     const [otp, setOtp] = useState('');
     const [qrcodeUrl, setqrCodeUrl] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const submittingRef = useRef(false);
     const notify = useNotify();
     const redirect = useRedirect();
     const {loginStep} = useCartContext();
@@ -36,36 +40,40 @@ export default function GenerateOTP({loading, myOtpUrl}) {
 
     const translate = useTranslate();
 
-    const verifyOtp = async () => {
+    const verifyOtp = async (code: string) => {
+        if (submittingRef.current || code.length !== 6) return;
+        submittingRef.current = true;
+        setSubmitting(true);
         try {
             const userId = localStorage.getItem('user_id') || ''
 
-            // @ts-ignore
-            const {
-                data: {},
-            } = await authApi.post<{ otp_verified: string }>(
+            await authApi.post<{ otp_verified: string }>(
                 "/user/otp/verify",
                 {
-                    code: otp,
+                    code,
                     user_id: userId,
                 }
             );
 
-            // 移除标识以便下一次进入密码登陆页面
             localStorage.setItem('verified_otp', 'true')
 
             notify(tPos('common.success'), {type: 'success'});
 
-            // 登陆成功后跳转到首页
             redirect('/#/login');
 
         } catch (error: any) {
+            submittingRef.current = false;
+            setSubmitting(false);
+            setOtp('');
             notify(tPos('common.failed', {text: '2FA'}), {type: 'error'});
         }
     };
 
-    const onSubmitHandler = () => {
-        verifyOtp();
+    const busy = loading || submitting;
+
+    const handleOtpChange = (next: string) => {
+        setOtp(next);
+        if (next.length === 6) verifyOtp(next);
     };
 
     return (
@@ -87,27 +95,26 @@ export default function GenerateOTP({loading, myOtpUrl}) {
                 title="qr code"
             />
             <CardContent>
-                <Box sx={{padding: "0 1em 1em 1em"}}>
-                    <Box sx={{marginTop: "1em"}}>
-                        <OtpInput
-                            inputStyle={{fontSize: 50, borderRadius: 5}}
-                            value={otp}
-                            onChange={setOtp}
-                            numInputs={6}
-                            renderSeparator={<span>-</span>}
-                            renderInput={(props) => <input {...props} />}
-                        />
-                    </Box>
-                </Box>
+                <OtpKeypad
+                    value={otp}
+                    onChange={handleOtpChange}
+                    disabled={busy}
+                    onPress={() => playPosSound('key')}
+                    deleteLabel={translate('pos.login.otp_delete', {_: '删除'})}
+                    clearLabel={translate('pos.login.otp_clear', {_: '清空'})}
+                />
             </CardContent>
             <CardActions>
                 <Button
                     variant="contained"
                     color="warning"
-                    onClick={onSubmitHandler}
+                    type="button"
+                    onClick={() => verifyOtp(otp)}
+                    disabled={busy || otp.length !== 6}
                     fullWidth
+                    sx={{minHeight: 64, fontSize: 20, fontWeight: 800}}
                 >
-                    {loading && <CircularProgress size={25} thickness={2}/>}
+                    {busy && <CircularProgress size={25} thickness={2}/>}
                     {translate("pos.auth.verified")}
                 </Button>
             </CardActions>

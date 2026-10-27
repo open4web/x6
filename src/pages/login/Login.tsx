@@ -16,6 +16,7 @@ import {LoginInput} from "./types";
 import {useCartContext} from "../../dataProvider/MyCartProvider";
 import AppearanceMenu from "../../layout/AppearanceMenu";
 import {playPosSound} from "../../utils/touchSound";
+import {takeLoginPending} from "./rememberLogin";
 
 const Login = () => {
     const [loading, setLoading] = useState(false);
@@ -29,33 +30,37 @@ const Login = () => {
     const handleSubmit = (auth: LoginInput) => {
         setLoading(true);
         auth.step = loginType;
-
-        login(
-            auth,
-            location.state ? (location.state as any).nextPathname : "/"
-        ).catch((error: Error) => {
-            setLoading(false);
-            setLoginStep(Date.now().toString());
-            playPosSound('warn');
-            notify(
-                typeof error === "string"
-                    ? error
-                    : typeof error === "undefined" || !error.message
-                        ? "ra.auth.sign_in_error"
-                        : error.message,
-                {
-                    type: "warning",
-                    messageArgs: {
-                        _:
-                            typeof error === "string"
-                                ? error
-                                : error && error.message
-                                    ? error.message
-                                    : undefined,
-                    },
+        const nextPath = location.state ? (location.state as any).nextPathname : "/";
+        return login(auth, nextPath).then(
+            () => ({ok: true}),
+            (error: Error) => {
+                setLoading(false);
+                setLoginStep(Date.now().toString());
+                if (takeLoginPending()) {
+                    return {ok: false, pending: true};
                 }
-            );
-        });
+                playPosSound('warn');
+                notify(
+                    typeof error === "string"
+                        ? error
+                        : typeof error === "undefined" || !error.message
+                            ? "ra.auth.sign_in_error"
+                            : error.message,
+                    {
+                        type: "warning",
+                        messageArgs: {
+                            _:
+                                typeof error === "string"
+                                    ? error
+                                    : error && error.message
+                                        ? error.message
+                                        : undefined,
+                        },
+                    }
+                );
+                return {ok: false};
+            }
+        );
     };
 
     return (
@@ -125,7 +130,7 @@ const Login = () => {
                                 {translate('pos.login.title')}
                             </Typography>
                         </Box>
-                        <LoginTabs loading={loading}/>
+                        <LoginTabs loading={loading} onLogin={handleSubmit}/>
                     </Box>
                 </Box>
             </Box>

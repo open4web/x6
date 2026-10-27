@@ -9,14 +9,16 @@ import GenerateOTP from "./GenerateOTP";
 import {useCartContext} from "../../dataProvider/MyCartProvider";
 import MerchantSelector from './MerchantSelect';
 import {authApi} from "../../utils/axios";
+import {LoginInput, LoginSubmitResult} from "./types";
 
 interface LoginTabsProps {
     loading: boolean;
+    onLogin: (auth: LoginInput) => Promise<LoginSubmitResult>;
 }
 
 
 // @ts-ignore
-const LoginTabs: React.FC<LoginTabsProps> = ({loading}) => {
+const LoginTabs: React.FC<LoginTabsProps> = ({loading, onLogin}) => {
     const [currentLoginStep, setCurrentLoginStep] = useState(
         () => localStorage.getItem('step') || 'password'
     );
@@ -116,7 +118,7 @@ const LoginTabs: React.FC<LoginTabsProps> = ({loading}) => {
         <Box sx={{width: "100%"}}>
             <TabContext value={currentLoginStep}>
                 <TabPanel value="password" sx={{p: 0}}>
-                    <LoginCard loading={loading} color={"info.main"}/>
+                    <LoginCard loading={loading} color={"info.main"} onLogin={onLogin}/>
                 </TabPanel>
                 <TabPanel value="mch" sx={{p: 0}}>
                     <MerchantSelector

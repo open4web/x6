@@ -1,5 +1,6 @@
 import {LoginInput} from "../pages/login/types";
 import {redirect} from "react-router";
+import {applyRememberChoice, clearLoginPending, dropRememberedAfterReject, markLoginPending} from "../pages/login/rememberLogin";
 
 const loginEndpoint = "/v1/system/auth/user/signin";
 const logoutEndpoint = "/v1/system/auth/user/signout";
@@ -7,7 +8,7 @@ const logoutEndpoint = "/v1/system/auth/user/signout";
 export const HandleLogin = async (
     params: LoginInput
 ) =>  {
-    const { phone, password, step } = params;
+    const { phone, password, step, remember } = params;
     const request = new Request(loginEndpoint, {
         method: 'POST',
         body: JSON.stringify({ phone, password, step }),
@@ -20,8 +21,12 @@ export const HandleLogin = async (
         const responseData = await response.json();
 
         if (response.status < 200 || response.status >= 400) {
+            clearLoginPending();
+            dropRememberedAfterReject(remember, response.status);
             throw new Error(responseData.message);
         }
+
+        applyRememberChoice(remember, phone, password);
 
         // Handle specific status codes
         switch (response.status) {
@@ -31,6 +36,7 @@ export const HandleLogin = async (
                 localStorage.setItem('mchStatus', responseData.status)
                 localStorage.setItem('verified_otp', responseData.verified_otp);
                 localStorage.setItem('merchant', JSON.stringify(responseData.merchant));
+                markLoginPending(responseData.step || 'mch');
                 throw new Error(responseData.message);
             case 307:
                 localStorage.setItem('user_id', responseData.user_id);
@@ -39,8 +45,10 @@ export const HandleLogin = async (
                 localStorage.setItem('otp_url', responseData.url_otp);
                 localStorage.setItem('mfa_expire', responseData.expire);
                 localStorage.setItem('login_id', responseData.login_id);
+                markLoginPending(responseData.step || 'mfa');
                 throw new Error(responseData.message);
             default:
+                clearLoginPending();
                 localStorage.setItem('token', responseData.token);
                 localStorage.setItem('permissions', responseData.roles);
                 localStorage.setItem('toolbar', responseData.tool_bar);
