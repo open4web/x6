@@ -211,18 +211,26 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
     };
     finishPaidRef.current = finishPaid;
 
+    const ensureLocked = async () => {
+        if (offers?.lock) {
+            return await offers.lock(orderID);
+        }
+        return price;
+    };
+
     const submitPay = async (scannedCode: string) => {
 
         // if (payingRef.current) return;
         // payingRef.current = true;
 
         try {
+            const due = await ensureLocked();
             await fetchData('/v1/pay/scan/pay', () => {
             }, "POST", {
                 channel: ChannelType.WeChatPay,
                 order_id: orderID,
                 desc: translate('pos.pay.desc'),
-                amount: price,
+                amount: due,
                 at: storeId,
                 code: scannedCode,
             });
@@ -277,12 +285,13 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
 
     const submitLakala = async (scannedCode: string) => {
         try {
+            const due = await ensureLocked();
             const body = await fetchData('/v1/pay/scan/pay', () => {
             }, 'POST', {
                 channel: ChannelType.KalaPay,
                 order_id: orderID,
                 desc: translate('pos.pay.desc'),
-                amount: price,
+                amount: due,
                 at: storeId,
                 code: scannedCode,
             }, true);
@@ -356,11 +365,12 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
         setQrImage('');
         const load = async () => {
             try {
+                const due = await ensureLocked();
                 const body = await fetchData('/v1/pay/lakala/qr', () => {
                 }, 'POST', {
                     order_id: orderID,
                     desc: translate('pos.pay.desc'),
-                    amount: price,
+                    amount: due,
                     at: storeId,
                 }, true);
                 if (cancel) {
@@ -420,10 +430,11 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
         }
 
         try {
+            const due = await ensureLocked();
             await fetchData('/v1/pay/cash/pay', () => {
             }, "POST", {
                 order_id: orderID,
-                amount: amount,
+                amount: due,
                 remark: translate('pos.pay.cash_remark'),
             });
             await finishPaid();

@@ -16,6 +16,7 @@ export const X6_REQUIRED_APIS = [
     '/v1/hlj/order/fastCancel',
     '/v1/hlj/order/fastRefund',
     '/v1/hlj/order/pos',
+    '/v1/hlj/order/pos/checkout/lock',
     '/v1/hlj/order/pos/stats',
     '/v1/hlj/order/ws',
     '/v1/hlj/product/pos/catalog-lite',

@@ -81,10 +81,11 @@ export default function MemberSelector({
         if (!selectedMember) return;
 
         try {
+            const due = offers?.lock ? await offers.lock(orderID) : price;
             await fetchData('/v1/pay/balance/pay', () => {}, 'POST', {
                 order_id: orderID,
                 account_id: selectedMember.id,
-                amount: price,
+                amount: due,
                 remark: offers?.ticketId ? tPos('pay.remark_coupon') : (offers?.campaignId ? tPos('pay.remark_campaign') : tPos('pay.remark_balance')),
             });
             await offers?.redeem?.(orderID);
