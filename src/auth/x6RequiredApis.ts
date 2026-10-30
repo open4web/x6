@@ -20,6 +20,7 @@ export const X6_REQUIRED_APIS = [
     '/v1/hlj/order/ws',
     '/v1/hlj/product/pos/catalog-lite',
     '/v1/hlj/product/pos/combs',
+    '/v1/hlj/product/pos/describe',
     '/v1/hlj/product/pos/menu',
     '/v1/hlj/product/pos/products',
     '/v1/hlj/product/pos/quick',
