@@ -14,6 +14,7 @@ import Version from "../common/Version"
 import AppearanceMenu from "./AppearanceMenu";
 import RefreshCatalogMenuItem from "./RefreshCatalogMenuItem";
 import {MyAccessDialog, MyAccessMenuItem} from "./MyAccessDialog";
+import {DishManageMenuItem, StoreManageMenuItem} from "./ManageMenuItems";
 import {LinkSignal} from "./LinkSignal";
 
 const CashierUserMenu = () => {
@@ -21,6 +22,8 @@ const CashierUserMenu = () => {
     return (
         <>
             <UserMenu>
+                <StoreManageMenuItem />
+                <DishManageMenuItem />
                 <MyAccessMenuItem onOpen={() => setAccessOpen(true)} />
                 <RefreshCatalogMenuItem />
                 <Logout />
