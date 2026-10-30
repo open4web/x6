@@ -16,6 +16,8 @@ import MyDataProvider from './dataProvider/customeProvider';
 // 加载业务
 import MyAuthProvider from "./common/MyAuthProvider";
 import {MyHome} from "./pages/dashboard/MyHome";
+import StoreManagePage from "./pages/manage/StoreManagePage";
+import DishManagePage from "./pages/manage/DishManagePage";
 import {MyCartProvider} from "./dataProvider/MyCartProvider";
 
 // 国际化
@@ -66,6 +68,8 @@ const App = () => {
                 >
                     <CustomRoutes>
                         <Route path="/configuration" element={<Configuration/>}/>
+                        <Route path="/manage/store" element={<StoreManagePage/>}/>
+                        <Route path="/manage/dishes" element={<DishManagePage/>}/>
                         {/* 图表 */}
                         <Route path="/" element={<MyHome/>}/>
                     </CustomRoutes>
