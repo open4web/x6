@@ -17,6 +17,10 @@ import {
     writeProducts,
 } from "../../../utils/catalogCache";
 import {productCardGridXs, useProductCardStyle} from "../../../layout/productCardStyle";
+import VoiceOrderBar from "./VoiceOrderBar";
+import VoiceResultsPanel from "./VoiceResultsPanel";
+import {toast} from "react-toastify";
+import {tPos} from "../../../i18n/t";
 
 function mapsFromMenus(menus: MenuData[]) {
     const nameMap = menus.reduce((acc: Record<string, MenuData>, item: MenuData) => {
@@ -42,6 +46,12 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     });
     const [categories, setCategories] = useState<MenuData[]>(() => readMenus(merchantId)?.data ?? []);
     const [query, setQuery] = useState("");
+    const [voiceBusy, setVoiceBusy] = useState(false);
+    const [voiceTranscript, setVoiceTranscript] = useState("");
+    const [voiceProducts, setVoiceProducts] = useState<ProductItem[] | null>(null);
+    const [voiceUnmatched, setVoiceUnmatched] = useState<string[]>([]);
+    const [voiceSource, setVoiceSource] = useState("");
+    const [voiceError, setVoiceError] = useState("");
     const [categoryMap, setCategoryMap] = useState<Record<string, MenuData>>(
         () => mapsFromMenus(readMenus(merchantId)?.data ?? []).nameMap,
     );
@@ -195,11 +205,49 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         return acc;
     }, {} as { [key: string]: CombSelectInfo });
 
+
+    const runVoiceMatch = async (transcript: string) => {
+        if (!merchantId) {
+            toast.warning(tPos('voice.need_store'), {position: 'top-center'});
+            return;
+        }
+        setVoiceBusy(true);
+        try {
+            const raw = await fetchData('/v1/hlj/product/pos/voice-match', () => {}, "POST", {
+                merchantId,
+                transcript,
+            }, true);
+            const body = raw?.data ?? raw;
+            const products = (body?.products || []) as ProductItem[];
+            setVoiceTranscript(body?.transcript || transcript);
+            setVoiceProducts(products);
+            setVoiceUnmatched(body?.unmatched || []);
+            setVoiceSource(body?.source || '');
+            setVoiceError(body?.error || '');
+            if (!products.length) {
+                toast.info(tPos('voice.none'), {position: 'top-center'});
+            }
+        } catch {
+            toast.error(tPos('voice.match_failed'), {position: 'top-center'});
+        } finally {
+            setVoiceBusy(false);
+        }
+    };
+
+    const clearVoiceResults = () => {
+        setVoiceProducts(null);
+        setVoiceTranscript('');
+        setVoiceUnmatched([]);
+        setVoiceSource('');
+        setVoiceError('');
+    };
+
     return (
         <Box>
             {alertComponent}
             <Box sx={{display: 'flex', alignItems: 'center', gap: 1.75, overflowX: 'auto', mb: 2, py: 1.5, px: 1}}>
-                {categories.map(category => {
+                <VoiceOrderBar busy={voiceBusy} onTranscript={runVoiceMatch} />
+                {voiceProducts == null && categories.map(category => {
                     const iconUrl = resolveMenuIconUrl(category.icon);
                     const selected = activeTab === category.id;
                     return (
@@ -254,6 +302,19 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                 })}
             </Box>
 
+            {voiceProducts != null ? (
+                <VoiceResultsPanel
+                    transcript={voiceTranscript}
+                    products={voiceProducts}
+                    unmatched={voiceUnmatched}
+                    source={voiceSource}
+                    error={voiceError}
+                    handleClick={handleClick}
+                    clearCartSignal={clearCartSignal}
+                    onClose={clearVoiceResults}
+                />
+            ) : (
+            <>
             {/* Product Grid */}
             {Object.keys(groupedData).map((combIndex) => {
                 const groupItems = groupedData[parseInt(combIndex, 10)];
@@ -308,6 +369,8 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                     </Grid>
                 );
             })}
+            </>
+            )}
         </Box>
     );
 }
