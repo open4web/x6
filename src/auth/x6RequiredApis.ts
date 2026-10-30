@@ -23,6 +23,7 @@ export const X6_REQUIRED_APIS = [
     '/v1/hlj/product/pos/menu',
     '/v1/hlj/product/pos/products',
     '/v1/hlj/product/pos/quick',
+    '/v1/hlj/product/pos/voice-match',
     '/v1/hlj/store/charge',
     '/v1/hlj/store/list',
     '/v1/hlj/store/pos/bind-menu',
