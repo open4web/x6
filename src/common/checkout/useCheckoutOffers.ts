@@ -108,6 +108,25 @@ export function useCheckoutOffers(amount: number, storeId?: string) {
     const totalBenefit = Math.round((campaignBenefit + couponBenefit) * 100) / 100;
     const payAmount = Math.max(0, Math.round((orderAmount - totalBenefit) * 100) / 100);
 
+    const [lockedPayAmount, setLockedPayAmount] = useState<number | null>(null);
+
+    // A-02: 支付前服务端锁价，后续渠道金额以锁定价为准
+    const lock = useCallback(async (orderId: string) => {
+        const { data } = await axios.post('/v1/hlj/order/pos/checkout/lock', {
+            order_id: orderId,
+            store_id: storeId || localStorage.getItem('current_store_id') || '',
+            member_id: memberId,
+            account_id: memberId,
+            campaign_id: campaignId || undefined,
+            ticket_id: ticketId || undefined,
+        }, { headers: authHeaders() });
+        const payload = data?.pay_amount != null ? data : (data?.data || data);
+        const locked = Number(payload?.pay_amount ?? payload?.real_price ?? payAmount);
+        const next = Number.isFinite(locked) ? Math.max(0, Math.round(locked * 100) / 100) : payAmount;
+        setLockedPayAmount(next);
+        return next;
+    }, [campaignId, memberId, payAmount, storeId, ticketId]);
+
     const redeem = useCallback(async (orderId: string) => {
         if (!campaignId && !ticketId) return;
         try {
@@ -125,6 +144,8 @@ export function useCheckoutOffers(amount: number, storeId?: string) {
         }
     }, [orderAmount, campaignId, memberId, storeId, ticketId, totalBenefit]);
 
+    const effectivePayAmount = lockedPayAmount != null ? lockedPayAmount : payAmount;
+
     return useMemo(() => ({
         loading,
         orderAmount,
@@ -140,12 +161,13 @@ export function useCheckoutOffers(amount: number, storeId?: string) {
         campaignBenefit,
         couponBenefit,
         totalBenefit,
-        payAmount,
+        payAmount: effectivePayAmount,
+        lock,
         redeem,
         reload,
     }), [
         loading, orderAmount, campaigns, tickets, campaignId, ticketId, bindMember,
-        campaign, ticket, campaignBenefit, couponBenefit, totalBenefit, payAmount, redeem, reload,
+        campaign, ticket, campaignBenefit, couponBenefit, totalBenefit, effectivePayAmount, lock, redeem, reload,
     ]);
 }
 
