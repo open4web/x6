@@ -26,7 +26,7 @@
         "fakerest": "^3.0.0",
         "fetch-mock": "~9.11.0",
         "graphql": "^15.6.0",
-        "graphql-tag": "^2.12.6",
+        "graphql-tag": "^2.12.7",
         "hooks": "^0.3.2",
         "html5-qrcode": "^2.3.8",
         "i-devices": "^0.1.4",
