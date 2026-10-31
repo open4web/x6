@@ -37,7 +37,7 @@ export default function MemberBalancePay({
                                              setOrderDrawerOpen,
                                              offers,
                                          }: Props) {
-    const {startPaymentWatch} = useCartContext();
+    const {notifyOrderPaid} = useCartContext();
     return (
         <CustomTabPanel value={value} index={index}>
             <MemberSelector
@@ -51,7 +51,7 @@ export default function MemberBalancePay({
                         setCart([]);
                     }
                     setOpen(false);
-                    startPaymentWatch(orderID);
+                    notifyOrderPaid(orderID);
                 }}
             />
         </CustomTabPanel>

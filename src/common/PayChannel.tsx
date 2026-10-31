@@ -146,7 +146,6 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                     return;
                 }
                 finished.current = true;
-                playPosSound('ok');
                 if (setCart) {
                     setCart([]);
                 }
@@ -199,7 +198,6 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
             return;
         }
         finished.current = true;
-        playPosSound('ok');
         await offers?.redeem?.(orderID);
         onSuccess?.();
         if (setCart) {
