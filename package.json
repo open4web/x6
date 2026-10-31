@@ -55,7 +55,7 @@
         "react-draggable-list": "^4.1.0",
         "react-image-lightbox": "^5.1.4",
         "react-otp-input": "^3.1.1",
-        "react-qr-code": "^2.0.12",
+        "react-qr-code": "^2.2.0",
         "react-router": "^6.1.0",
         "react-router-dom": "^6.1.0",
         "react-toastify": "^9.1.3",
