@@ -89,7 +89,6 @@ export default function MemberSelector({
             });
             await offers?.redeem?.(orderID);
 
-            toast.success(tPos('pay.success'));
             onSuccess?.();
             handleClose();
         } catch {

@@ -4,6 +4,7 @@ import {tPos} from '../i18n/t';
 import {CartItem, CartItemHolder} from "../common/types";
 import {OrderListWatcher, PaymentWatcher} from "../common/OrderPulling";
 import {dutyUserId, readLocalDuty} from "../common/shiftDuty";
+import {playPosSound} from '../utils/touchSound';
 
 export type OrderSyncStatus = 'idle' | 'syncing' | 'ready';
 
@@ -161,6 +162,7 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
             return;
         }
         lastPaidRef.current = orderNo;
+        playPosSound('success');
         toast.success(tPos('pay.success'), {position: "top-center", autoClose: 2000});
         setWatchingOrderNo('');
         setDrawerOpen(false);
