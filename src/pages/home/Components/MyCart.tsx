@@ -18,6 +18,7 @@ import {playPosSound} from "../../../utils/touchSound";
 import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import TablePicker from "../../../common/TablePicker";
 import {readStoreTables, writeStoreTables} from "../../../utils/storeCache";
+import {SEATS_CHANGED} from "../../../utils/seatHold";
 import {Alert, FormControl, FormControlLabel, Radio, RadioGroup} from "@mui/material";
 import {cartPanelWidth, useCartStyle} from "../../../layout/cartStyle";
 import {CartItemList} from "./CartItemLayouts";
@@ -127,6 +128,12 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     const [meta, setMeta] = React.useState(readMeta);
     const [payMeta, setPayMeta] = React.useState({seat: '', people: '', note: ''});
     const refreshMeta = () => setMeta(readMeta());
+
+    React.useEffect(() => {
+        const onSeats = () => refreshMeta();
+        window.addEventListener(SEATS_CHANGED, onSeats);
+        return () => window.removeEventListener(SEATS_CHANGED, onSeats);
+    }, []);
 
     const pricedItems = React.useMemo(
         () => withUnitPrices(cartItems, id => lookupProductUnitPrice(merchantId, id)),
@@ -241,21 +248,27 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             return;
         }
         const people = Number(localStorage.getItem('peopleNumber') || 0);
-        fetchData(`/v1/hlj/store/seat/${storeId}`, () => {
+        fetchData(`/v1/hlj/store/seat/${storeId}`, (response) => {
             const cached = readStoreTables(storeId);
             if (!cached) {
                 return;
             }
-            writeStoreTables(storeId, {
-                ...cached,
-                seats: (cached.seats || []).map(item => item.id === seatId ? {
-                    ...item,
-                    status: 1,
-                    order_no: orderNo,
-                    occupied_at: Math.floor(Date.now() / 1000),
-                    people: people || item.people,
-                } : item),
-            });
+            const list = Array.isArray(response) ? response : null;
+            if (list) {
+                writeStoreTables(storeId, {...cached, seats: list});
+            } else {
+                writeStoreTables(storeId, {
+                    ...cached,
+                    seats: (cached.seats || []).map(item => item.id === seatId ? {
+                        ...item,
+                        status: 1,
+                        order_no: orderNo,
+                        occupied_at: item.status === 1 && item.occupied_at ? item.occupied_at : Math.floor(Date.now() / 1000),
+                        people: people || item.people,
+                    } : item),
+                });
+            }
+            window.dispatchEvent(new Event(SEATS_CHANGED));
         }, 'PUT', {id: seatId, status: 1, order_no: orderNo, people});
     };
 

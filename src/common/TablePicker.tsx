@@ -22,6 +22,7 @@ import {useFetchData} from './FetchData';
 import {useCartContext} from '../dataProvider/MyCartProvider';
 import {Order} from '../pages/home/Components/types';
 import {formatElapsed, liveElapsed, readStoreTables, seatLabel, seatZone, StoreSeat, writeStoreTables} from '../utils/storeCache';
+import {holdKey, holdPhase, occupiedStartSec, readHoldExtras, SEATS_CHANGED} from '../utils/seatHold';
 import {playPosSound} from '../utils/touchSound';
 
 export type TableSaveValue = {
@@ -135,7 +136,18 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
         };
         load();
         const timer = window.setInterval(() => setTick(value => value + 1), 1000);
-        return () => window.clearInterval(timer);
+        const onSeats = () => {
+            const cached = readStoreTables(storeId);
+            if (cached) {
+                setStore(cached);
+                setSelected(prev => cached.seats?.find(item => item.id === (prev?.id || localStorage.getItem('selectedSeatId'))) || null);
+            }
+        };
+        window.addEventListener(SEATS_CHANGED, onSeats);
+        return () => {
+            window.clearInterval(timer);
+            window.removeEventListener(SEATS_CHANGED, onSeats);
+        };
     }, [open, storeId]);
 
     React.useEffect(() => {
@@ -151,6 +163,8 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
     const rows = Math.max(1, store?.layout?.rows || Math.ceil(seats.length / cols) || 1);
 
     const cells = React.useMemo(() => {
+        const holdExtras = readHoldExtras(storeId);
+        const nowSec = Math.floor(Date.now() / 1000);
         return Array.from({length: cols * rows}, (_, index) => {
             const x = (index % cols) + 1;
             const y = Math.floor(index / cols) + 1;
@@ -159,9 +173,11 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
                 const sy = Number(item.y) || (Math.floor(seatIndex / cols) + 1);
                 return sx === x && sy === y;
             });
-            return {x, y, seat};
+            const start = seat ? occupiedStartSec(seat) : 0;
+            const phase = seat && start ? holdPhase(start, holdExtras[holdKey(seat.id, start)] || 0, nowSec) : 'ok';
+            return {x, y, seat, overtime: phase !== 'ok'};
         });
-    }, [seats, cols, rows, tick]);
+    }, [seats, cols, rows, tick, storeId]);
 
     const bindSeat = (seat: StoreSeat, intent: TableSaveValue['intent']) => {
         const tableNo = seatLabel(seat, store?.layout?.qr_display);
@@ -324,7 +340,7 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
                                         const off = seat.status === 3;
                                         const active = selected?.id === seat.id;
                                         const elapsed = seat.status === 1 || seat.status === 2 ? liveElapsed(seat) : 0;
-                                        const hint = hintKey(Number(seat.status) || 0);
+                                        const hint = cell.overtime ? 'pos.seat.overtime_mark' : hintKey(Number(seat.status) || 0);
                                         return (
                                             <Box
                                                 key={seat.id}
@@ -341,7 +357,7 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
                                                     p: 1.25,
                                                     borderRadius: 2,
                                                     cursor: off ? 'not-allowed' : 'pointer',
-                                                    bgcolor: statusColor[Number(seat.status) || 0],
+                                                    bgcolor: cell.overtime ? '#c62828' : statusColor[Number(seat.status) || 0],
                                                     color: '#fff',
                                                     outline: active ? '3px solid #111' : 'none',
                                                     outlineOffset: 2,
