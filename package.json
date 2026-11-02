@@ -4,7 +4,7 @@
     "private": true,
     "dependencies": {
         "@ant-design/plots": "^2.6.8",
-        "@apollo/client": "^3.3.19",
+        "@apollo/client": "^3.14.1",
         "@emotion/react": "^11.11.4",
         "@emotion/styled": "^11.11.0",
         "@hookform/resolvers": "^3.3.2",
