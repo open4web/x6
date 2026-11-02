@@ -30,7 +30,7 @@
         "hooks": "^0.3.2",
         "html5-qrcode": "^2.3.8",
         "i-devices": "^0.1.4",
-        "inflection": "~1.12.0",
+        "inflection": "~1.13.4",
         "jwt-decode": "^3.1.2",
         "moment": "^2.30.1",
         "nprogress": "^0.2.0",
