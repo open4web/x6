@@ -20,6 +20,7 @@ import {themes, ThemeName} from '../themes/themes';
 import {PRODUCT_CARD_STYLES, ProductCardStyle, useProductCardStyle} from './productCardStyle';
 import {ORDER_CARD_STYLES, OrderCardStyle, useOrderCardStyle} from './orderCardStyle';
 import {CART_STYLES, CartStyle, useCartStyle} from './cartStyle';
+import {FONT_SIZES, FontSize, useFontSize, useApplyFontSize, applyFontScale} from './fontScale';
 
 function CardStylePreview({styleName, selected}: {styleName: ProductCardStyle; selected: boolean}) {
     const bar = {height: 6, borderRadius: 1, bgcolor: 'action.disabled', mb: 0.4};
@@ -263,6 +264,8 @@ export function AppearancePanel() {
     const [cardStyle, setCardStyle] = useProductCardStyle();
     const [orderStyle, setOrderStyle] = useOrderCardStyle();
     const [cartStyle, setCartPanelStyle] = useCartStyle();
+    const [fontSize, setFontSize] = useFontSize();
+    useApplyFontSize();
     const [soundOn, setSoundOn] = useState(isPosSoundOn);
 
     const setMode = (light: boolean) => {
@@ -314,6 +317,34 @@ export function AppearancePanel() {
                         setPosSoundOn(next);
                     }}
                 />
+            </Box>
+
+
+            <Divider sx={{mb: 1.5}} />
+            <Typography variant="subtitle2" sx={{mb: 1, fontWeight: 700}}>
+                {translate('pos.font_size.title', {_: '字体大小'})}
+            </Typography>
+            <Box sx={{display: 'flex', gap: 1, mb: 2}}>
+                {FONT_SIZES.map(size => {
+                    const selected = fontSize === size;
+                    return (
+                        <Chip
+                            key={size}
+                            label={translate(`pos.font_size.${size}`, {_: size})}
+                            color={selected ? 'primary' : 'default'}
+                            variant={selected ? 'filled' : 'outlined'}
+                            onClick={() => {
+                                setFontSize(size as FontSize);
+                                applyFontScale(size as FontSize);
+                            }}
+                            sx={{
+                                fontSize: size === 'small' ? 12 : size === 'large' ? 16 : 14,
+                                fontWeight: selected ? 800 : 500,
+                                minWidth: 64,
+                            }}
+                        />
+                    );
+                })}
             </Box>
 
             <Divider sx={{mb: 1.5}} />
@@ -475,6 +506,7 @@ export function AppearancePanel() {
 
 export default function AppearanceMenu() {
     useAppearance();
+    useApplyFontSize();
     const translate = useTranslate();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const title = translate('pos.action.appearance', {_: 'Language & theme'});

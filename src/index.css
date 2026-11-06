@@ -1,3 +1,9 @@
+
+/* POS font scale: 中 = 1 (current). Set by layout/fontScale.ts */
+html {
+  font-size: calc(16px * var(--pos-font-scale, 1));
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
