@@ -16,9 +16,15 @@ import MyDataProvider from './dataProvider/customeProvider';
 // 加载业务
 import MyAuthProvider from "./common/MyAuthProvider";
 import {MyHome} from "./pages/dashboard/MyHome";
-import StoreManagePage from "./pages/manage/StoreManagePage";
-import DishManagePage from "./pages/manage/DishManagePage";
 import {MyCartProvider} from "./dataProvider/MyCartProvider";
+import {PosErrorBoundary} from "./common/PosErrorBoundary";
+
+const StoreManagePage = React.lazy(() => import("./pages/manage/StoreManagePage"));
+const DishManagePage = React.lazy(() => import("./pages/manage/DishManagePage"));
+
+const HomeDashboard = () => (
+    <PosErrorBoundary><MyHome /></PosErrorBoundary>
+);
 
 // 国际化
 const localeLoaders: Record<string, () => Promise<{default: any}>> = {
@@ -54,7 +60,7 @@ const App = () => {
                     title={"order by pos "}
                     dataProvider={MyDataProvider}
                     authProvider={MyAuthProvider}
-                    dashboard={MyHome}
+                    dashboard={HomeDashboard}
                     loginPage={Login}
                     layout={Layout}
                     i18nProvider={i18nProvider}
@@ -68,10 +74,14 @@ const App = () => {
                 >
                     <CustomRoutes>
                         <Route path="/configuration" element={<Configuration/>}/>
-                        <Route path="/manage/store" element={<StoreManagePage/>}/>
-                        <Route path="/manage/dishes" element={<DishManagePage/>}/>
+                        <Route path="/manage/store" element={
+                            <React.Suspense fallback={null}><StoreManagePage/></React.Suspense>
+                        }/>
+                        <Route path="/manage/dishes" element={
+                            <React.Suspense fallback={null}><DishManagePage/></React.Suspense>
+                        }/>
                         {/* 图表 */}
-                        <Route path="/" element={<MyHome/>}/>
+                        <Route path="/" element={<PosErrorBoundary><MyHome/></PosErrorBoundary>}/>
                     </CustomRoutes>
 
                     {/* 基础权限系统 */}

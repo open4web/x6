@@ -22,63 +22,68 @@ const aliases = packages.reduce((acc, dirName) => {
 
 // https://vitejs.dev/config/
 // @ts-ignore
-export default defineConfig({
-    plugins: [react()],
-    define: {
-        'process.env': process.env,
-        __APP_VERSION__: JSON.stringify(appVersion),
-    },
-    server: { // 开发服务器配置
-        port: 8000, // 开发服务器端口
-        proxy: {
-            [loadEnv('development', process.cwd()).VITE_APP_BASE_API]: {
-                target: loadEnv('development', process.cwd()).VITE_APP_REAL_API,
-                // target: 'http://localhost:3003', // animal_server
-                changeOrigin: true,
-                rewrite: path => {
-                    const apiString = loadEnv('development', process.cwd()).VITE_APP_BASE_API
-                    const envApi = new RegExp(apiString, 'g')
-                    return path.replace(envApi, '')
+export default defineConfig(({ command, mode }) => {
+    const isBuild = command === 'build';
+    const env = loadEnv(mode, process.cwd(), 'VITE_');
+    const defineEnv: Record<string, string> = {};
+    for (const [key, value] of Object.entries(env)) {
+        defineEnv[`import.meta.env.${key}`] = JSON.stringify(value);
+    }
+    // Keep a tiny process.env shim for libraries that still read NODE_ENV.
+    defineEnv['process.env.NODE_ENV'] = JSON.stringify(isBuild ? 'production' : mode);
+
+    const alias: { find: string; replacement: string }[] = [];
+    if (!isBuild && process.env.VITE_REACT_PROFILING === '1') {
+        alias.push(
+            { find: 'react-dom', replacement: 'react-dom/profiling' },
+            { find: 'scheduler/tracing', replacement: 'scheduler/tracing-profiling' },
+        );
+    }
+
+    return {
+        plugins: [react()],
+        define: {
+            ...defineEnv,
+            __APP_VERSION__: JSON.stringify(appVersion),
+        },
+        server: {
+            port: 8000,
+            proxy: {
+                [loadEnv('development', process.cwd()).VITE_APP_BASE_API]: {
+                    target: loadEnv('development', process.cwd()).VITE_APP_REAL_API,
+                    changeOrigin: true,
+                    rewrite: path => {
+                        const apiString = loadEnv('development', process.cwd()).VITE_APP_BASE_API
+                        const envApi = new RegExp(apiString, 'g')
+                        return path.replace(envApi, '')
+                    },
+                },
+                '/api': {
+                    target: 'http://shop.r2day.club/',
+                    changeOrigin: true,
+                    rewrite: (path) => path.replace(/^\/api/, ''),
                 },
             },
-            '/api': {
-                target: 'http://shop.r2day.club/',
-                changeOrigin: true, // 是否跨域
-                rewrite: (path) => {
-                  return path.replace(/^\/api/, '');
-                }
+        },
+        base: './',
+        esbuild: {
+            keepNames: !isBuild,
+        },
+        build: {
+            sourcemap: isBuild ? 'hidden' : true,
+            chunkSizeWarningLimit: 100,
+            rollupOptions: {
+                onwarn(warning, warn) {
+                    if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
+                        return
+                    }
+                    warn(warning)
+                },
             },
         },
-    },
-    base: './',
-    esbuild: {
-        keepNames: true,
-    },
-    build: {
-        sourcemap: true,
-        chunkSizeWarningLimit: 100,
-        rollupOptions: {
-            onwarn(warning, warn) {
-                if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
-                    return
-                }
-                warn(warning)
-            }}
-    },
-    resolve: {
-        preserveSymlinks: true,
-        alias: [
-            // allow profiling in production
-            { find: 'react-dom', replacement: 'react-dom/profiling' },
-            {
-                find: 'scheduler/tracing',
-                replacement: 'scheduler/tracing-profiling',
-            },
-            // we need to manually follow the symlinks for local packages to allow deep HMR
-            // ...Object.keys(aliases).map(packageName => ({
-            //     find: packageName,
-            //     replacement: aliases[packageName],
-            // })),
-        ],
-    },
+        resolve: {
+            preserveSymlinks: true,
+            alias,
+        },
+    };
 });

@@ -36,10 +36,7 @@ const MyCard = (props: Props) => {
     const [expanded2, setExpanded2] = React.useState(false);
 
 
-    const [selectedNames, setSelectedNames] = React.useState<string>(() => {
-        // 初始化拼接字符串为本地存储中的值，或空字符串
-        return localStorage.getItem('selectedNames') || '';
-    });
+    const [selectedNames, setSelectedNames] = React.useState<string>('');
 
     const getItemCountInCart = () => {
         return cartItems.reduce((count, cartItem) => {
@@ -61,16 +58,11 @@ const MyCard = (props: Props) => {
     const handleClose = () => {
         console.log("Collapse 关闭！");
         setExpanded2(false);
-        localStorage.removeItem('propMap')
-        localStorage.removeItem('selectedNames');
-        setPropMap({})
+        setSelectedNames('');
+        setPropMap({});
     };
 
-    const [propMap, setPropMap] = React.useState<Record<string, string>>(() => {
-        // 初始化映射为本地存储中的值，或空对象
-        const storedMap = localStorage.getItem('propMap');
-        return storedMap ? JSON.parse(storedMap) : {};
-    });
+    const [propMap, setPropMap] = React.useState<Record<string, string>>({});
 
     const handlePropsChange = (options: string, supportMultiProps: boolean) => {
         const optionsString = aggregateData(options);
@@ -85,11 +77,7 @@ const MyCard = (props: Props) => {
                 updatedMap[propId] = name;
                 const names = Object.values(updatedMap).join(','); // 拼接所有 name
 
-                // 将最新结果存储到本地
-                localStorage.setItem('propMap', JSON.stringify(updatedMap));
-                localStorage.setItem('selectedNames', names);
-
-                setSelectedNames(names); // 更新拼接后的字符串
+                setSelectedNames(names);
                 return updatedMap;
             });
         } catch (error) {
@@ -141,9 +129,8 @@ const MyCard = (props: Props) => {
         item.combID = combID
         setCartCount(cartCount + 1); // 每次点击增加数量
         // 当属性被提交后重置属性
-        localStorage.removeItem('propMap')
-        localStorage.removeItem('selectedNames');
-        setPropMap({})
+        setSelectedNames('');
+        setPropMap({});
         // 如果是直接快速添加则不会勾选属性
         if (withoutProp) {
             // 强制置为空
@@ -233,7 +220,7 @@ const MyCard = (props: Props) => {
     );
 };
 
-export default MyCard;
+export default React.memo(MyCard);
 
 
 // 聚合函数

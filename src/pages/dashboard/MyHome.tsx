@@ -15,12 +15,12 @@ import {CartItem} from "../../common/types";
 import {lookupProductUnitPrice} from "../../utils/catalogCache";
 import {resolveUnitPrice} from "../../utils/comboMatch";
 import {useCallback, useEffect, useRef, useState} from "react";
-import RechargeCardSelector from "../../common/RechargeCardSelector";
 import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
 import OrderFlyOverlay from "../home/Components/OrderFlyOverlay";
 
 const MyDataDrawer = React.lazy(() => import('./MyDataDrawer'));
 const HandoverPageDrawer = React.lazy(() => import('../Shift/Handover'));
+const RechargeCardSelector = React.lazy(() => import('../../common/RechargeCardSelector'));
 
 function DeferredPanelFallback() {
     return (
@@ -44,6 +44,7 @@ export const MyHome = () => {
     const [fabPulse, setFabPulse] = useState(false);
     const [mountSales, setMountSales] = useState(false);
     const [mountHandover, setMountHandover] = useState(false);
+    const [mountRecharge, setMountRecharge] = useState(false);
     const orderFabRef = useRef<HTMLButtonElement>(null);
     // Stay unmounted until first open, then keep mounted so a later close does not drop the panel.
     if (dataDrawerOpen && !mountSales) {
@@ -51,6 +52,9 @@ export const MyHome = () => {
     }
     if (shiftOpen && !mountHandover) {
         setMountHandover(true);
+    }
+    if (rechargeOpen && !mountRecharge) {
+        setMountRecharge(true);
     }
 
     const guardOrdering = () => {
@@ -88,12 +92,11 @@ export const MyHome = () => {
                         : cartItem
                 )
             );
-            console.log("increment quantity", cartItems)
-            toast.success(translate('pos.cart.qty_up', {name: priced.name}), { position: "top-center", autoClose: 2000 });
+            toast.success(translate('pos.cart.qty_up', {name: priced.name}), { position: "top-center", autoClose: 900, toastId: 'cart-qty' });
         } else {
             // 商品不存在，首次添加到购物车
             setCartItems([...cartItems, { ...priced, quantity: 1 }]);
-            toast.success(translate('pos.cart.added'), { position: "top-center", autoClose: 2000 });
+            toast.success(translate('pos.cart.added'), { position: "top-center", autoClose: 900, toastId: 'cart-add' });
         }
     };
 
@@ -148,15 +151,18 @@ export const MyHome = () => {
                             <HandoverPageDrawer />
                         </React.Suspense>
                     )}
-                    <RechargeCardSelector
-                        modal={true}
-                        open={rechargeOpen}
-                        onClose={() => setRechargeOpen(false)}
-                        onSuccess={(card) => {
-                            console.log('已选择充值卡:', card);
-                            // 刷新会员余额等
-                        }}
-                    />
+                    {mountRecharge && (
+                        <React.Suspense fallback={<DeferredPanelFallback />}>
+                            <RechargeCardSelector
+                                modal={true}
+                                open={rechargeOpen}
+                                onClose={() => setRechargeOpen(false)}
+                                onSuccess={(card) => {
+                                    console.log('已选择充值卡:', card);
+                                }}
+                            />
+                        </React.Suspense>
+                    )}
                     {/* 仅在 dataDrawerOpen 为 false 时渲染以下部分 */}
                     {!dataDrawerOpen && (
                         <>

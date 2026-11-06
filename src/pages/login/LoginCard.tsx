@@ -47,7 +47,7 @@ const LoginCard = ({ loading, color, onLogin }: LoginCardProps) => {
         }
         const result = await onLogin({
             phone: current.phone,
-            password: current.password,
+            device_token: current.deviceToken,
             remember: true,
         });
         if (result && result.ok === false && !result.pending) {

@@ -1,10 +1,11 @@
-import React, {createContext, useCallback, useContext, useRef, useState, ReactNode} from 'react';
+import React, {createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode} from 'react';
 import {toast} from 'react-toastify';
 import {tPos} from '../i18n/t';
 import {CartItem, CartItemHolder} from "../common/types";
 import {OrderListWatcher, PaymentWatcher} from "../common/OrderPulling";
 import {dutyUserId, readLocalDuty} from "../common/shiftDuty";
 import {playPosSound} from '../utils/touchSound';
+import {clearPersistedCart, readPersistedCart, writePersistedCart} from '../utils/cartPersist';
 
 export type OrderSyncStatus = 'idle' | 'syncing' | 'ready';
 
@@ -104,7 +105,10 @@ export const useCartContext = () => {
 };
 
 export const MyCartProvider = ({ children }: { children: ReactNode }) => {
-    const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+        const storeId = localStorage.getItem("current_store_id") || '';
+        return readPersistedCart(storeId)?.items || [];
+    });
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [orderDrawerOpen, setOrderDrawerOpen] = useState(false);
     const [showProductImage, setShowProductImage] = useState(false);
@@ -196,6 +200,27 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
         setOrderSyncProgress(0);
         setSyncingOrderNo('');
     }, []);
+
+    useEffect(() => {
+        if (!merchantId) {
+            return;
+        }
+        if (!cartItems.length) {
+            clearPersistedCart(merchantId);
+            return;
+        }
+        writePersistedCart(merchantId, cartItems);
+    }, [merchantId, cartItems]);
+
+    useEffect(() => {
+        if (!merchantId) {
+            return;
+        }
+        const saved = readPersistedCart(merchantId);
+        if (saved?.items?.length) {
+            setCartItems(saved.items);
+        }
+    }, [merchantId]);
 
     return (
         <CartContext.Provider value={{ cartItems, setCartItems,

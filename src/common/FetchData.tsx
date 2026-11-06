@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 import {tPos} from '../i18n/t';
+import {clearAuthStorage, readAuthToken} from '../utils/authToken';
+
+const DEFAULT_TIMEOUT_MS = 15000;
 
 export const useFetchData = () => {
     const navigate = useNavigate();
-    const cookie = localStorage.getItem('cookie') || '';
-    const [alertMessage, setAlertMessage] = useState<string | null>(null); // 提示消息
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('info'); // 提示类型
-    const [open, setOpen] = useState(false); // 控制 Snackbar 的显示状态
+    const [alertMessage, setAlertMessage] = useState<string | null>(null);
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('info');
+    const [open, setOpen] = useState(false);
 
     const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
         if (reason === 'clickaway') return;
@@ -29,7 +31,9 @@ export const useFetchData = () => {
             method: Method = 'GET',
             data?: any,
             quiet = false,
+            opts?: { signal?: AbortSignal; timeoutMs?: number },
         ) => {
+            const cookie = readAuthToken();
             try {
                 const config = {
                     method,
@@ -37,15 +41,16 @@ export const useFetchData = () => {
                     headers: {
                         'Content-Type': 'application/json',
                         Cookies: cookie,
-                        Authorization: cookie,
+                        Authorization: cookie ? `Bearer ${cookie}` : '',
                     },
                     data: method !== 'GET' ? data : undefined,
+                    timeout: opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+                    signal: opts?.signal,
                 };
 
                 const response = await axios(config);
 
                 if (response.status === 200 || response.status === 201) {
-                    console.log(`Data fetched from ${path}:`, response.data);
                     setResponse(response.data);
                     if (!quiet) {
                         showAlert(tPos('common.success'), 'success');
@@ -56,11 +61,14 @@ export const useFetchData = () => {
                 showAlert(tPos('common.server'), 'warning');
                 throw new Error(`unexpected status ${response.status}`);
             } catch (error) {
-                console.error(`Error fetching data from ${path}:`, error);
+                if (axios.isCancel(error) || (error as any)?.code === 'ERR_CANCELED') {
+                    throw error;
+                }
+                console.error(`Error fetching data from ${path}:`, (error as any)?.message || error);
                 if (axios.isAxiosError(error) && error.response) {
                     if (error.response.status === 401) {
-                        console.warn('Unauthorized (401): Clearing cookies.');
-                        localStorage.removeItem('cookie');
+                        console.warn('Unauthorized (401): Clearing auth storage.');
+                        clearAuthStorage();
                         navigate('/login');
                         showAlert(tPos('common.expired'), 'warning');
                     } else {
@@ -72,11 +80,11 @@ export const useFetchData = () => {
                 throw error;
             }
         },
-        [cookie, navigate]
+        [navigate]
     );
 
     return { fetchData, alertComponent: (
-            <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+            <Snackbar open={open} autoHideDuration={4000} onClose={handleClose}>
                 <Alert onClose={handleClose} severity={alertType} sx={{ width: '100%' }}>
                     {alertMessage}
                 </Alert>

@@ -34,3 +34,33 @@ export function orderWsUrl(path = '/v1/hlj/order/ws') {
     const query = params.toString();
     return query ? `${path}?${query}` : path;
 }
+
+const AUTH_KEYS = [
+    'cookie',
+    'token',
+    'accessToken',
+    'permissions',
+    'toolbar',
+    'otp_verified',
+    'user_id',
+    'code',
+    'otp_url',
+    'step',
+    'username',
+    'login_id',
+    'verified_otp',
+    'mfa_expire',
+    'merchant',
+    'mchStatus',
+];
+
+/** Drop every login-related key so 401 cannot leave a half-logged-in POS. */
+export function clearAuthStorage() {
+    for (const key of AUTH_KEYS) {
+        try {
+            localStorage.removeItem(key);
+        } catch {
+            /* ignore */
+        }
+    }
+}

@@ -211,3 +211,9 @@ date-fns 是 `ra-core` 的 `export * from './inference'` 带进来的，业务�
 - 购物车 Context 挂在 `globalThis.__x6PosCartContext` 上，避免 Vite 热更新后 `useCartContext` 抛错。
 - 提示音用 `src/utils/touchSound.ts` 的 AudioContext 合成，没有额外音频文件。
 - 镜像只拷 `dist`，不在容器里跑 yarn。优化构建产物即可，不必改这层。
+
+## 落地记录（2026-11-06）
+
+已实现（见 PR feat/x6-opt-p0-p1）：生产构建去 profiling / 全量 `process.env`、hidden sourcemap、nginx gzip+assets 长缓存、字体改系统栈、`React.lazy` 扩到充值/管理页、时钟独立、菜谱 TTL 内不回源、库存补丁延迟持久化、扫码拼包、请求超时与 401 清全量登录态、购物车本地恢复、Error Boundary、记住登录改为 auth-api 设备令牌（不再存明文密码）、CI 跑 `*.test.ts`。
+
+未做 / 后续：金额改分、React 18、彻底拆购物车 Context、删 `packages/` 源码目录、商品图缩略图尺寸协商。

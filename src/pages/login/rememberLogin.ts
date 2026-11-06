@@ -1,12 +1,15 @@
-// Device-local shortcut for shift change. Sign-in still sends the password, then the OTP.
+// Device-local shortcut for shift change. Password is NOT stored;
+// auth-api issues a 7-day revocable device_token after OTP success.
 const STORAGE_KEY = 'pos.login.remember7';
 const PENDING_KEY = 'pos.login.pending';
+const REMEMBER_FLAG_KEY = 'pos.login.rememberPending';
 
 export const REMEMBER_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export type RememberedLogin = {
     phone: string;
-    password: string;
+    /** Revocable POS device credential from auth-api. Legacy password field ignored. */
+    deviceToken: string;
     until: number;
 };
 
@@ -26,21 +29,29 @@ export function formatRememberUntil(until: number): string {
     });
 }
 
-export function buildRememberedLogin(phone: string, password: string, now = Date.now()): RememberedLogin | null {
+export function buildRememberedLogin(phone: string, deviceToken: string, now = Date.now(), until?: number): RememberedLogin | null {
     const nextPhone = phone.trim();
-    if (!nextPhone || !password) return null;
-    return {phone: nextPhone, password, until: now + REMEMBER_TTL_MS};
+    if (!nextPhone || !deviceToken) return null;
+    return {
+        phone: nextPhone,
+        deviceToken,
+        until: typeof until === 'number' && Number.isFinite(until) ? until : now + REMEMBER_TTL_MS,
+    };
 }
 
 export function parseRememberedLogin(raw: string | null, now = Date.now()): RememberedLogin | null {
     if (!raw) return null;
     try {
-        const data = JSON.parse(raw) as Partial<RememberedLogin>;
+        const data = JSON.parse(raw) as Partial<RememberedLogin> & {password?: string};
         if (typeof data.phone !== 'string' || !data.phone) return null;
-        if (typeof data.password !== 'string' || !data.password) return null;
         if (typeof data.until !== 'number' || !Number.isFinite(data.until)) return null;
         if (data.until <= now) return null;
-        return {phone: data.phone, password: data.password, until: data.until};
+        // Migrate away from legacy plaintext password storage.
+        if (typeof data.password === 'string' && data.password && !data.deviceToken) {
+            return null;
+        }
+        if (typeof data.deviceToken !== 'string' || !data.deviceToken) return null;
+        return {phone: data.phone, deviceToken: data.deviceToken, until: data.until};
     } catch {
         return null;
     }
@@ -64,8 +75,8 @@ export function readRememberedLogin(now = Date.now()): RememberedLogin | null {
     return parsed;
 }
 
-export function writeRememberedLogin(phone: string, password: string, now = Date.now()) {
-    const next = buildRememberedLogin(phone, password, now);
+export function writeRememberedLogin(phone: string, deviceToken: string, until?: number, now = Date.now()) {
+    const next = buildRememberedLogin(phone, deviceToken, now, until);
     if (!next) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
 }
@@ -78,12 +89,37 @@ export function clearRememberedLogin() {
     }
 }
 
-export function applyRememberChoice(remember: boolean | undefined, phone?: string, password?: string) {
+/** Remember checkbox only marks intent; token is written after OTP + /device/bind. */
+export function applyRememberChoice(remember: boolean | undefined, phone?: string, _password?: string) {
     if (remember === true) {
-        if (phone && password) writeRememberedLogin(phone, password);
+        try {
+            sessionStorage.setItem(REMEMBER_FLAG_KEY, '1');
+            if (phone) {
+                sessionStorage.setItem('pos.login.rememberPhone', phone.trim());
+            }
+        } catch {
+            /* ignore */
+        }
         return;
     }
-    if (remember === false) clearRememberedLogin();
+    if (remember === false) {
+        clearRememberedLogin();
+        try {
+            sessionStorage.removeItem(REMEMBER_FLAG_KEY);
+        } catch {
+            /* ignore */
+        }
+    }
+}
+
+export function consumeRememberFlag(): boolean {
+    try {
+        const on = sessionStorage.getItem(REMEMBER_FLAG_KEY) === '1';
+        sessionStorage.removeItem(REMEMBER_FLAG_KEY);
+        return on;
+    } catch {
+        return false;
+    }
 }
 
 export function dropRememberedAfterReject(remember: boolean | undefined, status: number) {

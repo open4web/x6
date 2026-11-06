@@ -18,6 +18,8 @@ type MerchantCatalog = {
     productsByMenu: Record<string, CacheEntry<ProductItem[]>>;
     combs?: CacheEntry<ComboGroup[]>;
     stockByProduct: Record<string, number>;
+    /** productId -> best unit price (yuan). Rebuilt on product writes. */
+    unitPriceByProduct?: Record<string, number>;
 };
 
 type ReadResult<T> = {
@@ -66,6 +68,50 @@ function persist(catalog: MerchantCatalog): void {
         // quota / private mode: memory cache still works
     }
     notify();
+}
+
+let persistTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Stock patches stay in memory; sessionStorage write is coalesced to idle time. */
+function schedulePersist(catalog: MerchantCatalog): void {
+    memory = catalog;
+    notify();
+    if (persistTimer) {
+        clearTimeout(persistTimer);
+    }
+    const run = () => {
+        persistTimer = undefined;
+        try {
+            sessionStorage.setItem(STORAGE_PREFIX + catalog.merchantId, JSON.stringify(catalog));
+        } catch {
+            /* ignore */
+        }
+    };
+    const ric = (globalThis as any).requestIdleCallback as undefined | ((cb: () => void, opts?: {timeout: number}) => number);
+    if (typeof ric === 'function') {
+        ric(run, {timeout: 1500});
+    } else {
+        persistTimer = setTimeout(run, 400);
+    }
+}
+
+function rebuildPriceIndex(catalog: MerchantCatalog): void {
+    const index: Record<string, number> = {};
+    Object.values(catalog.productsByMenu).forEach(entry => {
+        (entry?.data || []).forEach(product => {
+            const origin = Number(product.origin_price) || 0;
+            const price = Number(product.price) || 0;
+            const unit = origin > 0 ? origin : price;
+            if (unit <= 0) {
+                return;
+            }
+            const prev = index[product.id] || 0;
+            if (unit > prev) {
+                index[product.id] = unit;
+            }
+        });
+    });
+    catalog.unitPriceByProduct = index;
 }
 
 function ensureStore(merchantId: string): MerchantCatalog {
@@ -157,6 +203,7 @@ export function writeProducts(merchantId: string, menuId: string, products: Prod
         dateKey: todayKey(),
     };
     seedStock(catalog, products);
+    rebuildPriceIndex(catalog);
     persist(catalog);
 }
 
@@ -188,22 +235,11 @@ export function lookupProductUnitPrice(merchantId: string, productId: string): n
     if (!merchantId || !productId) {
         return 0;
     }
-    let best = 0;
     const catalog = ensureStore(merchantId);
-    Object.values(catalog.productsByMenu).forEach(entry => {
-        (entry?.data || []).forEach(product => {
-            if (product.id !== productId) {
-                return;
-            }
-            const origin = Number(product.origin_price) || 0;
-            const price = Number(product.price) || 0;
-            const unit = origin > 0 ? origin : price;
-            if (unit > best) {
-                best = unit;
-            }
-        });
-    });
-    return best;
+    if (!catalog.unitPriceByProduct) {
+        rebuildPriceIndex(catalog);
+    }
+    return catalog.unitPriceByProduct?.[productId] || 0;
 }
 
 /** Overlay live stock without touching the catalog TTL. Ready for websocket patches. */
@@ -218,7 +254,7 @@ export function patchStock(
     items.forEach(item => {
         catalog.stockByProduct[item.productId] = item.stock;
     });
-    persist(catalog);
+    schedulePersist(catalog);
 }
 
 export function invalidateCatalog(merchantId?: string): void {

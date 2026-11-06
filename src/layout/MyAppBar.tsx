@@ -33,11 +33,8 @@ const CashierUserMenu = () => {
     );
 };
 
-const MyAppBar = (props: any) => {
-    const isLargeEnough = useMediaQuery<Theme>(theme =>
-        theme.breakpoints.up('sm')
-    );
-
+/** Clock alone so the rest of the app bar does not re-render every second. */
+const AppBarClock = React.memo(function AppBarClock() {
     const locale = useLocale();
     const [currentTime, setCurrentTime] = React.useState<string>(() => FormatCurrentTime(locale));
 
@@ -49,13 +46,23 @@ const MyAppBar = (props: any) => {
     }, [locale]);
 
     return (
+        <Box sx={{ ml: 1, color: 'white', fontSize: '1rem', whiteSpace: 'nowrap', opacity: 0.92 }}>
+            {currentTime}
+        </Box>
+    );
+});
+
+const MyAppBar = (props: any) => {
+    const isLargeEnough = useMediaQuery<Theme>(theme =>
+        theme.breakpoints.up('sm')
+    );
+
+    return (
         <AppBar {...props} color="primary" userMenu={<CashierUserMenu />}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <MerchantSelect />
                 <MyShiftSwitch/>
-                <Box sx={{ ml: 1, color: 'white', fontSize: '1rem', whiteSpace: 'nowrap', opacity: 0.92 }}>
-                    {currentTime}
-                </Box>
+                <AppBarClock />
             </Box>
 
             {isLargeEnough && <Box component="span" sx={{ flex: 1 }} />}
