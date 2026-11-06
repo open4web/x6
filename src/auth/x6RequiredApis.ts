@@ -43,6 +43,7 @@ export const X6_REQUIRED_APIS = [
     '/v1/pay/scan/pay',
     '/v1/system/auth/heartbeat',
     '/v1/system/auth/user/access',
+    '/v1/system/auth/user/device/bind',
     '/v1/system/auth/user/otp/validate',
     '/v1/system/auth/user/otp/verify',
     '/v1/system/auth/user/signin',

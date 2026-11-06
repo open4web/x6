@@ -6,6 +6,7 @@ import {playPosSound} from '../../utils/touchSound';
 import React, { useRef, useState } from 'react';
 import Countdown from 'react-countdown';
 import OtpKeypad from './OtpKeypad';
+import {consumeRememberFlag, writeRememberedLogin} from './rememberLogin';
 
 interface Login2FACardProps {
     loading: boolean;
@@ -56,11 +57,30 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
             keysToRemove.forEach((key) => localStorage.removeItem(key));
 
             localStorage.setItem('token', token);
+            localStorage.setItem('cookie', token);
             localStorage.setItem('permissions', roles);
             localStorage.setItem('toolbar', tool_bar);
             localStorage.setItem('user_id', user_id);
             localStorage.setItem('username', username);
             localStorage.setItem('avatar', avatar ? avatar : generateRandomAvatar());
+
+            if (consumeRememberFlag()) {
+                try {
+                    const phone = sessionStorage.getItem('pos.login.rememberPhone') || '';
+                    const bind = await authApi.post('/user/device/bind', {}, {
+                        headers: {Authorization: `Bearer ${token}`, Cookies: token},
+                    });
+                    const deviceToken = bind?.data?.device_token;
+                    const until = bind?.data?.until;
+                    const bindPhone = bind?.data?.phone || phone;
+                    if (deviceToken && bindPhone) {
+                        writeRememberedLogin(bindPhone, deviceToken, until);
+                    }
+                } catch (bindErr) {
+                    console.warn('device bind failed', bindErr);
+                }
+            }
+
             redirect('/');
         } catch (error: any) {
             const status = error?.response?.status;
@@ -116,7 +136,6 @@ const Login2FACard: React.FC<Login2FACardProps> = ({ loading, color }) => {
 
             <Box sx={{ display: 'flex', justifyContent: 'center', marginBottom: 2 }}>
                 <Typography variant="body1" sx={{ color: 'error.main', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                    {/* @ts-expect-error react-countdown 与项目 @types/react 版本冲突 */}
                     <Countdown
                         date={Date.now() + 1000 * parseInt(localStorage.getItem('mfa_expire') || '0', 10)}
                         intervalDelay={1000}

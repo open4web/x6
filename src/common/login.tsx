@@ -8,10 +8,16 @@ const logoutEndpoint = "/v1/system/auth/user/signout";
 export const HandleLogin = async (
     params: LoginInput
 ) =>  {
-    const { phone, password, step, remember } = params;
+    const { phone, password, device_token, step, remember } = params;
     const request = new Request(loginEndpoint, {
         method: 'POST',
-        body: JSON.stringify({ phone, password, step }),
+        body: JSON.stringify({
+            phone,
+            password: device_token ? undefined : password,
+            device_token: device_token || undefined,
+            step,
+            remember: !!remember,
+        }),
         headers: new Headers({ 'Content-Type': 'application/json' }),
     });
 
@@ -27,6 +33,11 @@ export const HandleLogin = async (
         }
 
         applyRememberChoice(remember, phone, password);
+        if (remember && phone) {
+            try {
+                sessionStorage.setItem('pos.login.rememberPhone', phone.trim());
+            } catch { /* ignore */ }
+        }
 
         // Handle specific status codes
         switch (response.status) {
@@ -78,6 +89,8 @@ export const HandleLogout = async () => {
         // Remove items from localStorage
         const itemsToRemove = [
             'token',
+            'cookie',
+            'accessToken',
             'permissions',
             'toolbar',
             'otp_verified',
@@ -85,7 +98,13 @@ export const HandleLogout = async () => {
             'code',
             'otp_url',
             'step',
-            'username'
+            'username',
+            'avatar',
+            'login_id',
+            'verified_otp',
+            'mfa_expire',
+            'merchant',
+            'mchStatus',
         ];
         itemsToRemove.forEach(item => localStorage.removeItem(item));
     } catch (error) {

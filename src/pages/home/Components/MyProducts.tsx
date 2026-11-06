@@ -119,7 +119,11 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             applyMenus([]);
         }
 
-        // 进页面或手动刷新时回源一次。写缓存不能再触发这次请求。
+        // TTL 内不回源；手动刷新走 invalidateCatalog（清缓存 + bump refreshTick）。
+        if (cached?.fresh) {
+            return;
+        }
+
         let cancelled = false;
         fetchData('/v1/hlj/product/pos/menu', (response) => {
             const menus = response || [];
@@ -157,7 +161,11 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             setRawData([]);
         }
 
-        // 切分类、进页面、手动刷新时回源一次，拿到当日库存。
+        // 2 分钟内切分类只画缓存，不重复打同一接口。
+        if (cached?.fresh) {
+            return;
+        }
+
         let cancelled = false;
         fetchData('/v1/hlj/product/pos/products', (response) => {
             const products = response || [];
@@ -180,17 +188,17 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         localStorage.setItem("current_category", categoryId);
     };
 
-    // 按combIndex分组
-    const groupedData = data.reduce((acc, item) => {
+    // 按combIndex分组（随 data 缓存）
+    const groupedData = useMemo(() => data.reduce((acc, item) => {
         const combIndex = item.combIndex;
         if (!acc[combIndex]) {
             acc[combIndex] = [];
         }
         acc[combIndex].push(item);
         return acc;
-    }, {} as { [key: number]: ProductItem[] });
+    }, {} as { [key: number]: ProductItem[] }), [data]);
 
-    const groupedDataSelectInfo = data.reduce((acc, item) => {
+    const groupedDataSelectInfo = useMemo(() => data.reduce((acc, item) => {
         const combIndex = item.combIndex;
 
         // 确保每个combIndex只有第一次赋值时才会创建
@@ -203,7 +211,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         }
 
         return acc;
-    }, {} as { [key: string]: CombSelectInfo });
+    }, {} as { [key: string]: CombSelectInfo }), [data, activeTab, categoryMap]);
 
 
     const runVoiceMatch = async (transcript: string) => {

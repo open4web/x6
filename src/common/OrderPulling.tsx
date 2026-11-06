@@ -1,8 +1,13 @@
 import {useEffect} from 'react';
 import axios from 'axios';
+import {readAuthToken} from '../utils/authToken';
 
 const POLL_INTERVAL_MS = 1500;
 const MAX_ATTEMPTS = 20;
+
+function backoffMs(base: number, attempt: number, cap = 8000): number {
+    return Math.min(cap, base * Math.pow(2, Math.max(0, attempt - 1)));
+}
 
 function unwrapOrder(payload: any) {
     if (!payload) {
@@ -18,7 +23,7 @@ function unwrapOrder(payload: any) {
 }
 
 async function fetchOrderSilent(orderID: string) {
-    const cookie = localStorage.getItem('cookie') || '';
+    const cookie = readAuthToken();
     const response = await axios({
         method: 'GET',
         url: `/v1/hlj/order/pos/${orderID}`,
@@ -55,7 +60,7 @@ function unwrapOrderList(payload: any): any[] {
 }
 
 async function fetchOrderListSilent(orderNo: string) {
-    const cookie = localStorage.getItem('cookie') || '';
+    const cookie = readAuthToken();
     const response = await axios({
         method: 'GET',
         url: '/v1/hlj/order/pos?filter=' + JSON.stringify({order_no: orderNo}),
@@ -111,7 +116,7 @@ export function OrderListWatcher({
                 setOrderSyncProgress(Math.min(92, attempts * 8));
             }
             if (!cancelled && attempts < LIST_MAX_ATTEMPTS) {
-                timer = setTimeout(tick, LIST_POLL_INTERVAL_MS);
+                timer = setTimeout(tick, backoffMs(LIST_POLL_INTERVAL_MS, attempts));
             } else if (!cancelled) {
                 markOrderListReady(syncingOrderNo);
             }
@@ -164,7 +169,7 @@ export function PaymentWatcher({
 
             attempts += 1;
             if (!cancelled && attempts < MAX_ATTEMPTS) {
-                timer = setTimeout(tick, POLL_INTERVAL_MS);
+                timer = setTimeout(tick, backoffMs(POLL_INTERVAL_MS, attempts));
             }
         };
 

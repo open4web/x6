@@ -241,45 +241,64 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
         }
     };
 
+    const submitPayRef = useRef(submitPay);
+    submitPayRef.current = submitPay;
+
+    // 微信 / 自动识别：扫码枪拼包（同拉卡拉），避免每键重绑监听丢字符。
     useEffect(() => {
-        if (isWeChatTab && price > 0) {
-            const handleScannerInput = (event: KeyboardEvent) => {
-                console.log("event.key ===>", event.key)
-                // 不同的支付渠道支付码长度不一样
-                if (code.length === 18) {
-                    submitPay(code);
-                    setCode(''); // 清空扫码结果
-                } else {
-                    setCode((prev) => prev + event.key); // 累计扫码输入
-                }
-            };
-
-            window.addEventListener("keydown", handleScannerInput);
-            return () => {
-                window.removeEventListener("keydown", handleScannerInput);
-            };
-        } else {
-            let interval: NodeJS.Timeout | null = null;
-
-            if (currentKey !== 'lakala' && code.length === 18) {
-                submitPay(code).then(() => {
-                    setCode('');
-                    setVerified(false);
-                });
-            }
-
-            interval = setInterval(() => {
-                setCode('');
-                setVerified(false);
-            }, 15000);
-
-            return () => {
-                if (interval) {
-                    clearInterval(interval);
-                }
-            };
+        if (!isWeChatTab || !(price > 0)) {
+            return;
         }
-    }, [isWeChatTab, code, price, currentKey]);
+        let buf = '';
+        let timer: number | undefined;
+        const flush = () => {
+            if (timer) {
+                window.clearTimeout(timer);
+                timer = undefined;
+            }
+            const next = buf.trim();
+            buf = '';
+            setCode('');
+            if (next.length >= 16) {
+                void submitPayRef.current(next);
+            }
+        };
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                flush();
+                return;
+            }
+            if (event.key.length !== 1) {
+                return;
+            }
+            buf += event.key;
+            setCode(buf);
+            if (timer) {
+                window.clearTimeout(timer);
+            }
+            timer = window.setTimeout(flush, 120);
+        };
+        window.addEventListener('keydown', onKey);
+        return () => {
+            window.removeEventListener('keydown', onKey);
+            if (timer) {
+                window.clearTimeout(timer);
+            }
+        };
+    }, [isWeChatTab, price]);
+
+    // 非扫码页签：15s 清空残留付款码显示。
+    useEffect(() => {
+        if (isWeChatTab || currentKey === 'lakala') {
+            return;
+        }
+        const interval = setInterval(() => {
+            setCode('');
+            setVerified(false);
+        }, 15000);
+        return () => clearInterval(interval);
+    }, [isWeChatTab, currentKey]);
 
     const submitLakala = async (scannedCode: string) => {
         try {
