@@ -15,15 +15,24 @@ import {CartItem} from "../../common/types";
 import {lookupProductUnitPrice} from "../../utils/catalogCache";
 import {resolveUnitPrice} from "../../utils/comboMatch";
 import {useCallback, useEffect, useRef, useState} from "react";
-import MyDataDrawer from "./MyDataDrawer";
 import RechargeCardSelector from "../../common/RechargeCardSelector";
 import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
-import HandoverPageDrawer from "../Shift/Handover";
 import OrderFlyOverlay from "../home/Components/OrderFlyOverlay";
+
+const MyDataDrawer = React.lazy(() => import('./MyDataDrawer'));
+const HandoverPageDrawer = React.lazy(() => import('../Shift/Handover'));
+
+function DeferredPanelFallback() {
+    return (
+        <Box sx={{position: 'fixed', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 1500}}>
+            <CircularProgress />
+        </Box>
+    );
+}
 
 export const MyHome = () => {
     const {
-        cartItems, setCartItems, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen,
+        cartItems, setCartItems, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen, shiftOpen,
         orderFlyEvent, orderDrawerOpen, startOrderListSync, orderSyncStatus, orderSyncProgress,
         resetOrderSync, ready, clearOrderFlyEvent, merchantId,
     } = useCartContext();
@@ -33,7 +42,16 @@ export const MyHome = () => {
     const [seatBoardOpen, setSeatBoardOpen] = useState(false);
     const [inboundOrders, setInboundOrders] = useState(0);
     const [fabPulse, setFabPulse] = useState(false);
+    const [mountSales, setMountSales] = useState(false);
+    const [mountHandover, setMountHandover] = useState(false);
     const orderFabRef = useRef<HTMLButtonElement>(null);
+    // Stay unmounted until first open, then keep mounted so a later close does not drop the panel.
+    if (dataDrawerOpen && !mountSales) {
+        setMountSales(true);
+    }
+    if (shiftOpen && !mountHandover) {
+        setMountHandover(true);
+    }
 
     const guardOrdering = () => {
         if (ready) {
@@ -115,13 +133,21 @@ export const MyHome = () => {
                 <React.Fragment>
                     <MyCartDrawer />
                     <MyOrderDrawer/>
-                    <MyDataDrawer/>
+                    {mountSales && (
+                        <React.Suspense fallback={<DeferredPanelFallback />}>
+                            <MyDataDrawer />
+                        </React.Suspense>
+                    )}
                     <OrderFlyOverlay
                         event={dataDrawerOpen && (!orderFlyEvent?.kind || orderFlyEvent.kind === 'paid') ? null : orderFlyEvent}
                         targetEl={orderFabRef.current}
                         onArrived={handleOrderArrived}
                     />
-                    <HandoverPageDrawer/>
+                    {mountHandover && (
+                        <React.Suspense fallback={<DeferredPanelFallback />}>
+                            <HandoverPageDrawer />
+                        </React.Suspense>
+                    )}
                     <RechargeCardSelector
                         modal={true}
                         open={rechargeOpen}

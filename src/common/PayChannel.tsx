@@ -3,7 +3,7 @@ import {useEffect, useRef, useState} from 'react';
 import {Box, Button, Tab, Tabs, Typography} from "@mui/material";
 import {toast} from "react-toastify";
 import QRCode from "qrcode";
-import QRScanner from "./ScanCode";
+import LazyQRScanner from "./LazyQRScanner";
 import {useFetchData} from "./FetchData";
 import {useCartContext} from "../dataProvider/MyCartProvider";
 import {ChannelType} from "./types";
@@ -521,7 +521,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                         <PayCodeDisplay value={code} verified={verified} onReset={handleResetInput} />
                     )}
                     {tab.key === 'lakala' && (
-                        <QRScanner
+                        <LazyQRScanner
                             onScanSuccess={(scannedCode: string) => {
                                 if (isScanning) {
                                     setIsScanning(false);
@@ -537,7 +537,7 @@ export default function PayChannel({setCart, price, setOpen, orderID, at, offers
                         />
                     )}
                     {tab.key === 'scan' && (
-                        <QRScanner
+                        <LazyQRScanner
                             onScanSuccess={(scannedCode: string) => {
                                 if (isScanning) {
                                     setIsScanning(false);

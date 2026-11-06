@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {Box} from "@mui/material";
 import {toast} from "react-toastify";
 import {tPos} from "../i18n/t";
-import QRScanner from "./ScanCode";
+import LazyQRScanner from "./LazyQRScanner";
 
 interface Props {
     value: number;
@@ -24,7 +24,7 @@ export default function ScanPayTab({value, index, submitPay}: Props) {
 
     return (
         <CustomTabPanel value={value} index={index}>
-            <QRScanner
+            <LazyQRScanner
                 onScanSuccess={(scannedCode: string) => {
                     if (!isScanning) return;
 
