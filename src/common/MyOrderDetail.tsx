@@ -24,6 +24,7 @@ import {useFetchData} from "./FetchData";
 import {getPlatformInfo} from "./payMethod";
 import {useTranslate} from 'react-admin';
 import {formatOrderYuan, orderYuan} from '../utils/orderMoney';
+import {ORDER_CARD_STYLES, OrderCardStyle, orderDetailCardSx, orderDetailPaperSx, useOrderCardStyle} from '../layout/orderCardStyle';
 
 interface MyOrderDetailProps {
     open: boolean;
@@ -63,6 +64,9 @@ interface SelectedItems {
 
 const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, openOrderDetailWithReason}) => {
     const translate = useTranslate();
+    const [cardStyle, setCardStyle] = useOrderCardStyle();
+    const detailPaperSx = orderDetailPaperSx(cardStyle);
+    const detailCardSx = orderDetailCardSx(cardStyle);
     const reasonDetails = OpenReasonMap[openOrderDetailWithReason];
     const dialogTitle = translate(reasonDetails.title);
     const {name: statusName, color: statusColor} = getOrderStatus(orderData.status);
@@ -304,17 +308,44 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-            <DialogTitle>
-                {dialogTitle} - {orderData.identity.order_no}
-                <IconButton onClick={handleCloudPrint} sx={{float: 'right'}}>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            fullWidth
+            maxWidth="md"
+            PaperProps={{
+                className: `pos-order-detail pos-order-detail--${cardStyle}`,
+                sx: detailPaperSx,
+            }}
+        >
+            <DialogTitle sx={{pr: 7, position: 'relative'}}>
+                <Box sx={{display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mb: 1}}>
+                    <Typography component="span" variant="h6" sx={{mr: 1}}>
+                        {dialogTitle} - {orderData.identity.order_no}
+                    </Typography>
+                    {ORDER_CARD_STYLES.map(styleName => {
+                        const selected = cardStyle === styleName;
+                        return (
+                            <Chip
+                                key={styleName}
+                                size="small"
+                                label={translate(`pos.order_style.${styleName}`, {_: styleName})}
+                                color={selected ? 'primary' : 'default'}
+                                variant={selected ? 'filled' : 'outlined'}
+                                onClick={() => setCardStyle(styleName as OrderCardStyle)}
+                                sx={{height: 24, fontWeight: selected ? 800 : 500}}
+                            />
+                        );
+                    })}
+                </Box>
+                <IconButton onClick={handleCloudPrint} sx={{position: 'absolute', right: 8, top: 8}}>
                     <PrintIcon/>
                 </IconButton>
             </DialogTitle>
             <DialogContent>
                 {/* 订单详情信息 */}
                 <Typography variant="h6">{translate('pos.detail.basic')}</Typography>
-                <Card variant="outlined" sx={{marginBottom: 2}}>
+                <Card variant="outlined" sx={{marginBottom: 2, ...(detailCardSx as any)}}>
                     <CardContent>
                         <Box display="flex" flexDirection="column" gap={1}>
                             <Typography>{translate('pos.detail.order_no')}: {orderData.identity.order_no}</Typography>
@@ -377,7 +408,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                         />
                     )}
                 </Box>
-                <Card variant="outlined" sx={{marginBottom: 2}}>
+                <Card variant="outlined" sx={{marginBottom: 2, ...(detailCardSx as any)}}>
                     <CardContent>
                         <List>
                             {orderData && orderData?.buckets && orderData?.buckets.map((bucket) => {
@@ -459,7 +490,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
 
                 {/* 支付信息 */}
                 <Typography variant="h6">{translate('pos.detail.pay_info')}</Typography>
-                <Card variant="outlined" sx={{marginBottom: 2}}>
+                <Card variant="outlined" sx={{marginBottom: 2, ...(detailCardSx as any)}}>
                     <CardContent>
                         <Box display="flex" flexDirection="row" gap={2} justifyContent="space-between">
                             <Box display="flex" flexDirection="column" gap={1} flex="1">
@@ -497,6 +528,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                     sx={{
                         marginBottom: 2,
                         overflowX: "auto", // 确保卡片内部可以横向滚动
+                        ...(detailCardSx as any),
                     }}
                 >
                     <CardContent
