@@ -30,11 +30,14 @@ import {tPos} from '../i18n/t';
 import {authHeaders} from '../utils/authToken';
 import {grantExceedsX6} from '../auth/scanX6Apis';
 import {X6_REQUIRED_APIS} from '../auth/x6RequiredApis';
+import X6RoleApplication from './X6RoleApplication';
+import {RolePreset} from '../auth/roleApplication';
 
 const ACCESS_PATH = '/v1/system/auth/user/access';
 
 type InspectResource = {
     path: string;
+    attr?: number;
     name_key?: string;
     actions?: string[];
 };
@@ -123,8 +126,9 @@ function actionLabel(action: string) {
     return text === key ? action : text;
 }
 
-function ResourceLine({row}: {row: InspectResource}) {
-    const exceeds = grantExceedsX6(row.path, X6_REQUIRED_APIS);
+function ResourceLine({row, requiredPaths, allowedAttr}: {row: InspectResource; requiredPaths: readonly string[]; allowedAttr?: number}) {
+    const exceeds = grantExceedsX6(row.path, requiredPaths);
+    const extraBits = allowedAttr === undefined ? 0 : (row.attr || 0) & ~allowedAttr;
     return (
         <Box
             sx={{
@@ -164,6 +168,7 @@ function ResourceLine({row}: {row: InspectResource}) {
                     sx={{flexShrink: 0, fontWeight: 700}}
                 />
             </Stack>
+            {extraBits > 0 && <Typography variant="caption" color="warning.main">{tPos('access.extra_action_bits', {n: extraBits})}</Typography>}
             {exceeds && (
                 <Typography variant="caption" color="error" sx={{display: 'block', mt: 0.5}}>
                     {tPos('access.exceed_hint')}
@@ -178,8 +183,10 @@ export function MyAccessDialog({open, onClose}: {open: boolean; onClose: () => v
     const [data, setData] = React.useState<InspectDTO | null>(null);
     const [error, setError] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
-    const [filter, setFilter] = React.useState<FilterMode>('all');
+    const [filter, setFilter] = React.useState<FilterMode>('needed');
     const [query, setQuery] = React.useState('');
+    const [preset, setPreset] = React.useState<RolePreset | null>(null);
+    const requiredPaths = preset ? preset.resources.filter((r) => r.grant).map((r) => r.path) : X6_REQUIRED_APIS;
 
     React.useEffect(() => {
         if (!open) return;
@@ -205,22 +212,22 @@ export function MyAccessDialog({open, onClose}: {open: boolean; onClose: () => v
 
     const services = data?.services || [];
     const rows = services.flatMap((svc) => svc.resources || []);
-    const exceedCount = rows.filter((row) => grantExceedsX6(row.path, X6_REQUIRED_APIS)).length;
+    const exceedCount = rows.filter((row) => grantExceedsX6(row.path, requiredPaths)).length;
     const neededCount = rows.length - exceedCount;
     const q = query.trim().toLowerCase();
 
     const visibleServices = services
         .map((svc) => {
             const resources = (svc.resources || []).filter((row) => {
-                const exceeds = grantExceedsX6(row.path, X6_REQUIRED_APIS);
+                const exceeds = grantExceedsX6(row.path, requiredPaths);
                 if (filter === 'exceed' && !exceeds) return false;
                 if (filter === 'needed' && exceeds) return false;
                 if (!q) return true;
                 return row.path.toLowerCase().includes(q) || (row.name_key || '').toLowerCase().includes(q);
             });
             const ordered = [...resources].sort((a, b) => {
-                const ae = grantExceedsX6(a.path, X6_REQUIRED_APIS) ? 0 : 1;
-                const be = grantExceedsX6(b.path, X6_REQUIRED_APIS) ? 0 : 1;
+                const ae = grantExceedsX6(a.path, requiredPaths) ? 0 : 1;
+                const be = grantExceedsX6(b.path, requiredPaths) ? 0 : 1;
                 if (ae !== be) return ae - be;
                 return a.path.localeCompare(b.path);
             });
@@ -237,6 +244,7 @@ export function MyAccessDialog({open, onClose}: {open: boolean; onClose: () => v
                 </IconButton>
             </DialogTitle>
             <DialogContent dividers sx={{pt: 1.5}}>
+                <X6RoleApplication onPreset={setPreset} />
                 <Alert severity="info" sx={{mb: 1.5}}>
                     {tPos('access.hint')}
                 </Alert>
@@ -311,7 +319,7 @@ export function MyAccessDialog({open, onClose}: {open: boolean; onClose: () => v
                             <Typography color="text.secondary">{tPos('access.no_match')}</Typography>
                         )}
                         {visibleServices.map((svc) => {
-                            const exceedN = svc.resources.filter((row) => grantExceedsX6(row.path, X6_REQUIRED_APIS)).length;
+                            const exceedN = svc.resources.filter((row) => grantExceedsX6(row.path, requiredPaths)).length;
                             return (
                             <Accordion key={svc.key} defaultExpanded disableGutters>
                                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -325,7 +333,7 @@ export function MyAccessDialog({open, onClose}: {open: boolean; onClose: () => v
                                 </AccordionSummary>
                                 <AccordionDetails sx={{p: 0}}>
                                     {svc.resources.map((row) => (
-                                        <ResourceLine key={row.path} row={row} />
+                                        <ResourceLine key={row.path} row={row} requiredPaths={requiredPaths} allowedAttr={preset?.resources.find((r) => r.path === row.path)?.attr} />
                                     ))}
                                 </AccordionDetails>
                             </Accordion>
