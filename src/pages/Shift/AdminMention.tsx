@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {Avatar, Input, Tag} from 'antd';
 import {useTranslate} from 'react-admin';
+import {alpha, useTheme} from '@mui/material/styles';
 import {Assignee, filterAssignees} from './types';
 
 type AdminMentionProps = {
@@ -31,8 +32,9 @@ const roleMessage = (role: string) => {
 const initials = (name: string) => (name || '?').trim().slice(0, 1);
 
 const PersonFace: React.FC<{person: Assignee; size?: number}> = ({person, size = 36}) => {
+    const theme = useTheme();
     const face = (
-        <Avatar size={size} src={person.avatar || undefined} style={{background: '#0f172a', flex: '0 0 auto'}}>
+        <Avatar size={size} src={person.avatar || undefined} style={{background: theme.palette.primary.main, color: theme.palette.primary.contrastText, flex: '0 0 auto'}}>
             {initials(person.name)}
         </Avatar>
     );
@@ -51,7 +53,7 @@ const PersonFace: React.FC<{person: Assignee; size?: number}> = ({person, size =
                     height: 9,
                     borderRadius: '50%',
                     background: '#22c55e',
-                    border: '2px solid #fff',
+                    border: `2px solid ${theme.palette.background.paper}`,
                 }}
             />
         </span>
@@ -67,6 +69,7 @@ const AdminMention = React.forwardRef<HTMLInputElement, AdminMentionProps>(({
     disabled,
 }, ref) => {
     const translate = useTranslate();
+    const theme = useTheme();
     const selected = people.find(person => person.id === value);
     const [query, setQuery] = useState(selected?.name || '');
     const [open, setOpen] = useState(false);
@@ -115,7 +118,7 @@ const AdminMention = React.forwardRef<HTMLInputElement, AdminMentionProps>(({
         <div style={{position: 'relative', width: '100%'}}>
             <Input
                 ref={ref as React.Ref<any>}
-                prefix={<span style={{color: '#1677ff', fontWeight: 700}}>@</span>}
+                prefix={<span style={{color: theme.palette.primary.main, fontWeight: 700}}>@</span>}
                 value={query}
                 disabled={disabled}
                 allowClear
@@ -172,16 +175,17 @@ const AdminMention = React.forwardRef<HTMLInputElement, AdminMentionProps>(({
                         left: 0,
                         right: 0,
                         zIndex: 30,
-                        background: '#fff',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: 10,
+                        background: theme.palette.background.paper,
+                        color: theme.palette.text.primary,
+                        border: `1px solid ${theme.palette.divider}`,
+                        borderRadius: theme.shape.borderRadius,
                         boxShadow: '0 8px 24px rgba(15, 23, 42, 0.12)',
                         maxHeight: 280,
                         overflow: 'auto',
                     }}
                 >
                     {filtered.length === 0 ? (
-                        <div style={{padding: '12px 14px', color: '#64748b'}}>
+                        <div style={{padding: '12px 14px', color: theme.palette.text.secondary}}>
                             {translate('pos.handover.mention_empty', {_: 'No administrator matches this prefix'})}
                         </div>
                     ) : filtered.map((person, index) => (
@@ -200,7 +204,8 @@ const AdminMention = React.forwardRef<HTMLInputElement, AdminMentionProps>(({
                                 border: 0,
                                 cursor: 'pointer',
                                 padding: '8px 10px',
-                                background: index === active ? '#e0f2fe' : 'transparent',
+                                color: theme.palette.text.primary,
+                                background: index === active ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.28 : 0.12) : 'transparent',
                             }}
                         >
                             <PersonFace person={person} />
@@ -212,7 +217,7 @@ const AdminMention = React.forwardRef<HTMLInputElement, AdminMentionProps>(({
                                     </Tag>
                                 </span>
                                 {extra(person) && (
-                                    <span style={{display: 'block', color: '#64748b', fontSize: 12}}>{extra(person)}</span>
+                                    <span style={{display: 'block', color: theme.palette.text.secondary, fontSize: 12}}>{extra(person)}</span>
                                 )}
                             </span>
                         </button>
@@ -222,10 +227,10 @@ const AdminMention = React.forwardRef<HTMLInputElement, AdminMentionProps>(({
             {selected && (
                 <div style={{display: 'flex', alignItems: 'center', gap: 8, marginTop: 8}}>
                     <PersonFace person={selected} size={28} />
-                    <span style={{fontWeight: 600}}>@{selected.name}</span>
+                    <span style={{fontWeight: 600, color: theme.palette.text.primary}}>@{selected.name}</span>
                     <Tag color={roleColor[selected.role] || 'default'}>{roleText(selected)}</Tag>
                     {selected.phone_suffix && (
-                        <span style={{color: '#64748b', fontSize: 12}}>
+                        <span style={{color: theme.palette.text.secondary, fontSize: 12}}>
                             {translate('pos.handover.phone_tail', {suffix: selected.phone_suffix, _: `····${selected.phone_suffix}`})}
                         </span>
                     )}

@@ -40,6 +40,39 @@ export function elapsedSeconds(startMs: number, nowMs: number): number {
     return Math.floor((nowMs - startMs) / 1000);
 }
 
+export function formatDutyClock(seconds: number): string {
+    const whole = Math.max(0, Math.floor(seconds));
+    const hours = Math.floor(whole / 3600);
+    const minutes = Math.floor((whole % 3600) / 60);
+    const secs = whole % 60;
+    return [hours, minutes, secs].map(part => String(part).padStart(2, '0')).join(':');
+}
+
+// 左 0–8 小时、中 8–12 小时、右 12–24 小时。超过 24 小时仍停在右侧红色。
+export const DUTY_GREEN_SEC = 8 * 3600;
+export const DUTY_YELLOW_SEC = 12 * 3600;
+export const DUTY_RED_SPAN_SEC = 12 * 3600;
+
+export type DutyBand = 'green' | 'yellow' | 'red';
+
+export type DutyPhase = {
+    band: DutyBand;
+    fills: [number, number, number];
+};
+
+export function dutyPhase(elapsedSec: number): DutyPhase {
+    const elapsed = Number.isFinite(elapsedSec) ? Math.max(0, elapsedSec) : 0;
+    if (elapsed < DUTY_GREEN_SEC) {
+        return {band: 'green', fills: [elapsed / DUTY_GREEN_SEC, 0, 0]};
+    }
+    if (elapsed < DUTY_YELLOW_SEC) {
+        const mid = (elapsed - DUTY_GREEN_SEC) / (DUTY_YELLOW_SEC - DUTY_GREEN_SEC);
+        return {band: 'yellow', fills: [1, mid, 0]};
+    }
+    const right = Math.min(1, (elapsed - DUTY_YELLOW_SEC) / DUTY_RED_SPAN_SEC);
+    return {band: 'red', fills: [1, 1, right]};
+}
+
 export type DutySnapshot = {
     ready: boolean;
     start: number;
