@@ -46,6 +46,7 @@ export const X6_REQUIRED_APIS = [
     '/v1/system/auth/user/device/bind',
     '/v1/system/auth/user/otp/validate',
     '/v1/system/auth/user/otp/verify',
+    '/v1/system/auth/user/role-applications/x6',
     '/v1/system/auth/user/signin',
     '/v1/system/auth/user/signout',
 ] as const;
