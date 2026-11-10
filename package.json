@@ -63,7 +63,7 @@
         "@types/react": "^17.0.20",
         "@types/react-dom": "^17.0.9",
         "@vitejs/plugin-react": "^2.2.0",
-        "esbuild": "^0.19.5",
+        "esbuild": "^0.28.2",
         "husky": "^8.0.1",
         "rewire": "^5.0.0",
         "source-map-explorer": "^2.0.0",
