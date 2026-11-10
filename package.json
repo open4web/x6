@@ -20,7 +20,7 @@
         "classnames": "^2.3.2",
         "clsx": "^1.1.1",
         "date-fns": "^2.19.0",
-        "graphql": "^15.10.3",
+        "graphql": "^15.11.0",
         "graphql-tag": "^2.12.6",
         "hooks": "^0.3.2",
         "html5-qrcode": "^2.3.8",
