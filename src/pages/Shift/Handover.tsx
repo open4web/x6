@@ -7,25 +7,26 @@ import {
     Input,
     InputNumber,
     Table,
-    Descriptions,
     Alert,
-    Divider,
     Space,
     Tag,
     Modal,
     Row,
     Col,
     Checkbox,
+    ConfigProvider,
+    App as AntdApp,
 } from 'antd';
 import {PrinterOutlined, WarningOutlined} from '@ant-design/icons';
 import axios from 'axios';
-import {clearLocalDuty, dutyErrorMessage, dutyUserId, isNotStartedMessage} from '../../common/shiftDuty';
+import {clearLocalDuty, dutyErrorMessage, dutyPhase, dutyUserId, elapsedSeconds, formatDutyClock, isNotStartedMessage, parseStartMs} from '../../common/shiftDuty';
 import type {ColumnsType} from 'antd/es/table';
 import dayjs from 'dayjs';
 import Drawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import {alpha, useTheme} from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import {useCartContext} from '../../dataProvider/MyCartProvider';
 import {toast} from 'react-toastify';
@@ -34,6 +35,7 @@ import {Assignee, Order, ShiftHandover} from './types';
 import {statusInfoMap} from './orderStatus';
 import {useTranslate} from 'react-admin';
 import AdminMention from './AdminMention';
+import {handoverAntdTheme} from './handoverTheme';
 
 const payOrder = ['wechat', 'alipay', 'cash', 'balance', 'points', 'other'] as const;
 
@@ -68,7 +70,7 @@ const PaymentSummary: React.FC<{summary?: Record<string, number>}> = ({summary})
         .map(key => ({key, amount: Number(summary?.[key] || 0)}))
         .filter(row => row.amount > 0);
     return (
-        <div style={{marginTop: 12}}>
+        <div style={{marginTop: 12, paddingTop: 4}}>
             <Typography variant="body2" sx={{fontWeight: 700, mb: 0.5}}>
                 {translate('pos.handover.payment_summary', {_: 'Payments this shift'})}
             </Typography>
@@ -102,13 +104,82 @@ const CashDifference: React.FC<{expected: number; counted: number | null | undef
             ? translate('pos.handover.diff_short', {_: 'Short'})
             : translate('pos.handover.diff_even', {_: 'Balanced'});
     return (
-        <Typography variant="body2" sx={{mt: -1, mb: 2, color: tone, fontWeight: 700}}>
+        <Typography variant="body2" sx={{mt: 0.75, color: tone, fontWeight: 700}}>
             {translate('pos.handover.difference', {_: 'Difference'})} ¥{diff.toFixed(2)} · {label}
         </Typography>
     );
 };
 
-const HandoverPageDrawer: React.FC = () => {
+const sheetPx = {xs: 2.5, sm: 4, lg: 5};
+
+const StatTiles = ({items}: {items: {label: string; value: React.ReactNode}[]}) => (
+    <Box
+        sx={{
+            display: 'grid',
+            gap: 1.5,
+            gridTemplateColumns: {
+                xs: 'repeat(2, minmax(0, 1fr))',
+                sm: 'repeat(4, minmax(0, 1fr))',
+                xl: 'repeat(8, minmax(0, 1fr))',
+            },
+        }}
+    >
+        {items.map(item => (
+            <Box
+                key={item.label}
+                sx={{
+                    minWidth: 0,
+                    px: 1.75,
+                    py: 1.25,
+                    borderRadius: 1.5,
+                    color: 'text.primary',
+                    bgcolor: theme => alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.1),
+                    border: '1px solid',
+                    borderColor: theme => alpha(theme.palette.primary.main, 0.28),
+                }}
+            >
+                <Typography variant="caption" color="text.secondary" sx={{display: 'block', lineHeight: 1.3}}>
+                    {item.label}
+                </Typography>
+                <Box sx={{mt: 0.5, fontWeight: 700, lineHeight: 1.35, wordBreak: 'break-word'}}>
+                    {item.value}
+                </Box>
+            </Box>
+        ))}
+    </Box>
+);
+
+const ShiftOvertimeBanner = ({startMs, on}: {startMs: number; on: boolean}) => {
+    const translate = useTranslate();
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => {
+        if (!on || !startMs) {
+            return;
+        }
+        setNow(Date.now());
+        const timer = window.setInterval(() => setNow(Date.now()), 1000);
+        return () => window.clearInterval(timer);
+    }, [on, startMs]);
+    if (!on || !startMs) {
+        return null;
+    }
+    const elapsed = elapsedSeconds(startMs, now);
+    if (dutyPhase(elapsed).band !== 'red') {
+        return null;
+    }
+    return (
+        <Alert
+            type="error"
+            showIcon
+            message={translate('pos.shift.overtime_title')}
+            description={translate('pos.shift.overtime_drawer', {time: formatDutyClock(elapsed)})}
+            style={{marginBottom: 12}}
+        />
+    );
+};
+
+const HandoverSheet: React.FC = () => {
+    const {modal} = AntdApp.useApp();
     const [form] = Form.useForm();
     const [currentShift, setCurrentShift] = useState<ShiftHandover | null>(null);
     const [loading, setLoading] = useState(false);
@@ -117,9 +188,10 @@ const HandoverPageDrawer: React.FC = () => {
     const [people, setPeople] = useState<Assignee[]>([]);
     const [peopleLoading, setPeopleLoading] = useState(false);
     const [peopleError, setPeopleError] = useState('');
-    const {shiftOpen, setShiftOpen, merchantId, setReady, setStartReady} = useCartContext();
+    const {shiftOpen, setShiftOpen, merchantId, ready, setReady, startReady, setStartReady} = useCartContext();
     const {fetchData} = useFetchData();
     const translate = useTranslate();
+    const dutyStartMs = parseStartMs(startReady) || parseStartMs(currentShift?.start_time);
     const nextCashierId = Form.useWatch('next_cashier_id', form);
     const supervisorId = Form.useWatch('supervisor_id', form);
     const countedCash = Form.useWatch('closing_cash', form);
@@ -221,17 +293,18 @@ const HandoverPageDrawer: React.FC = () => {
     const handleSubmit = async (values: any) => {
         const next = people.find(person => person.id === values.next_cashier_id);
         const nextLabel = next ? ` @${next.name}` : '';
-        Modal.confirm({
+        modal.confirm({
             title: translate('pos.handover.confirm_title'),
             content: `${translate('pos.handover.confirm_body')}${nextLabel}`,
             okText: translate('pos.handover.confirm_ok'),
             cancelText: translate('pos.handover.confirm_check'),
+            zIndex: 2000,
             onOk: async () => {
                 setSubmitting(true);
                 try {
                     await doHandover(values);
                 } catch {
-                    Modal.error({title: translate('pos.handover.fail'), content: translate('pos.handover.retry')});
+                    modal.error({title: translate('pos.handover.fail'), content: translate('pos.handover.retry'), zIndex: 2000});
                 } finally {
                     setSubmitting(false);
                 }
@@ -271,10 +344,11 @@ const HandoverPageDrawer: React.FC = () => {
                     maxHeight: '92vh',
                     overflow: 'auto',
                     borderRadius: '0 0 16px 16px',
-                    maxWidth: 980,
-                    mx: 'auto',
-                    left: 0,
-                    right: 0,
+                    width: '100%',
+                    maxWidth: '100%',
+                    bgcolor: 'background.default',
+                    color: 'text.primary',
+                    backgroundImage: 'none',
                 },
             }}
         >
@@ -286,13 +360,16 @@ const HandoverPageDrawer: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    px: 3,
+                    gap: 2,
+                    px: sheetPx,
                     py: 1.5,
-                    bgcolor: '#fff',
-                    borderBottom: '1px solid #eee',
+                    color: 'text.primary',
+                    bgcolor: theme => alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.22 : 0.12),
+                    borderBottom: '3px solid',
+                    borderColor: 'primary.main',
                 }}
             >
-                <Box>
+                <Box sx={{minWidth: 0, flex: 1}}>
                     <Typography variant="h6" sx={{fontWeight: 700, lineHeight: 1.2}}>
                         {translate('pos.handover.title')}
                     </Typography>
@@ -300,13 +377,14 @@ const HandoverPageDrawer: React.FC = () => {
                         {translate('pos.handover.subtitle')}
                     </Typography>
                 </Box>
-                <IconButton onClick={closeDrawer} aria-label={translate('pos.handover.close')} disabled={submitting}>
+                <IconButton onClick={closeDrawer} aria-label={translate('pos.handover.close')} disabled={submitting} sx={{flexShrink: 0}}>
                     <CloseIcon />
                 </IconButton>
             </Box>
 
-            <Box sx={{p: 3}}>
-                <Card loading={loading} bordered={false} bodyStyle={{padding: 0}}>
+            <Box sx={{px: sheetPx, pt: 2, pb: 2.5}}>
+                <ShiftOvertimeBanner startMs={dutyStartMs} on={shiftOpen && ready} />
+                <Card loading={loading} bordered={false} bodyStyle={{padding: 0, background: 'transparent'}} style={{marginTop: 0, background: 'transparent', boxShadow: 'none'}}>
                     {!currentShift && !loading && (
                         <Alert
                             type="warning"
@@ -317,36 +395,22 @@ const HandoverPageDrawer: React.FC = () => {
 
                     {currentShift && (
                         <>
-                            <Descriptions bordered column={3} size="small">
-                                <Descriptions.Item label={translate('pos.handover.cashier')}>
-                                    <CashierName name={currentShift.previous_cashier} people={people} />
-                                </Descriptions.Item>
-                                <Descriptions.Item label={translate('pos.handover.start_time')}>
-                                    {currentShift.start_time ? dayjs(currentShift.start_time).format('MM-DD HH:mm') : '-'}
-                                </Descriptions.Item>
-                                <Descriptions.Item label={translate('pos.handover.order_count')}>{translate('pos.handover.orders_unit', {count: currentShift.total_orders})}</Descriptions.Item>
-                                <Descriptions.Item label={translate('pos.handover.sales')}>
-                                    <strong>¥{Number(currentShift.total_sales_amount || 0).toFixed(2)}</strong>
-                                </Descriptions.Item>
-                                <Descriptions.Item label={translate('pos.handover.paid')}>
-                                    <strong>¥{Number(currentShift.total_paid_amount || 0).toFixed(2)}</strong>
-                                </Descriptions.Item>
-                                <Descriptions.Item label={translate('pos.handover.refund')}>
-                                    <strong>¥{Number(currentShift.total_refund_amount || 0).toFixed(2)}</strong>
-                                </Descriptions.Item>
-                                <Descriptions.Item label={translate('pos.handover.expected_cash', {_: 'System cash'})}>
-                                    ¥{Number(currentShift.expected_cash || currentShift.closing_cash || 0).toFixed(2)}
-                                </Descriptions.Item>
-                                <Descriptions.Item label={translate('pos.handover.cancelled', {_: 'Cancel / refund'})}>
-                                    {currentShift.cancelled_orders || 0}
-                                </Descriptions.Item>
-                            </Descriptions>
+                            <StatTiles
+                                items={[
+                                    {label: translate('pos.handover.cashier'), value: <CashierName name={currentShift.previous_cashier} people={people} />},
+                                    {label: translate('pos.handover.start_time'), value: currentShift.start_time ? dayjs(currentShift.start_time).format('MM-DD HH:mm') : '-'},
+                                    {label: translate('pos.handover.order_count'), value: translate('pos.handover.orders_unit', {count: currentShift.total_orders})},
+                                    {label: translate('pos.handover.sales'), value: `¥${Number(currentShift.total_sales_amount || 0).toFixed(2)}`},
+                                    {label: translate('pos.handover.paid'), value: `¥${Number(currentShift.total_paid_amount || 0).toFixed(2)}`},
+                                    {label: translate('pos.handover.refund'), value: `¥${Number(currentShift.total_refund_amount || 0).toFixed(2)}`},
+                                    {label: translate('pos.handover.expected_cash', {_: 'System cash'}), value: `¥${Number(currentShift.expected_cash || currentShift.closing_cash || 0).toFixed(2)}`},
+                                    {label: translate('pos.handover.cancelled', {_: 'Cancel / refund'}), value: currentShift.cancelled_orders || 0},
+                                ]}
+                            />
 
                             {currentShift.payment_live && (
                                 <PaymentSummary summary={currentShift.payment_summary} />
                             )}
-
-                            <Divider />
 
                             {peopleError && (
                                 <Alert
@@ -358,8 +422,9 @@ const HandoverPageDrawer: React.FC = () => {
                                 />
                             )}
 
+                            <Box sx={{mt: 2, '& .ant-form-item': {marginBottom: 12}}}>
                             <Form form={form} layout="vertical" onFinish={handleSubmit}>
-                                <Row gutter={16}>
+                                <Row gutter={[16, 4]}>
                                     <Col xs={24} md={12}>
                                         <Form.Item
                                             label={translate('pos.handover.next_cashier')}
@@ -412,16 +477,22 @@ const HandoverPageDrawer: React.FC = () => {
                                         </Form.Item>
                                     </Col>
                                 </Row>
-                                <Form.Item label={translate('pos.handover.cash')} name="closing_cash" rules={[{required: true, message: translate('pos.handover.cash_required')}]}>
-                                    <InputNumber style={{width: 320}} min={0} precision={2} prefix="¥" />
-                                </Form.Item>
-                                <CashDifference
-                                    expected={Number(currentShift.expected_cash || currentShift.closing_cash || 0)}
-                                    counted={countedCash}
-                                />
-                                <Form.Item label={translate('pos.handover.notes')} name="special_notes">
-                                    <Input.TextArea rows={3} placeholder={translate('pos.handover.notes_ph', {_: 'Keys, equipment, unfinished work'})} />
-                                </Form.Item>
+                                <Row gutter={[16, 4]}>
+                                    <Col xs={24} md={8}>
+                                        <Form.Item label={translate('pos.handover.cash')} name="closing_cash" rules={[{required: true, message: translate('pos.handover.cash_required')}]}>
+                                            <InputNumber style={{width: '100%'}} min={0} precision={2} prefix="¥" />
+                                        </Form.Item>
+                                        <CashDifference
+                                            expected={Number(currentShift.expected_cash || currentShift.closing_cash || 0)}
+                                            counted={countedCash}
+                                        />
+                                    </Col>
+                                    <Col xs={24} md={16}>
+                                        <Form.Item label={translate('pos.handover.notes')} name="special_notes">
+                                            <Input.TextArea rows={2} placeholder={translate('pos.handover.notes_ph', {_: 'Keys, equipment, unfinished work'})} />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
                                 {((currentShift.open_orders?.length || 0) > 0 || (currentShift.anomalies?.length || 0) > 0) && (
                                     <Form.Item
                                         name="ack_open"
@@ -442,21 +513,24 @@ const HandoverPageDrawer: React.FC = () => {
                                     </Form.Item>
                                 )}
 
-                                <Space wrap>
-                                    <Button onClick={closeDrawer} size="large" disabled={submitting}>
-                                        {translate('pos.handover.cancel')}
-                                    </Button>
-                                    <Button icon={<PrinterOutlined />} size="large" onClick={() => window.print()}>
-                                        {translate('pos.handover.print')}
-                                    </Button>
-                                    <Button size="large" onClick={() => setShowOpenOrders(true)}>
-                                        {translate('pos.handover.open_orders')} ({currentShift.open_orders?.length || 0})
-                                    </Button>
+                                <Box sx={{display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, mt: 0.5}}>
+                                    <Space wrap>
+                                        <Button onClick={closeDrawer} size="large" disabled={submitting}>
+                                            {translate('pos.handover.cancel')}
+                                        </Button>
+                                        <Button icon={<PrinterOutlined />} size="large" onClick={() => window.print()}>
+                                            {translate('pos.handover.print')}
+                                        </Button>
+                                        <Button size="large" onClick={() => setShowOpenOrders(true)}>
+                                            {translate('pos.handover.open_orders')} ({currentShift.open_orders?.length || 0})
+                                        </Button>
+                                    </Space>
                                     <Button type="primary" htmlType="submit" loading={submitting} size="large" disabled={peopleLoading || people.length === 0}>
                                         {translate('pos.handover.confirm_ok')}
                                     </Button>
-                                </Space>
+                                </Box>
                             </Form>
+                            </Box>
 
                             {currentShift.anomalies?.length > 0 && (
                                 <Alert
@@ -502,6 +576,17 @@ const HandoverPageDrawer: React.FC = () => {
                 </Modal>
             </Box>
         </Drawer>
+    );
+};
+
+const HandoverPageDrawer: React.FC = () => {
+    const muiTheme = useTheme();
+    return (
+        <ConfigProvider theme={handoverAntdTheme(muiTheme)}>
+            <AntdApp>
+                <HandoverSheet />
+            </AntdApp>
+        </ConfigProvider>
     );
 };
 
