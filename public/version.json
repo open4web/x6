@@ -1,7 +1,7 @@
 {
-  "version": "0.0.26",
-  "gitHash": "9727834",
+  "version": "0.0.28",
+  "gitHash": "pending",
   "gitBranch": "main",
-  "buildTime": "2026-11-10T16:04:32Z",
-  "tag": "v0.0.26"
+  "buildTime": "2026-11-10T16:46:51Z",
+  "tag": "v0.0.28"
 }
