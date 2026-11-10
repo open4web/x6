@@ -9,7 +9,7 @@
         "@hookform/resolvers": "^3.10.0",
         "@mui/icons-material": "^5.15.13",
         "@mui/lab": "^5.0.0-alpha.177",
-        "@mui/material": "^5.15.13",
+        "@mui/material": "^5.18.0",
         "@mui/styles": "^5.18.0",
         "@types/inflection": "^1.5.28",
         "@types/qrcode": "^1.5.6",
