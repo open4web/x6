@@ -1,7 +1,7 @@
 {
-  "version": "0.0.29",
-  "gitHash": "69cff4c",
-  "gitBranch": "fix/react-router-dedupe-6.30.6",
-  "buildTime": "2026-11-10T17:34:50Z",
-  "tag": "v0.0.29"
+  "version": "0.0.30",
+  "gitHash": "pending",
+  "gitBranch": "main",
+  "buildTime": "2026-11-11T18:05:57Z",
+  "tag": "v0.0.30"
 }
