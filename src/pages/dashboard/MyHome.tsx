@@ -14,6 +14,7 @@ import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 import {CartItem} from "../../common/types";
 import {lookupProductUnitPrice} from "../../utils/catalogCache";
 import {resolveUnitPrice} from "../../utils/comboMatch";
+import {cartPanelWidth, useCartStyle} from "../../layout/cartStyle";
 import {readDeviceId} from "../../utils/deviceId";
 import {DEVICE_BLOCKED_EVENT, isDeviceBlocked} from "../../utils/deviceGuard";
 import {useCallback, useEffect, useRef, useState} from "react";
@@ -34,11 +35,14 @@ function DeferredPanelFallback() {
 
 export const MyHome = () => {
     const {
-        cartItems, setCartItems, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen, shiftOpen,
+        cartItems, setCartItems, drawerOpen, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen, shiftOpen,
         orderFlyEvent, orderDrawerOpen, startOrderListSync, orderSyncStatus, orderSyncProgress,
         resetOrderSync, ready, clearOrderFlyEvent, merchantId,
     } = useCartContext();
     const translate = useTranslate();
+    const [cartStyle] = useCartStyle();
+    const cartWidth = cartPanelWidth(cartStyle);
+    const fabRight = drawerOpen ? cartWidth + 16 : 16;
     const [clearCartSignal, setClearCartSignal] = useState(false);
     const [rechargeOpen, setRechargeOpen] = useState(false);
     const [seatBoardOpen, setSeatBoardOpen] = useState(false);
@@ -82,7 +86,6 @@ export const MyHome = () => {
         if (!guardOrdering()) {
             return;
         }
-        setDrawerOpen(true);
 
         const unit = resolveUnitPrice(item) || lookupProductUnitPrice(merchantId, item.id);
         const priced: CartItem = {
@@ -235,6 +238,8 @@ export const MyHome = () => {
                                     pointerEvents: ready && !deviceBlocked ? 'auto' : 'none',
                                     filter: ready && !deviceBlocked ? 'none' : 'grayscale(0.25)',
                                     opacity: ready && !deviceBlocked ? 1 : 0.55,
+                                    pr: drawerOpen ? `${cartWidth}px` : 0,
+                                    transition: 'padding-right 200ms ease',
                                 }}
                             >
                                 <MyProducts handleClick={handleClick} clearCartSignal={clearCartSignal} />
@@ -247,8 +252,9 @@ export const MyHome = () => {
                                 sx={{
                                     position: 'fixed',
                                     bottom: 16,
-                                    right: 16,
-                                    zIndex: 1000,
+                                    right: fabRight,
+                                    zIndex: 1300,
+                                    transition: 'right 200ms ease',
                                 }}
                                 onClick={() => setRechargeOpen(true)}
                             >
@@ -258,10 +264,11 @@ export const MyHome = () => {
                                 sx={{
                                     position: 'fixed',
                                     bottom: 80,
-                                    right: 16,
-                                    zIndex: 1000,
+                                    right: fabRight,
+                                    zIndex: 1300,
                                     width: 56,
                                     height: 56,
+                                    transition: 'right 200ms ease',
                                 }}
                             >
                                 {orderSyncStatus !== 'idle' && (
@@ -324,18 +331,25 @@ export const MyHome = () => {
                                 sx={{
                                     position: 'fixed',
                                     bottom: 208,
-                                    right: 16,
-                                    zIndex: 1000,
+                                    right: fabRight,
+                                    zIndex: 1300,
+                                    transition: 'right 200ms ease',
                                 }}
                                 disabled={!ready}
                                 onClick={() => {
                                     if (!guardOrdering()) {
                                         return;
                                     }
-                                    setDrawerOpen(true);
+                                    setDrawerOpen(!drawerOpen);
                                 }}
                             >
-                                <ShoppingCartIcon fontSize="large" color={ready ? 'error' : 'disabled'} />
+                                <Badge
+                                    badgeContent={cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0)}
+                                    color="error"
+                                    max={99}
+                                >
+                                    <ShoppingCartIcon fontSize="large" color={ready ? 'error' : 'disabled'} />
+                                </Badge>
                             </Fab>
                             <Fab
                                 aria-label={translate('pos.cart.view_seats')}
@@ -343,8 +357,9 @@ export const MyHome = () => {
                                 sx={{
                                     position: 'fixed',
                                     bottom: 144,
-                                    right: 16,
-                                    zIndex: 1000,
+                                    right: fabRight,
+                                    zIndex: 1300,
+                                    transition: 'right 200ms ease',
                                 }}
                                 onClick={() => setSeatBoardOpen(true)}
                             >

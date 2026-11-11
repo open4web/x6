@@ -1,3 +1,5 @@
+import {playPosSound} from './touchSound';
+
 export type RequestErrorInfo = {
     status: number;
     message: string;
@@ -81,6 +83,11 @@ function emit(info: RequestErrorInfo) {
         return;
     }
     window.dispatchEvent(new CustomEvent(REQUEST_ERROR_EVENT, {detail: info}));
+    try {
+        playPosSound(info.noAccess ? 'deny' : 'warn');
+    } catch {
+        /* autoplay */
+    }
 }
 
 export function goBackSafe() {

@@ -11,6 +11,8 @@ import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {useFetchData} from "../../../common/FetchData";
 import {CartItem, MyCartProps} from "../../../common/types";
 import {FormatDate} from "../../../common/MyDatetime";
+import CloseIcon from "@mui/icons-material/Close";
+import IconButton from "@mui/material/IconButton";
 import NumbersIcon from "@mui/icons-material/Numbers";
 import EmojiPeopleIcon from "@mui/icons-material/EmojiPeople";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
@@ -19,7 +21,7 @@ import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import TablePicker from "../../../common/TablePicker";
 import {readStoreTables, writeStoreTables} from "../../../utils/storeCache";
 import {SEATS_CHANGED} from "../../../utils/seatHold";
-import {Alert, FormControl, FormControlLabel, Radio, RadioGroup, useTheme} from "@mui/material";
+import {Alert, useTheme} from "@mui/material";
 import {cartPanelWidth, useCartStyle} from "../../../layout/cartStyle";
 import {CartItemList} from "./CartItemLayouts";
 import {matchComboGroups, toOrderBuckets, withUnitPrices} from "../../../utils/comboMatch";
@@ -90,6 +92,52 @@ function MetaTile({
     );
 }
 
+function PickModeTile({
+    selected,
+    icon,
+    label,
+    color,
+    onClick,
+}: {
+    selected: boolean;
+    icon: React.ReactElement;
+    label: string;
+    color: string;
+    onClick: () => void;
+}) {
+    return (
+        <Box
+            role="button"
+            aria-pressed={selected}
+            onClick={onClick}
+            sx={{
+                minHeight: 88,
+                px: 0.75,
+                py: 1.25,
+                borderRadius: 2,
+                border: '2px solid',
+                borderColor: selected ? color : 'divider',
+                bgcolor: selected ? `${color}22` : 'action.hover',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 0.5,
+                cursor: 'pointer',
+                userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                transition: 'transform 90ms ease, border-color 120ms ease',
+                '&:active': {transform: 'scale(0.96)'},
+            }}
+        >
+            {React.cloneElement(icon, {sx: {fontSize: 34, color: selected ? color : 'text.secondary'}})}
+            <Typography sx={{fontWeight: 800, fontSize: 15, color: selected ? color : 'text.primary'}}>
+                {label}
+            </Typography>
+        </Box>
+    );
+}
+
 export const pickTypes = [
     {id: 0, nameKey: 'pos.cart.pickup_self', color: 'primary', icon: <Storefront />},
     {id: 1, nameKey: 'pos.cart.pickup_takeout', color: 'success', icon: <DeliveryDining />},
@@ -145,8 +193,8 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         [pricedItems, comboGroup],
     );
 
-    const handlePickChange = (event: { target: { value: any; }; }) => {
-        const next = Number(event.target.value);
+    const handlePickChange = (next: number) => {
+        playPosSound('tap');
         setPick(next);
         if (next !== 1) {
             setNeedAddress(false);
@@ -416,6 +464,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         <Box sx={{
             width: cartPanelWidth(cartStyle),
             padding: 1,
+            position: 'relative',
             bgcolor: ticketLook ? '#fffaf3' : docked ? '#fafafa' : 'background.paper',
             minHeight: '100%',
             display: 'flex',
@@ -438,14 +487,23 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             }
 
             {alertComponent}
-            <Typography variant="h5" sx={{
-                textAlign: 'center',
-                mb: 2,
-                letterSpacing: ticketLook ? 3 : 0,
-                fontFamily: ticketLook ? 'ui-monospace, Menlo, monospace' : undefined,
-            }}>
-                {translate('pos.cart.title')}
-            </Typography>
+            <Box sx={{display: 'flex', alignItems: 'center', mb: 2, px: 0.5}}>
+                <Typography variant="h5" sx={{
+                    flex: 1,
+                    textAlign: 'center',
+                    letterSpacing: ticketLook ? 3 : 0,
+                    fontFamily: ticketLook ? 'ui-monospace, Menlo, monospace' : undefined,
+                }}>
+                    {translate('pos.cart.title')}
+                </Typography>
+                <IconButton
+                    aria-label={translate('pos.request_error.close', {_: '关闭'})}
+                    onClick={() => setDrawerOpen(false)}
+                    sx={{position: 'absolute', right: 8, top: 8}}
+                >
+                    <CloseIcon />
+                </IconButton>
+            </Box>
             <Box sx={{flex: 1, overflowY: 'auto'}}>
                 <CartItemList
                     items={pricedItems}
@@ -584,47 +642,28 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
 
 
 
-            {/* 选择取餐方式 */}
-            {/* 选择取餐方式 */}
-            <FormControl component="fieldset" fullWidth>
-                <RadioGroup row value={pick} onChange={handlePickChange}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            gap: 2,
-                            flexWrap: "wrap",
-                            width: "100%",
-                        }}
-                    >
-                        {pickTypes
-                            .filter(type => type.id <= 2) // 如果只展示：自提/外卖/堂食（可按需删）
-                            .map(type => (
-                                <FormControlLabel
-                                    key={type.id}
-                                    value={type.id}
-                                    control={<Radio />}
-                                    label={
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 0.5,
-                                            }}
-                                        >
-                                            {React.cloneElement(type.icon, {
-                                                sx: { fontSize: 18 },
-                                            })}
-                                            <Typography variant="body2">
-                                                {translate(type.nameKey)}
-                                            </Typography>
-                                        </Box>
-                                    }
-                                />
-                            ))}
-                    </Box>
-                </RadioGroup>
-            </FormControl>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr 1fr',
+                    gap: 1,
+                }}
+            >
+                {[
+                    {...pickTypes[2], color: '#e65100'},
+                    {...pickTypes[1], color: '#2e7d32'},
+                    {...pickTypes[0], color: '#1565c0'},
+                ].map(type => (
+                    <PickModeTile
+                        key={type.id}
+                        selected={pick === type.id}
+                        icon={type.icon}
+                        label={translate(type.nameKey)}
+                        color={type.color}
+                        onClick={() => handlePickChange(type.id)}
+                    />
+                ))}
+            </Box>
 
             {isTakeout && (
                 <Box sx={{mt: 1.5, display: 'flex', flexDirection: 'column', gap: 1}}>
