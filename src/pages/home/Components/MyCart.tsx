@@ -19,7 +19,7 @@ import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import TablePicker from "../../../common/TablePicker";
 import {readStoreTables, writeStoreTables} from "../../../utils/storeCache";
 import {SEATS_CHANGED} from "../../../utils/seatHold";
-import {Alert, FormControl, FormControlLabel, Radio, RadioGroup} from "@mui/material";
+import {Alert, FormControl, FormControlLabel, Radio, RadioGroup, useTheme} from "@mui/material";
 import {cartPanelWidth, useCartStyle} from "../../../layout/cartStyle";
 import {CartItemList} from "./CartItemLayouts";
 import {matchComboGroups, toOrderBuckets, withUnitPrices} from "../../../utils/comboMatch";
@@ -114,6 +114,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     const [address, setAddress] = React.useState(() => localStorage.getItem('deliveryAddress') || '');
     const [receiver, setReceiver] = React.useState(() => localStorage.getItem('deliveryReceiver') || '');
     const [cartStyle] = useCartStyle();
+    const dark = useTheme().palette.mode === 'dark';
     const [orderCount, setOrderCount] = React.useState(0);
     const [totalItems, setTotalItems] = React.useState(0);
     const [estimatedWait, setEstimatedWait] = React.useState(0);
@@ -459,27 +460,37 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             {comboResult.matches.length > 0 && (
                 <Box sx={{px: 0.5, mb: 1}}>
                     {comboResult.matches.map(hit => (
-                        <Box key={hit.id} sx={{mb: 1, p: 1, borderRadius: 1, bgcolor: '#fff8e1'}}>
-                            <Typography sx={{fontWeight: 800, fontSize: 14}}>
+                        <Box
+                            key={hit.id}
+                            sx={{
+                                mb: 1,
+                                p: 1,
+                                borderRadius: 1,
+                                bgcolor: dark ? '#3e2723' : '#fff8e1',
+                                border: '1px solid',
+                                borderColor: dark ? '#6d4c41' : '#ffe0b2',
+                            }}
+                        >
+                            <Typography sx={{fontWeight: 800, fontSize: 14, color: dark ? '#fff3e0' : '#3e2723'}}>
                                 {translate('pos.cart.combo_match')} · {hit.name} ×{hit.count}
-                                <Box component="span" sx={{float: 'right', color: '#d32f2f'}}>
+                                <Box component="span" sx={{float: 'right', color: dark ? '#ff8a80' : '#d32f2f'}}>
                                     ¥{(hit.price * hit.count).toFixed(2)}
                                 </Box>
                             </Typography>
                             {hit.items.map((item, index) => (
-                                <Typography key={`${item.id}-${index}`} variant="caption" sx={{display: 'block', color: '#5d4037'}}>
+                                <Typography key={`${item.id}-${index}`} variant="caption" sx={{display: 'block', color: dark ? '#ffcc80' : '#5d4037'}}>
                                     {item.comboName ? `${item.comboName} · ` : ''}{item.name} ×{item.quantity}
                                 </Typography>
                             ))}
                             {hit.discount > 0 && (
-                                <Typography variant="caption" sx={{color: '#2e7d32', fontWeight: 700}}>
+                                <Typography variant="caption" sx={{color: dark ? '#a5d6a7' : '#2e7d32', fontWeight: 700}}>
                                     {translate('pos.cart.discount')}: ¥{hit.discount.toFixed(2)}
                                 </Typography>
                             )}
                         </Box>
                     ))}
                     {comboResult.totalDiscount > 0 && (
-                        <Typography variant="body2" sx={{textAlign: 'right', color: '#2e7d32', fontWeight: 700}}>
+                        <Typography variant="body2" sx={{textAlign: 'right', color: dark ? '#a5d6a7' : '#2e7d32', fontWeight: 700}}>
                             {translate('pos.cart.total_discount')}: ¥{comboResult.totalDiscount.toFixed(2)}
                         </Typography>
                     )}

@@ -1,24 +1,29 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {Avatar, Box, Chip, Grid} from '@mui/material';
 import MyCard from "../MyCard";
-import {CombSelectInfo, DetailsProps, MenuData, ProductItem} from "./Type";
+import {DetailsProps, MenuData, ProductItem} from "./Type";
 import {useFetchData} from "../../../common/FetchData";
 import {useCartContext} from "../../../dataProvider/MyCartProvider";
 import {GenerateColorFromId} from "../../../utils/randColor";
-import MyCardWithScroll from "./MyCardWithScroll";
 import {resolveMenuIconUrl} from "./Icons";
 import {
     applyStock,
+    readCombs,
     readMenus,
     readProducts,
     useCatalogRefresh,
     useCatalogTick,
+    writeCombs,
     writeMenus,
     writeProducts,
 } from "../../../utils/catalogCache";
 import {productCardGridXs, useProductCardStyle} from "../../../layout/productCardStyle";
 import VoiceOrderBar from "./VoiceOrderBar";
 import VoiceResultsPanel from "./VoiceResultsPanel";
+import ComboOfferStrip from "./ComboOfferStrip";
+import ComboPickBoard from "./ComboPickBoard";
+import {normalizeComboOffers} from "../../../utils/comboMatch";
+import {ComboGroup} from "../types";
 import {toast} from "react-toastify";
 import {tPos} from "../../../i18n/t";
 
@@ -45,6 +50,8 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         return readProducts(merchantId, menuId)?.data ?? [];
     });
     const [categories, setCategories] = useState<MenuData[]>(() => readMenus(merchantId)?.data ?? []);
+    const [combos, setCombos] = useState<ComboGroup[]>(() => readCombs(merchantId)?.data ?? []);
+    const [selectedComboId, setSelectedComboId] = useState('');
     const [query, setQuery] = useState("");
     const [voiceBusy, setVoiceBusy] = useState(false);
     const [voiceTranscript, setVoiceTranscript] = useState("");
@@ -71,40 +78,30 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         () => applyStock(merchantId, rawData),
         [merchantId, rawData, catalogTick],
     );
-
-    // 通过 id 获取 isComboMode
-    const getIsComboModeById = (id: string): boolean | undefined => {
-        const item = categoryMap[id]; // 获取对应的 MenuData 对象
-        return item ? item.isComboMode : undefined; // 如果找到返回 isComboMode，否则返回 undefined
-    };
+    const regularMenus = useMemo(
+        () => categories.filter(menu => !menu.isComboMode),
+        [categories],
+    );
+    const comboSource = useMemo(
+        () => {
+            const list = combos.length
+                ? combos
+                : categories.filter(menu => menu.isComboMode) as unknown as ComboGroup[];
+            return list.filter(item => item.is_sell !== false);
+        },
+        [combos, categories],
+    );
+    const comboOffers = useMemo(() => normalizeComboOffers(comboSource), [comboSource]);
+    const selectedCombo = comboOffers.find(offer => offer.id === selectedComboId);
 
     const getCategoryName = (id: string): string => {
-        const item = categoryMap[id]; // 获取对应的 MenuData 对象
-        return item?.name; // 如果找到返回 isComboMode，否则返回 undefined
-    };
-
-    const getCombPrice = (id: string): number => {
-        const item = categoryMap[id]; // 获取对应的 MenuData 对象
-        return item?.price; // 如果找到返回 isComboMode，否则返回 undefined
-    };
-
-    // getCombRequestItems
-    const getCombRequestItems = (id: string): { id: string; quantity: number }[] => {
         const item = categoryMap[id];
-        const slots = item?.combo || [];
-        if (slots.length) {
-            return slots.flatMap((slot: any) =>
-                (slot.products || []).map((productId: string) => ({
-                    id: productId,
-                    quantity: slot.requires || 1,
-                })),
-            );
-        }
-        return (item?.products || []).map((productId: string) => ({id: productId, quantity: 1}));
+        return item?.name;
     };
+
     const getCategoryId = (id: string): string => {
-        const item = categoryMap[id]; // 获取对应的 MenuData 对象
-        return item?.id; // 如果找到返回 isComboMode，否则返回 undefined
+        const item = categoryMap[id];
+        return item?.id;
     };
 
     useEffect(() => {
@@ -139,15 +136,50 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     }, [merchantId, fetchData, refreshTick]);
 
     useEffect(() => {
-        if (categories.length === 0) {
+        if (!merchantId) {
             return;
         }
-        const exists = categories.some(category => category.id === activeTab);
-        if (!exists) {
-            setActiveTab(categories[0].id);
-            localStorage.setItem("current_category", categories[0].id);
+        const cached = readCombs(merchantId);
+        if (cached) {
+            setCombos(cached.data);
+        } else {
+            setCombos([]);
         }
-    }, [categories, activeTab]);
+        if (cached?.fresh) {
+            return;
+        }
+        let cancelled = false;
+        fetchData('/v1/hlj/product/pos/combs', (response) => {
+            const list = Array.isArray(response) ? response : (response?.data || []);
+            writeCombs(merchantId, list);
+            if (!cancelled) {
+                setCombos(list);
+            }
+        }, 'POST', {merchantId}, true);
+        return () => {
+            cancelled = true;
+        };
+    }, [merchantId, fetchData, refreshTick]);
+
+    useEffect(() => {
+        if (regularMenus.length === 0 && comboOffers.length === 0) {
+            return;
+        }
+        const onRegular = regularMenus.some(menu => menu.id === activeTab);
+        const onCombo = comboOffers.some(offer => offer.id === activeTab);
+        if (onCombo && !selectedComboId) {
+            setSelectedComboId(activeTab);
+            return;
+        }
+        if (!onRegular && !onCombo) {
+            const fallback = regularMenus[0]?.id || comboOffers[0]?.id;
+            if (!fallback) {
+                return;
+            }
+            setActiveTab(fallback);
+            localStorage.setItem('current_category', fallback);
+        }
+    }, [regularMenus, comboOffers, activeTab, selectedComboId]);
 
     useEffect(() => {
         if (!merchantId || !activeTab) {
@@ -184,8 +216,24 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
     }, [activeTab, merchantId, fetchData, refreshTick]);
 
     const handleChipClick = (categoryId: string) => {
+        setSelectedComboId('');
         setActiveTab(categoryId);
-        localStorage.setItem("current_category", categoryId);
+        localStorage.setItem('current_category', categoryId);
+    };
+
+    const handleComboSelect = (comboId: string) => {
+        if (selectedComboId === comboId) {
+            setSelectedComboId('');
+            const fallback = regularMenus[0]?.id;
+            if (fallback) {
+                setActiveTab(fallback);
+                localStorage.setItem('current_category', fallback);
+            }
+            return;
+        }
+        setSelectedComboId(comboId);
+        setActiveTab(comboId);
+        localStorage.setItem('current_category', comboId);
     };
 
     // 按combIndex分组（随 data 缓存）
@@ -197,22 +245,6 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
         acc[combIndex].push(item);
         return acc;
     }, {} as { [key: number]: ProductItem[] }), [data]);
-
-    const groupedDataSelectInfo = useMemo(() => data.reduce((acc, item) => {
-        const combIndex = item.combIndex;
-
-        // 确保每个combIndex只有第一次赋值时才会创建
-        if (!acc[combIndex]) {
-            const slots = categoryMap[activeTab]?.combo || [];
-            acc[combIndex] = {
-                title: slots[Number(combIndex)]?.combName || getCategoryName(activeTab) || '',
-                maxLimit: item.maxLimit || slots[Number(combIndex)]?.quantity || slots[Number(combIndex)]?.requires || 1,
-            };
-        }
-
-        return acc;
-    }, {} as { [key: string]: CombSelectInfo }), [data, activeTab, categoryMap]);
-
 
     const runVoiceMatch = async (transcript: string) => {
         if (!merchantId) {
@@ -255,7 +287,7 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
             {alertComponent}
             <Box sx={{display: 'flex', alignItems: 'center', gap: 1.75, overflowX: 'auto', mb: 2, py: 1.5, px: 1}}>
                 <VoiceOrderBar busy={voiceBusy} onTranscript={runVoiceMatch} />
-                {voiceProducts == null && categories.map(category => {
+                {voiceProducts == null && regularMenus.map(category => {
                     const iconUrl = resolveMenuIconUrl(category.icon);
                     const selected = activeTab === category.id;
                     return (
@@ -323,20 +355,30 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                 />
             ) : (
             <>
-            {/* Product Grid */}
-            {Object.keys(groupedData).map((combIndex) => {
+            <ComboOfferStrip
+                combos={comboSource}
+                merchantId={merchantId}
+                selectedId={selectedComboId}
+                onSelect={handleComboSelect}
+            />
+            {selectedCombo ? (
+                <ComboPickBoard
+                    offer={selectedCombo}
+                    products={data}
+                    handleClick={handleClick}
+                    kindName={selectedCombo.name}
+                    kindColor={categoryColorMap[selectedCombo.id] || '#c62828'}
+                    clearCartSignal={clearCartSignal}
+                    onBack={() => handleComboSelect(selectedCombo.id)}
+                />
+            ) : Object.keys(groupedData).map((combIndex) => {
                 const groupItems = groupedData[parseInt(combIndex, 10)];
-                // 使用combIndex计算色相，确保它在0到360之间
-                const hue = (parseInt(combIndex, 10) * 20) % 360;  // 色相（0-360）
-                const saturation = 50;  // 饱和度（40-60）
-                const lightness = 40;   // 明度（30-50），适合黑灰色背景
-
-                // 动态生成HSL颜色
-                const backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                const hue = (parseInt(combIndex, 10) * 20) % 360;
+                const backgroundColor = `hsl(${hue}, 50%, 40%)`;
 
                 return (
                     <Grid container spacing={2} key={combIndex}>
-                        {!getIsComboModeById(activeTab) && groupItems && groupItems?.map((item) => (
+                        {groupItems?.map((item) => (
                             <Grid
                                 item
                                 xs={productCardGridXs(cardStyle, showProductImage)}
@@ -351,29 +393,11 @@ function MyProducts({handleClick, clearCartSignal}: DetailsProps) {
                                     clearCartSignal={clearCartSignal}
                                     backgroundColor={backgroundColor}
                                     combIndex={combIndex}
-                                    combPrice={getCombPrice(activeTab)}
-                                    combRequestItems={getCombRequestItems(activeTab)}
+                                    combPrice={0}
+                                    combRequestItems={[]}
                                 />
                             </Grid>
                         ))}
-
-                        {
-                            getIsComboModeById(activeTab) &&
-                            <MyCardWithScroll
-                                groupItems={groupItems}
-                                groupedDataSelectInfo={groupedDataSelectInfo}
-                                handleClick={handleClick}
-                                kindName={getCategoryName(activeTab)}
-                                combID={getCategoryId(activeTab)}
-                                kindColor={categoryColorMap[activeTab] || '#ccc'}
-                                clearCartSignal={clearCartSignal}
-                                backgroundColor={backgroundColor}
-                                combIndex={combIndex}
-                                combPrice={getCombPrice(activeTab)}
-                                combRequestItems={getCombRequestItems(activeTab)}
-                            />
-
-                        }
                     </Grid>
                 );
             })}

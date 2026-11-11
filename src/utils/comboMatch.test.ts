@@ -1,6 +1,6 @@
 import assert from 'assert';
 import {CartItem} from '../common/types';
-import {matchComboGroups, spiceSelections, toOrderBuckets} from './comboMatch';
+import {comboListPrice, comboSlotSummary, matchComboGroups, spiceSelections, toOrderBuckets} from './comboMatch';
 
 function dish(partial: Partial<CartItem> & Pick<CartItem, 'id' | 'name' | 'price'>): CartItem {
     return {
@@ -112,4 +112,23 @@ const withSize = dish({
     assert.strictEqual(buckets[0].Price, 12);
     assert.deepEqual(buckets[0].props, [6448769]);
     assert.strictEqual(buckets[0].props_item?.[0]?.value, '中份');
+}
+
+{
+    const lunch = {
+        id: 'lunch',
+        name: '午餐套餐',
+        price: 38,
+        combo: [
+            {combName: '主食', price: 0, requires: 1, products: ['a']},
+            {combName: '配菜', price: 0, requires: 1, products: ['b', 'c']},
+            {combName: '饮料', price: 0, requires: 1, products: ['d']},
+        ],
+    };
+    assert.strictEqual(comboSlotSummary(lunch), '主食 + 配菜 + 饮料');
+    const prices: Record<string, number> = {a: 22, b: 12, c: 18, d: 8};
+    const listed = comboListPrice(lunch, id => prices[id] || 0);
+    assert.strictEqual(listed.price, 38);
+    assert.strictEqual(listed.original, 42);
+    assert.strictEqual(listed.discount, 4);
 }

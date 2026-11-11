@@ -214,16 +214,43 @@ function fillOnce(offer: ComboOffer, pool: Record<string, number>, names: Record
     return items;
 }
 
-function savings(offer: ComboOffer, prices: Record<string, number>) {
-    const original = offer.combo.reduce((sum, slot) => {
-        const cheapest = Math.min(...slot.products.map(id => prices[id] ?? Number.POSITIVE_INFINITY));
+export type ComboListPrice = {
+    price: number;
+    original: number;
+    discount: number;
+};
+
+export function comboSlotSummary(offer: ComboOffer): string {
+    const parts = (offer.combo || []).map(slot => {
+        const name = (slot.combName || '').trim();
+        const need = Math.max(1, Number(slot.requires) || 1);
+        if (name) {
+            return need > 1 ? `${name}×${need}` : name;
+        }
+        return need > 1 ? `×${need}` : '';
+    }).filter(Boolean);
+    return parts.join(' + ');
+}
+
+export function comboListPrice(offer: ComboOffer, lookup?: (id: string) => number): ComboListPrice {
+    const original = (offer.combo || []).reduce((sum, slot) => {
+        const cheapest = Math.min(...(slot.products || []).map(id => {
+            const unit = lookup?.(id) ?? 0;
+            return unit > 0 ? unit : Number.POSITIVE_INFINITY;
+        }));
         const unit = Number.isFinite(cheapest) ? cheapest : 0;
-        return sum + unit * slot.requires;
+        return sum + unit * Math.max(1, Number(slot.requires) || 1);
     }, 0);
-    if (offer.price > 0) {
-        return original - offer.price;
-    }
-    return 0;
+    const price = Number(offer.price) > 0 ? Number(offer.price) : original;
+    return {
+        price,
+        original,
+        discount: Math.max(0, original - price),
+    };
+}
+
+function savings(offer: ComboOffer, prices: Record<string, number>) {
+    return comboListPrice(offer, id => prices[id] || 0).discount;
 }
 
 export function matchComboGroups(cartItems: CartItem[], comboGroups: ComboGroup[] | any): ComboMatchResult {

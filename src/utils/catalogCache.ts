@@ -242,6 +242,20 @@ export function lookupProductUnitPrice(merchantId: string, productId: string): n
     return catalog.unitPriceByProduct?.[productId] || 0;
 }
 
+export function findCachedProduct(merchantId: string, productId: string): ProductItem | undefined {
+    if (!merchantId || !productId) {
+        return undefined;
+    }
+    const catalog = ensureStore(merchantId);
+    for (const entry of Object.values(catalog.productsByMenu)) {
+        const found = (entry?.data || []).find(product => product.id === productId);
+        if (found) {
+            return found;
+        }
+    }
+    return undefined;
+}
+
 /** Overlay live stock without touching the catalog TTL. Ready for websocket patches. */
 export function patchStock(
     merchantId: string,
