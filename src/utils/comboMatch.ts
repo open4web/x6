@@ -64,21 +64,55 @@ export function withUnitPrices(items: CartItem[], lookup?: (id: string) => numbe
     });
 }
 
-function spiceOf(item: CartItem): number {
+export type OrderPropItem = {
+    is_default: number;
+    id: number;
+    code: string;
+    value: string;
+    price: number;
+};
+
+function parsePropId(raw: string | number | undefined): number {
+    const id = Number.parseInt(String(raw ?? ''), 10);
+    return Number.isFinite(id) ? id : 0;
+}
+
+/** Selected specs from cart desc + spiceOptions. Backend PriceOrder requires props_item when unit price includes extras. */
+export function spiceSelections(item: CartItem): OrderPropItem[] {
     if (!item?.desc || !item.spiceOptions?.length) {
-        return 0;
+        return [];
     }
     const names = item.desc.split(',').map(name => name.trim()).filter(Boolean);
-    return names.reduce((sum, name) => {
-        let extra = 0;
-        item.spiceOptions.forEach(prop => {
-            const matched = prop.spiceOptions.find(spice => spice.name === name);
-            if (matched) {
-                extra += Number(matched.price) || 0;
+    const used = new Set<string>();
+    const selected: OrderPropItem[] = [];
+    names.forEach(name => {
+        for (const prop of item.spiceOptions) {
+            const matched = (prop.spiceOptions || []).find(spice => {
+                if (spice.name !== name) {
+                    return false;
+                }
+                const key = `${prop.id}:${spice.id}`;
+                return !used.has(key);
+            });
+            if (!matched) {
+                continue;
             }
-        });
-        return sum + extra;
-    }, 0);
+            used.add(`${prop.id}:${matched.id}`);
+            selected.push({
+                is_default: 0,
+                id: parsePropId(matched.id),
+                code: prop.id,
+                value: matched.name,
+                price: Math.round(Number(matched.price) || 0),
+            });
+            break;
+        }
+    });
+    return selected;
+}
+
+function spiceOf(item: CartItem): number {
+    return spiceSelections(item).reduce((sum, spice) => sum + (Number(spice.price) || 0), 0);
 }
 
 function lineKey(item: CartItem) {
@@ -335,6 +369,7 @@ export function toOrderBuckets(cartItems: CartItem[], result: ComboMatchResult) 
         }
         const rest = item.quantity - used;
         const unitPrice = resolveUnitPrice(item);
+        const propsItem = spiceSelections(item);
         const pay = comboPay + rest * unitPrice + spiceOf(item) * item.quantity;
         const unit = item.quantity > 0 ? pay / item.quantity : unitPrice;
         return {
@@ -343,6 +378,8 @@ export function toOrderBuckets(cartItems: CartItem[], result: ComboMatchResult) 
             Price: Number(unit.toFixed(4)),
             Name: item.name,
             props_text: item.desc,
+            props: propsItem.map(prop => prop.id).filter(id => id > 0),
+            props_item: propsItem,
         };
     });
 }

@@ -40,6 +40,15 @@ export interface Buckets {
     // Image: string;
     // Amount: string;
     Name: string;
+    props_text?: string;
+    props?: number[];
+    props_item?: {
+        is_default: number;
+        id: number;
+        code: string;
+        value: string;
+        price: number;
+    }[];
 }
 
 export interface OrderResp {
