@@ -96,6 +96,16 @@ export const extraUi = pack(
             success: '请求成功！', server: '服务器响应异常，请稍后重试！', expired: '登录状态已过期，请重新登录！',
             failed: '请求失败：%{text}', network: '网络错误或未知错误，请检查网络连接！', unknown: '未知',
         },
+        request_error: {
+            title: '请求失败',
+            no_access_title: '该页面无访问权限',
+            status: '状态码',
+            request_id: 'Request-Id',
+            none: '未返回',
+            copy: '复制错误信息',
+            copied: '已复制',
+            close: '关闭',
+        },
         offer: {
             campaign: '门店活动', none: '不使用', coupon: '使用优惠券', loading: '正在查询会员券…',
             empty: '没有查到该会员名下的未使用券。', threshold: '满%{amount}元可用', no_threshold: '无门槛',
@@ -470,6 +480,16 @@ export const extraUi = pack(
         common: {
             success: 'Request succeeded', server: 'Server error, try again later', expired: 'Session expired, please sign in',
             failed: 'Request failed: %{text}', network: 'Network error, check your connection', unknown: 'Unknown',
+        },
+        request_error: {
+            title: 'Request failed',
+            no_access_title: 'No access to this page',
+            status: 'Status',
+            request_id: 'Request-Id',
+            none: 'Not returned',
+            copy: 'Copy error',
+            copied: 'Copied',
+            close: 'Close',
         },
         offer: {
             campaign: 'Store offers', none: 'None', coupon: 'Use coupon', loading: 'Loading coupons…',

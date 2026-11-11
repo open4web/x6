@@ -3,6 +3,7 @@ import Menu from './Menu';
 import MyAppBar from "./MyAppBar";
 import NoticeHost from './NoticeHost';
 import SeatHoldWatch from '../common/SeatHoldWatch';
+import RequestErrorHost from '../common/RequestErrorHost';
 import {useApplyFontSize} from './fontScale';
 
 function FontSizeBridge() {
@@ -15,6 +16,7 @@ export default (props: LayoutProps) => {
         <>
             <FontSizeBridge />
             <NoticeHost channel="pos" />
+            <RequestErrorHost />
             <SeatHoldWatch />
             <Layout {...props} appBar={MyAppBar} menu={Menu}/>
         </>

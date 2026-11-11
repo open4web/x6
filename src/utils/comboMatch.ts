@@ -21,6 +21,7 @@ export type ComboHitItem = {
     quantity: number;
     comboName: string;
     unitPrice: number;
+    combIndex?: number;
 };
 
 export type ComboHit = {
@@ -197,7 +198,8 @@ function consumeSlot(slot: ComboSlot, pool: Record<string, number>, names: Recor
 function fillOnce(offer: ComboOffer, pool: Record<string, number>, names: Record<string, string>, prices: Record<string, number>): ComboHitItem[] | null {
     const snapshot = {...pool};
     const items: ComboHitItem[] = [];
-    for (const slot of offer.combo) {
+    for (let index = 0; index < offer.combo.length; index += 1) {
+        const slot = offer.combo[index];
         const taken = consumeSlot(slot, pool, names);
         const got = taken.reduce((sum, item) => sum + item.quantity, 0);
         if (got < slot.requires) {
@@ -208,6 +210,7 @@ function fillOnce(offer: ComboOffer, pool: Record<string, number>, names: Record
         }
         taken.forEach(item => {
             item.unitPrice = prices[item.id] || 0;
+            item.combIndex = index;
         });
         items.push(...taken);
     }
@@ -375,38 +378,29 @@ export function matchComboGroups(cartItems: CartItem[], comboGroups: ComboGroup[
 }
 
 export function toOrderBuckets(cartItems: CartItem[], result: ComboMatchResult) {
-    const money: Record<string, number> = {};
-    const qty: Record<string, number> = {};
+    const comboByProduct: Record<string, {id: string; index: number}> = {};
     result.matches.forEach(hit => {
-        const original = hit.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0) || 1;
-        const comboPay = hit.price * hit.count;
         hit.items.forEach(item => {
-            const share = comboPay * ((item.unitPrice * item.quantity) / original);
-            money[item.id] = (money[item.id] || 0) + share;
-            qty[item.id] = (qty[item.id] || 0) + item.quantity;
+            if (!comboByProduct[item.id]) {
+                comboByProduct[item.id] = {id: hit.id, index: item.combIndex || 0};
+            }
         });
     });
 
     return cartItems.map(item => {
-        const used = Math.min(item.quantity, qty[item.id] || 0);
-        const comboPay = used > 0 && qty[item.id] ? money[item.id] * (used / qty[item.id]) : 0;
-        if (used > 0) {
-            money[item.id] -= comboPay;
-            qty[item.id] -= used;
-        }
-        const rest = item.quantity - used;
-        const unitPrice = resolveUnitPrice(item);
         const propsItem = spiceSelections(item);
-        const pay = comboPay + rest * unitPrice + spiceOf(item) * item.quantity;
-        const unit = item.quantity > 0 ? pay / item.quantity : unitPrice;
+        const combo = comboByProduct[item.id];
+        const unitPrice = resolveUnitPrice(item);
         return {
             ID: item.id,
             Number: item.quantity,
-            Price: Number(unit.toFixed(4)),
+            Price: Number(unitPrice.toFixed(4)),
             Name: item.name,
             props_text: item.desc,
             props: propsItem.map(prop => prop.id).filter(id => id > 0),
             props_item: propsItem,
+            comb_id: combo?.id || '',
+            comb_index: combo?.index || 0,
         };
     });
 }

@@ -1,4 +1,5 @@
 import {DEVICE_ID_HEADER, readDeviceId} from './deviceId';
+import {reportFetchResponse, reportXhr} from './requestError';
 
 // 每个发往本站接口的请求都带上客户端标识、版本号和本机设备号。
 declare const __APP_VERSION__: string;
@@ -34,7 +35,12 @@ export const installClientHeaders = (): void => {
         if (!headers.has('X-Client-Id')) headers.set('X-Client-Id', CLIENT_ID);
         if (!headers.has('X-Client-Version')) headers.set('X-Client-Version', CLIENT_VERSION);
         if (!headers.has(DEVICE_ID_HEADER)) headers.set(DEVICE_ID_HEADER, readDeviceId());
-        return rawFetch(input as any, { ...init, headers });
+        return rawFetch(input as any, { ...init, headers }).then((res: Response) => {
+            if (res && res.ok === false) {
+                void reportFetchResponse(res, url, (init && (init as RequestInit).method) || 'GET');
+            }
+            return res;
+        });
     };
 
     // XMLHttpRequest（axios）
@@ -42,6 +48,8 @@ export const installClientHeaders = (): void => {
     const rawSend = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.open = function (this: any, method: string, url: string | URL, ...rest: any[]) {
         this.__clientHeadersSame = isSameOrigin(String(url));
+        this.__clientHeadersUrl = String(url);
+        this.__clientHeadersMethod = method;
         return (rawOpen as any).call(this, method, url, ...rest);
     } as any;
     XMLHttpRequest.prototype.send = function (this: any, body?: any) {
@@ -53,6 +61,9 @@ export const installClientHeaders = (): void => {
             } catch (_) {
                 /* 请求状态不对时忽略，不影响业务请求 */
             }
+            this.addEventListener('load', function (this: any) {
+                reportXhr(this, this.__clientHeadersUrl, this.__clientHeadersMethod);
+            });
         }
         return rawSend.call(this, body);
     };

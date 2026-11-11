@@ -11,12 +11,13 @@ const store: Record<string, string> = {};
     location: { href: 'https://admin.example.com/#/', origin: 'https://admin.example.com' },
     fetch: async (input: any, init?: any) => {
         calls.push({ url: String(input), headers: new Headers(init?.headers) });
-        return {} as any;
+        return {ok: true, status: 200, clone() { return this; }} as any;
     },
 };
 (globalThis as any).XMLHttpRequest = function () {} as any;
 (globalThis as any).XMLHttpRequest.prototype.open = function () {};
 (globalThis as any).XMLHttpRequest.prototype.send = function () {};
+(globalThis as any).XMLHttpRequest.prototype.addEventListener = function () {};
 (globalThis as any).XMLHttpRequest.prototype.setRequestHeader = function (k: string, v: string) {
     ((this as any).h ||= {})[k] = v;
 };

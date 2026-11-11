@@ -24,7 +24,10 @@ const MyAuthProvider: AuthProvider = {
         if (status === 403 && (payload?.error === 'device_not_allowed' || /设备白名单/.test(String(payload?.message || '')))) {
             return Promise.resolve();
         }
-        if (status === 401 || status === 403 || status === 307) {
+        if ((status === 401 || status === 403) && (localStorage.getItem('token') || localStorage.getItem('cookie'))) {
+            return Promise.resolve();
+        }
+        if (status === 401 || status === 307) {
             localStorage.removeItem('token');
             return Promise.reject();
         }

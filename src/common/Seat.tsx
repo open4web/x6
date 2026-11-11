@@ -68,18 +68,11 @@ export default function MySeat({ storeId, onSelectSeat }: MySeatProps) {
                         : `${window.location.origin}${item.background}`,
                 }));
                 setData(seatList);
-            } else if (response.status === 401) {
-                window.location.href = '/login';
             } else {
                 console.error('Unexpected response status:', response.status);
             }
         } catch (error) {
-            if (axios.isAxiosError(error) && error.response?.status === 401) {
-                console.error('Unauthorized access - redirecting to login');
-                window.location.href = '/login';
-            } else {
-                console.error('Error fetching data:', error);
-            }
+            console.error('Error fetching data:', error);
         }
     };
 

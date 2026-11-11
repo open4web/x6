@@ -64,7 +64,7 @@ const withSize = dish({
 
     const buckets = toOrderBuckets([withSize], priced);
     assert.strictEqual(buckets.length, 1);
-    assert.strictEqual(buckets[0].Price, 13);
+    assert.strictEqual(buckets[0].Price, 12);
     assert.strictEqual(buckets[0].props_text, '大份');
     assert.deepEqual(buckets[0].props, [6448768]);
     assert.deepEqual(buckets[0].props_item, selected);
@@ -94,7 +94,7 @@ const withSize = dish({
     const priced = matchComboGroups([two], []);
     assert.strictEqual(priced.payAmount, 26);
     const buckets = toOrderBuckets([two], priced);
-    assert.strictEqual(buckets[0].Price, 13);
+    assert.strictEqual(buckets[0].Price, 10);
     assert.deepEqual(buckets[0].props, [6448768, 1002]);
     assert.ok(buckets[0].props_item?.length === 2);
 }
@@ -131,4 +131,20 @@ const withSize = dish({
     assert.strictEqual(listed.price, 38);
     assert.strictEqual(listed.original, 42);
     assert.strictEqual(listed.discount, 4);
+
+    const cart = [
+        dish({id: 'a', name: 'A', price: 22, origin_price: 22}),
+        dish({id: 'b', name: 'B', price: 12, origin_price: 12}),
+        dish({id: 'd', name: 'D', price: 8, origin_price: 8}),
+    ];
+    const matched = matchComboGroups(cart, [lunch]);
+    assert.strictEqual(matched.matches.length, 1);
+    assert.strictEqual(matched.payAmount, 38);
+    const comboBuckets = toOrderBuckets(cart, matched);
+    assert.equal(comboBuckets[0].comb_id, 'lunch');
+    assert.equal(comboBuckets[1].comb_id, 'lunch');
+    assert.equal(comboBuckets[2].comb_id, 'lunch');
+    assert.equal(comboBuckets[0].Price, 22);
+    assert.equal(comboBuckets[0].comb_index, 0);
+    assert.equal(comboBuckets[1].comb_index, 1);
 }
