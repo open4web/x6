@@ -14,6 +14,8 @@ import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 import {CartItem} from "../../common/types";
 import {lookupProductUnitPrice} from "../../utils/catalogCache";
 import {resolveUnitPrice} from "../../utils/comboMatch";
+import {readDeviceId} from "../../utils/deviceId";
+import {DEVICE_BLOCKED_EVENT, isDeviceBlocked} from "../../utils/deviceGuard";
 import {useCallback, useEffect, useRef, useState} from "react";
 import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
 import OrderFlyOverlay from "../home/Components/OrderFlyOverlay";
@@ -45,6 +47,7 @@ export const MyHome = () => {
     const [mountSales, setMountSales] = useState(false);
     const [mountHandover, setMountHandover] = useState(false);
     const [mountRecharge, setMountRecharge] = useState(false);
+    const [deviceBlocked, setDeviceBlocked] = useState(() => isDeviceBlocked());
     const orderFabRef = useRef<HTMLButtonElement>(null);
     // Stay unmounted until first open, then keep mounted so a later close does not drop the panel.
     if (dataDrawerOpen && !mountSales) {
@@ -57,7 +60,17 @@ export const MyHome = () => {
         setMountRecharge(true);
     }
 
+    useEffect(() => {
+        const sync = () => setDeviceBlocked(isDeviceBlocked());
+        window.addEventListener(DEVICE_BLOCKED_EVENT, sync);
+        return () => window.removeEventListener(DEVICE_BLOCKED_EVENT, sync);
+    }, []);
+
     const guardOrdering = () => {
+        if (deviceBlocked) {
+            toast.warning(translate('pos.device.blocked'), {position: 'top-center', autoClose: 2200});
+            return false;
+        }
         if (ready) {
             return true;
         }
@@ -166,6 +179,30 @@ export const MyHome = () => {
                     {/* 仅在 dataDrawerOpen 为 false 时渲染以下部分 */}
                     {!dataDrawerOpen && (
                         <>
+                            {deviceBlocked && (
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        mb: 2,
+                                        mx: 1,
+                                        px: 2.5,
+                                        py: 1.75,
+                                        borderRadius: 2,
+                                        border: '1px solid #ef9a9a',
+                                        bgcolor: '#ffebee',
+                                    }}
+                                >
+                                    <Typography sx={{fontWeight: 700, color: '#b71c1c'}}>
+                                        {translate('pos.device.title')}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {translate('pos.device.body')}
+                                    </Typography>
+                                    <Typography sx={{mt: 1, fontFamily: 'monospace', fontWeight: 800}}>
+                                        {translate('pos.device.id')}: {readDeviceId()}
+                                    </Typography>
+                                </Paper>
+                            )}
                             {!ready && (
                                 <Paper
                                     elevation={0}
@@ -195,9 +232,9 @@ export const MyHome = () => {
                             )}
                             <Box
                                 sx={{
-                                    pointerEvents: ready ? 'auto' : 'none',
-                                    filter: ready ? 'none' : 'grayscale(0.25)',
-                                    opacity: ready ? 1 : 0.55,
+                                    pointerEvents: ready && !deviceBlocked ? 'auto' : 'none',
+                                    filter: ready && !deviceBlocked ? 'none' : 'grayscale(0.25)',
+                                    opacity: ready && !deviceBlocked ? 1 : 0.55,
                                 }}
                             >
                                 <MyProducts handleClick={handleClick} clearCartSignal={clearCartSignal} />

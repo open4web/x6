@@ -121,6 +121,12 @@ export const extraUi = pack(
             card: '充值卡', virtual: '虚拟产品', remark: '充值卡：%{name}',
             credit: '到账', empty_cards: '暂无充值卡', gifts: '赠送', pick_card: '请选择充值卡',
         },
+        device: {
+            blocked: '本机未加入点餐设备白名单，请联系管理员',
+            title: '设备未授权',
+            body: '当前收银机不在该账号的白名单里。把下面的设备号发给管理员，在账号安全设置里勾选后即可点餐收款。',
+            id: '本机设备号',
+        },
         combo: {
             max: '已经达到了最大选择数量',
             title: '套餐',
@@ -489,6 +495,12 @@ export const extraUi = pack(
             sell: 'Price', title: 'Top-up', cancel: 'Cancel', confirm: 'Confirm & pay',
             card: 'Top-up card', virtual: 'Virtual', remark: 'Card: %{name}',
             credit: 'Credited', empty_cards: 'No top-up cards', gifts: 'Bonus', pick_card: 'Select a card',
+        },
+        device: {
+            blocked: 'This register is not on the device allow list',
+            title: 'Device not allowed',
+            body: 'Ask an administrator to add this device ID in account security settings.',
+            id: 'Device ID',
         },
         combo: {
             max: 'Selection limit reached',

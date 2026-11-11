@@ -2,6 +2,11 @@ import assert from 'assert';
 
 // 在 node 里模拟浏览器环境，检查 fetch 补头的规则
 const calls: Array<{ url: string; headers: Headers }> = [];
+const store: Record<string, string> = {};
+(globalThis as any).localStorage = {
+    getItem: (k: string) => store[k] || null,
+    setItem: (k: string, v: string) => { store[k] = v; },
+};
 (globalThis as any).window = {
     location: { href: 'https://admin.example.com/#/', origin: 'https://admin.example.com' },
     fetch: async (input: any, init?: any) => {
@@ -26,6 +31,7 @@ const calls: Array<{ url: string; headers: Headers }> = [];
     await f('https://cdn.third-party.com/a.js');
     assert.strictEqual(calls[0].headers.get('X-Client-Id'), CLIENT_ID);
     assert.ok(calls[0].headers.get('X-Client-Version'));
+    assert.ok(calls[0].headers.get('X-Device-ID'));
     assert.strictEqual(calls[0].headers.get('Authorization'), 'x'); // 原有头不丢
     assert.strictEqual(calls[1].headers.get('X-Client-Id'), CLIENT_ID);
     assert.strictEqual(calls[2].headers.get('X-Client-Id'), CLIENT_ID); // 跨域但是 /v1/ 接口
@@ -35,6 +41,7 @@ const calls: Array<{ url: string; headers: Headers }> = [];
     X.open('GET', '/v1/system/auth/me');
     X.send();
     assert.strictEqual(X.h['X-Client-Id'], CLIENT_ID);
+    assert.ok(X.h['X-Device-ID']);
     const Y = new (globalThis as any).XMLHttpRequest();
     Y.open('GET', 'https://cdn.third-party.com/a.js');
     Y.send();

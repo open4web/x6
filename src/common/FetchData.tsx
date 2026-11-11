@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 import {tPos} from '../i18n/t';
 import {clearAuthStorage, readAuthToken} from '../utils/authToken';
+import {isDeviceNotAllowed, markDeviceBlocked} from '../utils/deviceGuard';
 
 const DEFAULT_TIMEOUT_MS = 15000;
 
@@ -71,6 +72,9 @@ export const useFetchData = () => {
                         clearAuthStorage();
                         navigate('/login');
                         showAlert(tPos('common.expired'), 'warning');
+                    } else if (error.response.status === 403 && isDeviceNotAllowed(error.response.data)) {
+                        markDeviceBlocked();
+                        showAlert(tPos('device.blocked'), 'error');
                     } else {
                         showAlert(tPos('common.failed', {text: error.response.statusText}), 'error');
                     }

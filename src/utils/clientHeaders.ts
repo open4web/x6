@@ -1,5 +1,6 @@
-// 审计日志用：每个发往本站接口的请求都带上客户端标识和版本号。
-// 仅用于展示和筛选，后端不拿它做鉴权；只给同源请求和本站接口路径(/v1/)加，避免给第三方域名带来跨域预检。
+import {DEVICE_ID_HEADER, readDeviceId} from './deviceId';
+
+// 每个发往本站接口的请求都带上客户端标识、版本号和本机设备号。
 declare const __APP_VERSION__: string;
 
 export const CLIENT_ID = 'x6';
@@ -32,6 +33,7 @@ export const installClientHeaders = (): void => {
         );
         if (!headers.has('X-Client-Id')) headers.set('X-Client-Id', CLIENT_ID);
         if (!headers.has('X-Client-Version')) headers.set('X-Client-Version', CLIENT_VERSION);
+        if (!headers.has(DEVICE_ID_HEADER)) headers.set(DEVICE_ID_HEADER, readDeviceId());
         return rawFetch(input as any, { ...init, headers });
     };
 
@@ -47,6 +49,7 @@ export const installClientHeaders = (): void => {
             try {
                 this.setRequestHeader('X-Client-Id', CLIENT_ID);
                 this.setRequestHeader('X-Client-Version', CLIENT_VERSION);
+                this.setRequestHeader(DEVICE_ID_HEADER, readDeviceId());
             } catch (_) {
                 /* 请求状态不对时忽略，不影响业务请求 */
             }
