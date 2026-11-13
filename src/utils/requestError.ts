@@ -7,15 +7,60 @@ export type RequestErrorInfo = {
     url: string;
     method: string;
     noAccess: boolean;
+    seq?: number;
 };
 
 export const REQUEST_ERROR_EVENT = 'app-request-error';
+export const REQUEST_ERROR_DEDUP_MS = 1600;
+export const REQUEST_ERROR_QUIET_MS = 1000;
 
 const SKIP = /\/(signin|signout|otp|login|heartbeat)(\/|$|\?)/i;
 const SESSION_DEAD = /expired|invalid token|jwt|登录.*过期|token.*invalid|authorization header/i;
 
 let lastKey = '';
 let lastAt = 0;
+let errorSeq = 0;
+let errorBatch: RequestErrorInfo[] = [];
+let dialogOpen = false;
+let quietUntil = 0;
+let nowImpl = () => Date.now();
+let soundCount = 0;
+
+function currentNow() {
+    return nowImpl();
+}
+
+export function setRequestErrorNowForTests(ts: number | (() => number) | null) {
+    if (ts == null) {
+        nowImpl = () => Date.now();
+        return;
+    }
+    nowImpl = typeof ts === 'function' ? ts : () => ts;
+}
+
+export function getRequestErrorBatch(): RequestErrorInfo[] {
+    return errorBatch.slice();
+}
+
+export function getRequestErrorSoundCountForTests(): number {
+    return soundCount;
+}
+
+export function resetRequestErrorQueueForTests() {
+    lastKey = '';
+    lastAt = 0;
+    errorBatch = [];
+    dialogOpen = false;
+    quietUntil = 0;
+    soundCount = 0;
+    nowImpl = () => Date.now();
+}
+
+export function closeRequestErrorDialog() {
+    errorBatch = [];
+    dialogOpen = false;
+    quietUntil = currentNow() + REQUEST_ERROR_QUIET_MS;
+}
 
 export function hasAuthToken(): boolean {
     try {
@@ -71,23 +116,44 @@ function requestIdFromBody(body: any): string {
     return String(body.request_id || body.requestId || body.req_id || '');
 }
 
-function emit(info: RequestErrorInfo) {
-    const key = `${info.status}|${info.url}|${info.requestId}|${info.message}`;
-    const now = Date.now();
-    if (key === lastKey && now - lastAt < 1600) {
-        return;
-    }
-    lastKey = key;
-    lastAt = now;
+function dispatchBatch(latest: RequestErrorInfo, playSound: boolean) {
     if (typeof window === 'undefined') {
         return;
     }
-    window.dispatchEvent(new CustomEvent(REQUEST_ERROR_EVENT, {detail: info}));
+    const detail = Object.assign({}, latest, {items: errorBatch.slice()});
+    window.dispatchEvent(new CustomEvent(REQUEST_ERROR_EVENT, {detail}));
+    if (!playSound) {
+        return;
+    }
+    soundCount += 1;
     try {
-        playPosSound(info.noAccess ? 'deny' : 'warn');
+        playPosSound(latest.noAccess ? 'deny' : 'warn');
     } catch {
         /* autoplay */
     }
+}
+
+function emit(info: RequestErrorInfo): RequestErrorInfo | null {
+    const key = `${info.status}|${info.url}|${info.requestId}|${info.message}`;
+    const ts = currentNow();
+    if (key === lastKey && ts - lastAt < REQUEST_ERROR_DEDUP_MS) {
+        return null;
+    }
+    if (!dialogOpen && ts < quietUntil) {
+        return null;
+    }
+    lastKey = key;
+    lastAt = ts;
+    const stamped = {...info, seq: ++errorSeq};
+    const opening = !dialogOpen;
+    if (opening) {
+        dialogOpen = true;
+        errorBatch = [stamped];
+    } else {
+        errorBatch = errorBatch.concat(stamped);
+    }
+    dispatchBatch(stamped, opening);
+    return stamped;
 }
 
 export function goBackSafe() {
@@ -117,6 +183,22 @@ export function formatRequestErrorCopy(info: RequestErrorInfo): string {
         `Request-Id: ${info.requestId || '-'}`,
         `接口: ${info.method} ${info.url}`,
     ].join('\n');
+}
+
+export function formatRequestErrorBatchCopy(items: RequestErrorInfo[]): string {
+    return items.map(formatRequestErrorCopy).join('\n\n');
+}
+
+export function requestErrorItemsFromEvent(
+    detail: (RequestErrorInfo & {items?: RequestErrorInfo[]}) | null | undefined,
+): RequestErrorInfo[] {
+    if (!detail) {
+        return [];
+    }
+    if (detail.items && detail.items.length) {
+        return detail.items;
+    }
+    return [detail];
 }
 
 export function reportHttpError(input: {
