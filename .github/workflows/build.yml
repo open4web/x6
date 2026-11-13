@@ -27,6 +27,8 @@ jobs:
         run: yarn test
 
       - name: Build Project
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: yarn build
 
       - name: Stamp version.json into dist
