@@ -98,6 +98,7 @@ export const extraUi = pack(
         },
         request_error: {
             title: '请求失败',
+            title_many: '请求失败（%{n} 条）',
             no_access_title: '该页面无访问权限',
             status: '状态码',
             request_id: 'Request-Id',
@@ -483,6 +484,7 @@ export const extraUi = pack(
         },
         request_error: {
             title: 'Request failed',
+            title_many: 'Request failed (%{n})',
             no_access_title: 'No access to this page',
             status: 'Status',
             request_id: 'Request-Id',
