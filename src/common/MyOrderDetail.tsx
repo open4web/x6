@@ -23,6 +23,7 @@ import {isOrderExpired} from "../utils/expireStore";
 import {useFetchData} from "./FetchData";
 import {getPlatformInfo} from "./payMethod";
 import {useTranslate} from 'react-admin';
+import DOMPurify from 'dompurify';
 import {formatOrderYuan, orderYuan} from '../utils/orderMoney';
 import {ORDER_CARD_STYLES, OrderCardStyle, orderDetailCardSx, orderDetailPaperSx, useOrderCardStyle} from '../layout/orderCardStyle';
 
@@ -259,7 +260,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
             printWindow.document.write(`
                 <html>
                 <head>
-                    <title>${dialogTitle}</title>
+                    <title>${String(dialogTitle).replace(/[<>&]/g, (ch) => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[ch] as string))}</title>
                     <style>
                         body {
                             font-family: Arial, sans-serif;
@@ -298,7 +299,7 @@ const MyOrderDetail: React.FC<MyOrderDetailProps> = ({open, orderData, onClose, 
                     </style>
                 </head>
                 <body>
-                    ${printContent.innerHTML}
+                    ${DOMPurify.sanitize(printContent.innerHTML)}
                 </body>
                 </html>
             `);
