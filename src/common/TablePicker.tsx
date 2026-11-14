@@ -21,7 +21,8 @@ import MyOrderDetail, {OpenReason} from './MyOrderDetail';
 import {useFetchData} from './FetchData';
 import {useCartContext} from '../dataProvider/MyCartProvider';
 import {Order} from '../pages/home/Components/types';
-import {formatElapsed, liveElapsed, readStoreTables, seatLabel, seatZone, StoreSeat, writeStoreTables} from '../utils/storeCache';
+import {findSeatsByTypedNo, formatElapsed, liveElapsed, readStoreTables, sameTableToken, seatLabel, seatZone, StoreSeat, writeStoreTables} from '../utils/storeCache';
+import {findActiveManualPlate, manualPlateSecondsLeft, rememberManualPlate, releaseUnorderedManualPlate} from '../utils/manualPlate';
 import {holdKey, holdPhase, occupiedStartSec, readHoldExtras, SEATS_CHANGED} from '../utils/seatHold';
 import {playPosSound} from '../utils/touchSound';
 
@@ -179,8 +180,20 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
         });
     }, [seats, cols, rows, tick, storeId]);
 
+    const takeManualPlate = (tableNo: string) => {
+        const prev = localStorage.getItem('ticketNumber') || '';
+        if (prev && !sameTableToken(prev, tableNo)) {
+            releaseUnorderedManualPlate(storeId, prev);
+        }
+        rememberManualPlate(storeId, tableNo);
+    };
+
     const bindSeat = (seat: StoreSeat, intent: TableSaveValue['intent']) => {
         const tableNo = seatLabel(seat, store?.layout?.qr_display);
+        const prev = localStorage.getItem('ticketNumber') || '';
+        if (prev) {
+            releaseUnorderedManualPlate(storeId, prev);
+        }
         localStorage.setItem('selectedSeatId', seat.id);
         localStorage.setItem('ticketNumber', tableNo);
         if (seat.capacity && !localStorage.getItem('peopleNumber')) {
@@ -398,6 +411,7 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
                             open={open}
                             setOpen={setOpen}
                             onSave={(value) => {
+                                takeManualPlate(value);
                                 localStorage.removeItem('selectedSeatId');
                                 localStorage.setItem('ticketNumber', value);
                                 onSave({tableNo: value, intent: 'order'});
@@ -408,6 +422,59 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
                             max={999}
                             wide
                             inline
+                            hintForValue={value => {
+                                const matches = findSeatsByTypedNo(seats, value, store?.layout?.qr_display);
+                                if (!matches.length) {
+                                    const plate = findActiveManualPlate(storeId, value);
+                                    if (!plate) {
+                                        return null;
+                                    }
+                                    const min = Math.max(1, Math.ceil(manualPlateSecondsLeft(plate, Math.floor(Date.now() / 1000)) / 60));
+                                    return {
+                                        tone: 'warning' as const,
+                                        text: translate('pos.table_dup.plate', {no: value, min}),
+                                    };
+                                }
+                                if (matches.length > 1) {
+                                    return {
+                                        tone: 'warning',
+                                        text: translate('pos.table_dup.many', {count: matches.length}),
+                                        actionLabel: translate('pos.table_dup.pick'),
+                                        onAction: () => setTab(0),
+                                    };
+                                }
+                                const seat = matches[0];
+                                const no = seatLabel(seat, store?.layout?.qr_display) || value;
+                                const seatStatus = Number(seat.status) || 0;
+                                if (seatStatus === 1) {
+                                    return {
+                                        tone: 'warning',
+                                        text: translate('pos.table_dup.busy', {no}),
+                                        actionLabel: translate('pos.seat.add'),
+                                        onAction: () => bindSeat(seat, 'add'),
+                                    };
+                                }
+                                if (seatStatus === 2) {
+                                    return {
+                                        tone: 'info',
+                                        text: translate('pos.table_dup.reserved', {no}),
+                                        actionLabel: translate('pos.seat.seat_in'),
+                                        onAction: () => bindSeat(seat, 'open'),
+                                    };
+                                }
+                                if (seatStatus === 3) {
+                                    return {
+                                        tone: 'warning',
+                                        text: translate('pos.table_dup.disabled', {no}),
+                                    };
+                                }
+                                return {
+                                    tone: 'info',
+                                    text: translate('pos.table_dup.empty', {no}),
+                                    actionLabel: translate('pos.table_dup.use_seat'),
+                                    onAction: () => bindSeat(seat, 'order'),
+                                };
+                            }}
                         />
                     )}
                 </DialogContent>

@@ -21,6 +21,7 @@ import NumericKeyboardDialog from "../../../common/NumericKeyboardDialog";
 import TablePicker from "../../../common/TablePicker";
 import {readStoreTables, writeStoreTables} from "../../../utils/storeCache";
 import {SEATS_CHANGED} from "../../../utils/seatHold";
+import {markManualPlateOrdered, releaseUnorderedManualPlate} from "../../../utils/manualPlate";
 import {Alert, useTheme} from "@mui/material";
 import {cartPanelWidth, useCartStyle} from "../../../layout/cartStyle";
 import {CartItemList} from "./CartItemLayouts";
@@ -269,6 +270,8 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
             setOpenPayChannel(true);
             if (!isTakeout && seatId) {
                 occupyCurrentSeat(createdOrderNo, seatId);
+            } else if (!isTakeout && ticketNumber) {
+                markManualPlateOrdered(localStorage.getItem('current_store_id') || '', ticketNumber);
             }
 
             // 设置订单预计排队信息
@@ -347,6 +350,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
         setSidebarOpen(true);
         setCartItems([]);
         setDrawerOpen(false);
+        releaseUnorderedManualPlate(localStorage.getItem('current_store_id') || '', localStorage.getItem('ticketNumber') || '');
         localStorage.removeItem('ticketNumber');
         localStorage.removeItem('selectedSeatId');
         localStorage.removeItem('phoneNumber');
@@ -408,6 +412,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
     };
 
     const resetCart = () => {
+        releaseUnorderedManualPlate(localStorage.getItem('current_store_id') || '', localStorage.getItem('ticketNumber') || '');
         localStorage.removeItem('ticketNumber')
         localStorage.removeItem('selectedSeatId')
         localStorage.removeItem('phoneNumber')

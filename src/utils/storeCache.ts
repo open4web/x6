@@ -214,6 +214,36 @@ export function seatLabel(seat?: StoreSeat | null, qrDisplay?: string) {
     return `${word} ${body}`;
 }
 
+function compactTableToken(value: string) {
+    return value.trim().replace(/\s+/g, '').toLowerCase();
+}
+
+export function sameTableToken(input: string, candidate: string) {
+    const left = compactTableToken(input);
+    const right = compactTableToken(candidate);
+    if (!left || !right) {
+        return false;
+    }
+    if (left === right) {
+        return true;
+    }
+    if (/^\d+$/.test(left) && /^\d+$/.test(right)) {
+        return parseInt(left, 10) === parseInt(right, 10);
+    }
+    return false;
+}
+
+export function findSeatsByTypedNo(seats: StoreSeat[], typed: string, qrDisplay?: string) {
+    const input = typed.trim();
+    if (!input) {
+        return [];
+    }
+    return seats.filter(seat => {
+        const label = seatLabel(seat, qrDisplay);
+        return [seat.table_no, seat.name, label].some(item => sameTableToken(input, String(item || '')));
+    });
+}
+
 export function formatElapsed(seconds?: number) {
     const value = Math.max(0, Number(seconds) || 0);
     const hours = Math.floor(value / 3600);

@@ -26,7 +26,15 @@ interface Props {
     due?: number;
     seat?: string;
     wide?: boolean;
+    hintForValue?: (value: string) => KeypadHint | null;
 }
+
+export type KeypadHint = {
+    text: string;
+    tone: "warning" | "info";
+    actionLabel?: string;
+    onAction?: () => void;
+};
 
 const emptyDefault = (value?: string | number) => {
     if (value === undefined || value === null || value === "") {
@@ -92,6 +100,7 @@ export default function NumericKeyboardDialog(props: Props) {
         due,
         seat,
         wide = false,
+        hintForValue,
     } = props;
 
     const [inputValue, setInputValue] = useState(() => emptyDefault(defaultValue));
@@ -116,6 +125,14 @@ export default function NumericKeyboardDialog(props: Props) {
     const short = dueNumber != null && hasNumber && received + 0.001 < dueNumber;
     const change = dueNumber != null && hasNumber ? Math.max(0, received - dueNumber) : 0;
     const showSlots = requiredLength != null && requiredLength > 0 && requiredLength <= 8;
+    const hint = hintForValue ? hintForValue(inputValue) : null;
+
+    useEffect(() => {
+        if (!open || !hint?.text) {
+            return;
+        }
+        playPosSound("warn");
+    }, [open, hint?.text]);
 
     const handleNumberClick = (num: string) => {
         if (type === "money") {
@@ -211,7 +228,7 @@ export default function NumericKeyboardDialog(props: Props) {
                     justifyContent: "center",
                     borderRadius: 2,
                     border: "2px solid",
-                    borderColor: error ? "error.main" : "divider",
+                    borderColor: error ? "error.main" : hint?.tone === "warning" ? "warning.main" : "divider",
                     bgcolor: "action.hover",
                 }}
             >
@@ -343,6 +360,36 @@ export default function NumericKeyboardDialog(props: Props) {
                         <Typography color="error" variant="body2" sx={{mt: 1}}>
                             {translate('pos.keypad.range', {min, max})}
                         </Typography>
+                    )}
+                    {hint && (
+                        <Box
+                            sx={{
+                                mt: 1.25,
+                                p: 1.25,
+                                borderRadius: 2,
+                                bgcolor: hint.tone === "warning" ? "#fff3e0" : "#e3f2fd",
+                                border: "1px solid",
+                                borderColor: hint.tone === "warning" ? "#ef6c00" : "#1565c0",
+                            }}
+                        >
+                            <Typography sx={{fontWeight: 800, lineHeight: 1.35, color: hint.tone === "warning" ? "#e65100" : "#0d47a1"}}>
+                                {hint.text}
+                            </Typography>
+                            {hint.actionLabel && hint.onAction ? (
+                                <Button
+                                    size="small"
+                                    variant="contained"
+                                    color={hint.tone === "warning" ? "warning" : "primary"}
+                                    onClick={() => {
+                                        playPosSound("tap");
+                                        hint.onAction?.();
+                                    }}
+                                    sx={{mt: 1, fontWeight: 800, minHeight: 36}}
+                                >
+                                    {hint.actionLabel}
+                                </Button>
+                            ) : null}
+                        </Box>
                     )}
                 </Box>
                 <Box>

@@ -7,6 +7,7 @@ import {useCartContext} from '../dataProvider/MyCartProvider';
 import {
     formatElapsed,
     readStoreTables,
+    sameTableToken,
     seatLabel,
     StoreSeat,
     writeStoreTables,
@@ -23,6 +24,7 @@ import {
     writeHoldExtra,
 } from '../utils/seatHold';
 import {playPosSound} from '../utils/touchSound';
+import {MANUAL_PLATE_LIMIT_SEC, sweepManualPlates} from '../utils/manualPlate';
 
 type PromptRow = {
     seat: StoreSeat;
@@ -58,6 +60,7 @@ export default function SeatHoldWatch() {
     const clearingRef = React.useRef<Set<string>>(new Set());
     const retryAtRef = React.useRef<Map<string, number>>(new Map());
     const warnedRef = React.useRef<Set<string>>(new Set());
+    const plateToldRef = React.useRef<Set<string>>(new Set());
     const storeIdRef = React.useRef(storeId);
     storeIdRef.current = storeId;
 
@@ -182,6 +185,22 @@ export default function SeatHoldWatch() {
             }
         });
         pruneHoldExtras(id, live);
+        sweepManualPlates(id, now).forEach(plate => {
+            const told = `${plate.no}:${plate.at}`;
+            if (plateToldRef.current.has(told)) {
+                return;
+            }
+            plateToldRef.current.add(told);
+            if (now - plate.at > MANUAL_PLATE_LIMIT_SEC + 90) {
+                return;
+            }
+            const ticket = localStorage.getItem('ticketNumber') || '';
+            if (!plate.ordered && !localStorage.getItem('selectedSeatId') && ticket && sameTableToken(ticket, plate.no)) {
+                localStorage.removeItem('ticketNumber');
+                window.dispatchEvent(new Event(SEATS_CHANGED));
+            }
+            toast.success(translate('pos.table_dup.plate_released', {no: plate.no}), {position: 'top-center', autoClose: 2200});
+        });
         if (playWarn) {
             playPosSound('warn');
         }
@@ -202,6 +221,7 @@ export default function SeatHoldWatch() {
         clearingRef.current.clear();
         retryAtRef.current.clear();
         warnedRef.current.clear();
+        plateToldRef.current.clear();
         seatsRef.current = [];
         setPrompts([]);
         if (!storeId) {

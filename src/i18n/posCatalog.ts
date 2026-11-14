@@ -30,6 +30,7 @@ export const posExtra = {
         },
         cart: {checkout: '结算', hold: '挂单', clear: '清空'},
         pay_hint: {leave_unpaid: '这笔单还没支付，可到订单列表继续支付', go_orders: '去订单列表'},
+        table_dup: {busy: '台号 %{no} 正在使用。再保存会开出同号的另一桌', reserved: '台号 %{no} 已经预定', empty: '台号 %{no} 已有空桌，建议直接选这桌', disabled: '台号 %{no} 已停用', many: '有 %{count} 张桌都是这个号，请到选桌里点具体一张', use_seat: '改用这桌', pick: '去选桌', plate: '号牌 %{no} 使用中，约 %{min} 分钟后自动释放', plate_released: '号牌 %{no} 已满 2 小时，已自动释放'},
         product: {sold_out: '已售罄', remaining: '剩余 %{stock}'},
         sales: {
             title: '当日销售',
@@ -129,6 +130,7 @@ export const posExtra = {
         },
         cart: {checkout: '結算', hold: '掛單', clear: '清空'},
         pay_hint: {leave_unpaid: '這筆單還沒支付，可到訂單列表繼續支付', go_orders: '去訂單列表'},
+        table_dup: {busy: '台號 %{no} 使用中。再儲存會開出同號的另一桌', reserved: '台號 %{no} 已經預定', empty: '台號 %{no} 已有空桌，建議直接選這桌', disabled: '台號 %{no} 已停用', many: '有 %{count} 張桌都是這個號，請到選桌裡點具體一張', use_seat: '改用這桌', pick: '去選桌', plate: '號牌 %{no} 使用中，約 %{min} 分鐘後自動釋放', plate_released: '號牌 %{no} 已滿 2 小時，已自動釋放'},
         product: {sold_out: '已售完', remaining: '剩餘 %{stock}'},
         sales: {
             title: '當日銷售',
@@ -216,6 +218,7 @@ export const posExtra = {
         },
         cart: {checkout: 'Checkout', hold: 'Hold', clear: 'Clear'},
         pay_hint: {leave_unpaid: 'Not paid yet. Continue from the order list.', go_orders: 'Open orders'},
+        table_dup: {busy: 'Table %{no} is in use. Saving opens another order with the same number.', reserved: 'Table %{no} is reserved', empty: 'Table %{no} is free. Pick that seat instead.', disabled: 'Table %{no} is disabled', many: '%{count} seats share this number. Pick one on the floor plan.', use_seat: 'Use this seat', pick: 'Pick a seat', plate: 'Number %{no} is in use. It frees in about %{min} min.', plate_released: 'Number %{no} was released after 2 hours.'},
         product: {sold_out: 'Sold out', remaining: '%{stock} left'},
         sales: {
             title: 'Today’s sales',
@@ -303,6 +306,7 @@ export const posExtra = {
         },
         cart: {checkout: 'Encaisser', hold: 'Mettre en attente', clear: 'Vider'},
         pay_hint: {leave_unpaid: 'Pas encore payée. Reprenez-la dans la liste.', go_orders: 'Voir les commandes'},
+        table_dup: {busy: 'Table %{no} occupée. Enregistrer ouvre une autre commande au même numéro.', reserved: 'Table %{no} réservée', empty: 'Table %{no} est libre. Choisissez cette place.', disabled: 'Table %{no} désactivée', many: '%{count} places ont ce numéro. Choisissez-en une.', use_seat: 'Utiliser cette place', pick: 'Choisir', plate: 'Numéro %{no} utilisé. Libéré dans %{min} min environ.', plate_released: 'Numéro %{no} libéré après 2 heures.'},
         product: {sold_out: 'Épuisé', remaining: '%{stock} restants'},
         sales: {
             title: 'Ventes du jour',
@@ -390,6 +394,7 @@ export const posExtra = {
         },
         cart: {checkout: '会計', hold: '保留', clear: 'クリア'},
         pay_hint: {leave_unpaid: 'まだ未払いです。注文一覧から続けて支払えます。', go_orders: '注文一覧へ'},
+        table_dup: {busy: '卓 %{no} は使用中です。このまま保存すると同じ番号がもう一卓できます。', reserved: '卓 %{no} は予約済みです', empty: '卓 %{no} は空いています。この席を選んでください。', disabled: '卓 %{no} は停止中です', many: 'この番号の卓が %{count} 席あります。席から選んでください。', use_seat: 'この席を使う', pick: '席を選ぶ', plate: '番号 %{no} は使用中です。約 %{min} 分後に自動で空きます。', plate_released: '番号 %{no} は 2 時間で自動解放しました。'},
         product: {sold_out: '売切', remaining: '残 %{stock}'},
         sales: {
             title: '本日の売上',
@@ -477,6 +482,7 @@ export const posExtra = {
         },
         cart: {checkout: '결제', hold: '보류', clear: '비우기'},
         pay_hint: {leave_unpaid: '아직 결제되지 않았습니다. 주문 목록에서 이어서 결제할 수 있습니다.', go_orders: '주문 목록'},
+        table_dup: {busy: '테이블 %{no} 사용 중입니다. 저장하면 같은 번호가 하나 더 생깁니다.', reserved: '테이블 %{no} 은 예약됨', empty: '테이블 %{no} 은 비어 있습니다. 이 좌석을 고르세요.', disabled: '테이블 %{no} 은 중지됨', many: '이 번호의 좌석이 %{count}개입니다. 좌석에서 고르세요.', use_seat: '이 좌석 사용', pick: '좌석 선택', plate: '번호 %{no} 사용 중. 약 %{min}분 후 자동 해제.', plate_released: '번호 %{no} 은 2시간 후 자동 해제되었습니다.'},
         product: {sold_out: '품절', remaining: '잔여 %{stock}'},
         sales: {
             title: '오늘 매출',
@@ -564,6 +570,7 @@ export const posExtra = {
         },
         cart: {checkout: 'ชำระเงิน', hold: 'พักบิล', clear: 'ล้าง'},
         pay_hint: {leave_unpaid: 'ยังไม่ชำระ สามารถไปชำระต่อในรายการออเดอร์', go_orders: 'ไปรายการ'},
+        table_dup: {busy: 'โต๊ะ %{no} กำลังใช้อยู่ ถ้าบันทึกจะเปิดอีกบิลเลขเดียวกัน', reserved: 'โต๊ะ %{no} จองแล้ว', empty: 'โต๊ะ %{no} ว่าง ควรเลือกโต๊ะนี้', disabled: 'โต๊ะ %{no} ปิดอยู่', many: 'มี %{count} โต๊ะที่ใช้เลขนี้ เลือกจากผังโต๊ะ', use_seat: 'ใช้โต๊ะนี้', pick: 'เลือกโต๊ะ', plate: 'ป้าย %{no} กำลังใช้ จะปล่อยในประมาณ %{min} นาที', plate_released: 'ป้าย %{no} ครบ 2 ชั่วโมง ปล่อยแล้ว'},
         product: {sold_out: 'หมด', remaining: 'เหลือ %{stock}'},
         sales: {
             title: 'ยอดขายวันนี้',
@@ -651,6 +658,7 @@ export const posExtra = {
         },
         cart: {checkout: 'Thanh toán', hold: 'Giữ đơn', clear: 'Xóa'},
         pay_hint: {leave_unpaid: 'Đơn này chưa thanh toán. Có thể trả tiếp trong danh sách đơn.', go_orders: 'Mở danh sách'},
+        table_dup: {busy: 'Bàn %{no} đang dùng. Lưu sẽ mở thêm một đơn cùng số.', reserved: 'Bàn %{no} đã đặt trước', empty: 'Bàn %{no} đang trống. Nên chọn bàn này.', disabled: 'Bàn %{no} đã tắt', many: 'Có %{count} bàn cùng số này. Hãy chọn trên sơ đồ.', use_seat: 'Dùng bàn này', pick: 'Chọn bàn', plate: 'Số %{no} đang dùng. Tự trả sau khoảng %{min} phút.', plate_released: 'Số %{no} đã tự trả sau 2 giờ.'},
         product: {sold_out: 'Hết hàng', remaining: 'Còn %{stock}'},
         sales: {
             title: 'Doanh thu hôm nay',
@@ -738,6 +746,7 @@ export const posExtra = {
         },
         cart: {checkout: 'Bayar', hold: 'Tahan', clear: 'Kosongkan'},
         pay_hint: {leave_unpaid: 'Pesanan ini belum dibayar. Lanjutkan di daftar pesanan.', go_orders: 'Buka daftar'},
+        table_dup: {busy: 'Meja %{no} sedang dipakai. Menyimpan akan membuka pesanan lain dengan nomor yang sama.', reserved: 'Meja %{no} sudah direservasi', empty: 'Meja %{no} kosong. Pilih meja ini.', disabled: 'Meja %{no} dimatikan', many: '%{count} meja memakai nomor ini. Pilih di denah.', use_seat: 'Pakai meja ini', pick: 'Pilih meja', plate: 'Nomor %{no} sedang dipakai. Bebas dalam sekitar %{min} menit.', plate_released: 'Nomor %{no} dilepas otomatis setelah 2 jam.'},
         product: {sold_out: 'Habis', remaining: 'Sisa %{stock}'},
         sales: {
             title: 'Penjualan hari ini',
@@ -825,6 +834,7 @@ export const posExtra = {
         },
         cart: {checkout: 'Cobrar', hold: 'Retener', clear: 'Vaciar'},
         pay_hint: {leave_unpaid: 'Este pedido no está pagado. Puedes seguir en la lista.', go_orders: 'Ir a pedidos'},
+        table_dup: {busy: 'La mesa %{no} está ocupada. Guardar abre otro pedido con el mismo número.', reserved: 'La mesa %{no} está reservada', empty: 'La mesa %{no} está libre. Elige ese asiento.', disabled: 'La mesa %{no} está desactivada', many: '%{count} mesas comparten este número. Elige una en el plano.', use_seat: 'Usar esta mesa', pick: 'Elegir mesa', plate: 'El número %{no} está en uso. Se libera en unos %{min} min.', plate_released: 'El número %{no} se liberó a las 2 horas.'},
         product: {sold_out: 'Agotado', remaining: 'Quedan %{stock}'},
         sales: {
             title: 'Ventas de hoy',
