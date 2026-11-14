@@ -9,6 +9,8 @@ ARG BUILD_TIME=unknown
 
 COPY dist /usr/share/nginx/html
 COPY ./deployment/docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY ./deployment/docker/nginx/99-app-version-log.sh /docker-entrypoint.d/99-app-version-log.sh
+RUN chmod +x /docker-entrypoint.d/99-app-version-log.sh
 
 RUN find /usr/share/nginx/html -name '*.map' -delete \
  && short=$(printf '%s' "$GIT_SHA" | cut -c1-7) \
