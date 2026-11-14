@@ -20,6 +20,7 @@ import {DEVICE_BLOCKED_EVENT, isDeviceBlocked} from "../../utils/deviceGuard";
 import {useCallback, useEffect, useRef, useState} from "react";
 import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
 import OrderFlyOverlay from "../home/Components/OrderFlyOverlay";
+import UnpaidLeaveHint from "../../common/checkout/UnpaidLeaveHint";
 
 const MyDataDrawer = React.lazy(() => import('./MyDataDrawer'));
 const HandoverPageDrawer = React.lazy(() => import('../Shift/Handover'));
@@ -37,7 +38,8 @@ export const MyHome = () => {
     const {
         cartItems, setCartItems, drawerOpen, setDrawerOpen, setOrderDrawerOpen, dataDrawerOpen, shiftOpen,
         orderFlyEvent, orderDrawerOpen, startOrderListSync, orderSyncStatus, orderSyncProgress,
-        resetOrderSync, ready, clearOrderFlyEvent, merchantId,
+        resetOrderSync, ready, clearOrderFlyEvent, merchantId, unpaidLeave, setHighlightOrderNo,
+        clearUnpaidLeave,
     } = useCartContext();
     const translate = useTranslate();
     const [cartStyle] = useCartStyle();
@@ -311,9 +313,20 @@ export const MyHome = () => {
                                     sx={{
                                         width: 56,
                                         height: 56,
-                                        boxShadow: fabPulse ? '0 0 0 8px rgba(255,152,0,0.22)' : undefined,
+                                        boxShadow: unpaidLeave || fabPulse ? '0 0 0 8px rgba(255,152,0,0.28)' : undefined,
+                                        animation: unpaidLeave ? 'orderListNudge 1.1s ease-out infinite' : undefined,
+                                        '@keyframes orderListNudge': {
+                                            '0%': {boxShadow: '0 0 0 0 rgba(255,152,0,0.55)'},
+                                            '100%': {boxShadow: '0 0 0 16px rgba(255,152,0,0)'},
+                                        },
                                     }}
-                                    onClick={() => setOrderDrawerOpen(true)}
+                                    onClick={() => {
+                                        if (unpaidLeave) {
+                                            setHighlightOrderNo(unpaidLeave.orderNo);
+                                            clearUnpaidLeave();
+                                        }
+                                        setOrderDrawerOpen(true);
+                                    }}
                                 >
                                     {orderSyncStatus === 'ready' ? (
                                         <CheckIcon sx={{fontSize: 32, color: '#2e7d32'}} />
@@ -365,6 +378,7 @@ export const MyHome = () => {
                             >
                                 <TableRestaurantIcon fontSize="large" color="primary" />
                             </Fab>
+                            <UnpaidLeaveHint fabRight={fabRight} />
                             <TablePicker
                                 open={seatBoardOpen}
                                 setOpen={setSeatBoardOpen}

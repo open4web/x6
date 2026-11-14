@@ -497,6 +497,7 @@ export default function TablePicker({open, setOpen, storeId, onSave}: Props) {
                     seat={seatLabel(billedSeatRef.current, store?.layout?.qr_display) || payOrder.identity?.table_no || ''}
                     fetchData={fetchData}
                     storeId={payOrder?.merchant?.id || storeId}
+                    remindOnBackdrop
                     onSuccess={() => {
                         if (billedSeatRef.current) {
                             patchSeat(billedSeatRef.current, 0);

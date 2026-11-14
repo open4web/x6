@@ -14,6 +14,7 @@ import PayChannel from './PayChannel';
 import { useCheckoutOffers } from './checkout/useCheckoutOffers';
 import CheckoutOfferBar from './checkout/CheckoutOfferBar';
 import {useTranslate} from 'react-admin';
+import {useCartContext} from '../dataProvider/MyCartProvider';
 
 interface PaymentDialogProps {
     open: boolean;
@@ -30,6 +31,8 @@ interface PaymentDialogProps {
     setCart?: (cart: any[]) => void;
     onSuccess?: () => void;
     storeId?: string;
+    // 点空白离开时提示可到订单列表继续支付。订单列表里再次打开时不要重复提示。
+    remindOnBackdrop?: boolean;
 }
 
 function Transition(props: TransitionProps & { children: React.ReactElement<any, any> }) {
@@ -50,8 +53,10 @@ export default function PaymentDialog({
     setCart,
     onSuccess,
     storeId,
+    remindOnBackdrop = false,
 }: PaymentDialogProps) {
     const translate = useTranslate();
+    const {remindUnpaidLeave} = useCartContext();
     const offers = useCheckoutOffers(price, storeId);
     const payAmount = offers.payAmount;
 
@@ -61,6 +66,13 @@ export default function PaymentDialog({
         onClose();
     };
 
+    const handleDismiss = (_event: object, reason: 'backdropClick' | 'escapeKeyDown') => {
+        onClose();
+        if (remindOnBackdrop && orderID && (reason === 'backdropClick' || reason === 'escapeKeyDown')) {
+            remindUnpaidLeave(orderID);
+        }
+    };
+
     return (
         <Dialog
             open={open}
@@ -68,7 +80,7 @@ export default function PaymentDialog({
             maxWidth="md"
             TransitionComponent={Transition}
             keepMounted
-            onClose={onClose}
+            onClose={handleDismiss}
         >
             <DialogTitle>
                 <Typography variant="body2" align="center" color="text.secondary">

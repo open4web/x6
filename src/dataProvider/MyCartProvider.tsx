@@ -66,6 +66,9 @@ type CartContextType = {
     startOrderListSync: (orderNo: string) => void;
     markOrderListReady: (orderNo: string) => void;
     resetOrderSync: () => void;
+    unpaidLeave: {orderNo: string; token: number} | null;
+    remindUnpaidLeave: (orderNo: string) => void;
+    clearUnpaidLeave: () => void;
 };
 
 // Vite can reload this module without remounting the provider. A new createContext()
@@ -201,6 +204,16 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
         setSyncingOrderNo('');
     }, []);
 
+    const [unpaidLeave, setUnpaidLeave] = useState<{orderNo: string; token: number} | null>(null);
+    const remindUnpaidLeave = useCallback((orderNo: string) => {
+        const id = orderNo.trim();
+        if (!id) {
+            return;
+        }
+        setUnpaidLeave({orderNo: id, token: Date.now()});
+    }, []);
+    const clearUnpaidLeave = useCallback(() => setUnpaidLeave(null), []);
+
     useEffect(() => {
         if (!merchantId) {
             return;
@@ -256,6 +269,9 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
             startOrderListSync,
             markOrderListReady,
             resetOrderSync,
+            unpaidLeave,
+            remindUnpaidLeave,
+            clearUnpaidLeave,
         }}>
             <CartWatchers />
             {children}

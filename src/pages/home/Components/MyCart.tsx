@@ -453,6 +453,7 @@ export default function MyCart({cartItems, setCartItems, comboGroup}: MyCartProp
                 fetchData={fetchData}
                 setCart={setCartItems}
                 storeId={localStorage.getItem("current_store_id") || ''}
+                remindOnBackdrop
             />
         );
     }

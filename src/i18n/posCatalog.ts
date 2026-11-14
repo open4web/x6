@@ -29,6 +29,7 @@ export const posExtra = {
             toast: '请先开始值班后再点餐',
         },
         cart: {checkout: '结算', hold: '挂单', clear: '清空'},
+        pay_hint: {leave_unpaid: '这笔单还没支付，可到订单列表继续支付', go_orders: '去订单列表'},
         product: {sold_out: '已售罄', remaining: '剩余 %{stock}'},
         sales: {
             title: '当日销售',
@@ -127,6 +128,7 @@ export const posExtra = {
             toast: '請先開始值班後再點餐',
         },
         cart: {checkout: '結算', hold: '掛單', clear: '清空'},
+        pay_hint: {leave_unpaid: '這筆單還沒支付，可到訂單列表繼續支付', go_orders: '去訂單列表'},
         product: {sold_out: '已售完', remaining: '剩餘 %{stock}'},
         sales: {
             title: '當日銷售',
@@ -213,6 +215,7 @@ export const posExtra = {
             toast: 'Start a shift before ordering',
         },
         cart: {checkout: 'Checkout', hold: 'Hold', clear: 'Clear'},
+        pay_hint: {leave_unpaid: 'Not paid yet. Continue from the order list.', go_orders: 'Open orders'},
         product: {sold_out: 'Sold out', remaining: '%{stock} left'},
         sales: {
             title: 'Today’s sales',
@@ -299,6 +302,7 @@ export const posExtra = {
             toast: 'Démarrez un service avant de commander',
         },
         cart: {checkout: 'Encaisser', hold: 'Mettre en attente', clear: 'Vider'},
+        pay_hint: {leave_unpaid: 'Pas encore payée. Reprenez-la dans la liste.', go_orders: 'Voir les commandes'},
         product: {sold_out: 'Épuisé', remaining: '%{stock} restants'},
         sales: {
             title: 'Ventes du jour',
@@ -385,6 +389,7 @@ export const posExtra = {
             toast: '先に勤務を開始してください',
         },
         cart: {checkout: '会計', hold: '保留', clear: 'クリア'},
+        pay_hint: {leave_unpaid: 'まだ未払いです。注文一覧から続けて支払えます。', go_orders: '注文一覧へ'},
         product: {sold_out: '売切', remaining: '残 %{stock}'},
         sales: {
             title: '本日の売上',
@@ -471,6 +476,7 @@ export const posExtra = {
             toast: '먼저 근무를 시작하세요',
         },
         cart: {checkout: '결제', hold: '보류', clear: '비우기'},
+        pay_hint: {leave_unpaid: '아직 결제되지 않았습니다. 주문 목록에서 이어서 결제할 수 있습니다.', go_orders: '주문 목록'},
         product: {sold_out: '품절', remaining: '잔여 %{stock}'},
         sales: {
             title: '오늘 매출',
@@ -557,6 +563,7 @@ export const posExtra = {
             toast: 'กรุณาเริ่มกะก่อนสั่งอาหาร',
         },
         cart: {checkout: 'ชำระเงิน', hold: 'พักบิล', clear: 'ล้าง'},
+        pay_hint: {leave_unpaid: 'ยังไม่ชำระ สามารถไปชำระต่อในรายการออเดอร์', go_orders: 'ไปรายการ'},
         product: {sold_out: 'หมด', remaining: 'เหลือ %{stock}'},
         sales: {
             title: 'ยอดขายวันนี้',
@@ -643,6 +650,7 @@ export const posExtra = {
             toast: 'Hãy bắt đầu ca trước khi gọi món',
         },
         cart: {checkout: 'Thanh toán', hold: 'Giữ đơn', clear: 'Xóa'},
+        pay_hint: {leave_unpaid: 'Đơn này chưa thanh toán. Có thể trả tiếp trong danh sách đơn.', go_orders: 'Mở danh sách'},
         product: {sold_out: 'Hết hàng', remaining: 'Còn %{stock}'},
         sales: {
             title: 'Doanh thu hôm nay',
@@ -729,6 +737,7 @@ export const posExtra = {
             toast: 'Mulai shift sebelum memesan',
         },
         cart: {checkout: 'Bayar', hold: 'Tahan', clear: 'Kosongkan'},
+        pay_hint: {leave_unpaid: 'Pesanan ini belum dibayar. Lanjutkan di daftar pesanan.', go_orders: 'Buka daftar'},
         product: {sold_out: 'Habis', remaining: 'Sisa %{stock}'},
         sales: {
             title: 'Penjualan hari ini',
@@ -815,6 +824,7 @@ export const posExtra = {
             toast: 'Inicia un turno antes de pedir',
         },
         cart: {checkout: 'Cobrar', hold: 'Retener', clear: 'Vaciar'},
+        pay_hint: {leave_unpaid: 'Este pedido no está pagado. Puedes seguir en la lista.', go_orders: 'Ir a pedidos'},
         product: {sold_out: 'Agotado', remaining: 'Quedan %{stock}'},
         sales: {
             title: 'Ventas de hoy',
