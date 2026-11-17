@@ -1,5 +1,5 @@
 import assert from 'assert';
-import {buildRememberedLogin, maskPhone, parseRememberedLogin, REMEMBER_TTL_MS} from './rememberLogin.ts';
+import {buildRememberedLogin, maskPhone, parseRememberedLogin, REMEMBER_TTL_MS} from './rememberLogin.js';
 
 const now = 1_700_000_000_000;
 const saved = buildRememberedLogin('13800138000', 'device-token-1', now);
