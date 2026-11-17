@@ -1,5 +1,5 @@
 import assert from 'assert';
-import {buildRememberedLogin, maskPhone, parseRememberedLogin, REMEMBER_TTL_MS} from './rememberLogin';
+import {buildRememberedLogin, maskPhone, parseRememberedLogin, REMEMBER_TTL_MS} from './rememberLogin.ts';
 
 const now = 1_700_000_000_000;
 const saved = buildRememberedLogin('13800138000', 'device-token-1', now);
@@ -11,5 +11,7 @@ assert.equal(parseRememberedLogin('nope', now), null);
 assert.equal(parseRememberedLogin(JSON.stringify({phone: '13800138000', password: 'x', until: now + 10}), now), null);
 assert.equal(parseRememberedLogin(JSON.stringify({phone: '13800138000', deviceToken: '', until: now + 10}), now), null);
 assert.equal(maskPhone('13800138000'), '138****8000');
+assert.equal(maskPhone('user@example.com'), 'us***@example.com');
+assert.equal(maskPhone('a@example.com'), 'a***@example.com');
 assert.equal(buildRememberedLogin('  ', 'x', now), null);
 assert.equal(buildRememberedLogin('13800138000', '', now), null);

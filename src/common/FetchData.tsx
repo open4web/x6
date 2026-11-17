@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 import {tPos} from '../i18n/t';
 import {readAuthToken} from '../utils/authToken';
-import {isDeviceNotAllowed, markDeviceBlocked} from '../utils/deviceGuard';
+import {isDeviceNotAllowed, isGuardedDevicePath, markDeviceBlocked, clearDeviceBlocked} from '../utils/deviceGuard';
 
 const DEFAULT_TIMEOUT_MS = 15000;
 
@@ -50,6 +50,9 @@ export const useFetchData = () => {
                 const response = await axios(config);
 
                 if (response.status === 200 || response.status === 201) {
+                    if (isGuardedDevicePath(path)) {
+                        clearDeviceBlocked();
+                    }
                     setResponse(response.data);
                     if (!quiet) {
                         showAlert(tPos('common.success'), 'success');

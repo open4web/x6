@@ -46,6 +46,13 @@ export function createDeviceId(now = Date.now()): string {
     return `${PREFIX}${randomHex(24)}${mix.toString(16).padStart(8, '0')}`;
 }
 
+function rememberDeviceCookie(id: string) {
+    if (typeof document === 'undefined' || !id) {
+        return;
+    }
+    document.cookie = `x6_device=${encodeURIComponent(id)}; Path=/; Max-Age=31536000; SameSite=Lax`;
+}
+
 export function readDeviceId(): string {
     if (typeof window === 'undefined') {
         return '';
@@ -53,13 +60,17 @@ export function readDeviceId(): string {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (isValidDeviceId(stored)) {
+            rememberDeviceCookie(stored as string);
             return stored as string;
         }
         const next = createDeviceId();
         localStorage.setItem(STORAGE_KEY, next);
+        rememberDeviceCookie(next);
         return next;
     } catch {
-        return createDeviceId();
+        const next = createDeviceId();
+        rememberDeviceCookie(next);
+        return next;
     }
 }
 

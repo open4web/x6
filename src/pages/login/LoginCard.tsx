@@ -1,12 +1,12 @@
-import {maxLength, minLength, number, required, TextInput, useTranslate,} from 'react-admin'
+import {maxLength, minLength, required, TextInput, useTranslate,} from 'react-admin'
 import LockIcon from '@mui/icons-material/Lock';
 import {Avatar, Box, Button, Checkbox, CircularProgress, FormControlLabel,} from '@mui/material';
 import {Controller, useFormContext} from 'react-hook-form';
 import {useState} from 'react';
 import {LoginInput, LoginSubmitResult} from './types';
 import {clearRememberedLogin, formatRememberUntil, maskPhone, readRememberedLogin} from './rememberLogin';
+import {isLoginId} from './loginId';
 
-const validatePhone = [required(), number(), minLength(11), maxLength(11)];
 const validatePassword = [required(), minLength(6), maxLength(18)];
 
 interface LoginCardProps {
@@ -29,6 +29,14 @@ const fieldSx = {
 const LoginCard = ({ loading, color, onLogin }: LoginCardProps) => {
     const translate = useTranslate();
     const { control } = useFormContext();
+    const validateLoginId = [
+        required(),
+        (value: unknown) => (
+            isLoginId(String(value ?? ''))
+                ? undefined
+                : translate('pos.auth.loginIdInvalid', {_: '请输入11位手机号或邮箱'})
+        ),
+    ];
     const [remembered, setRemembered] = useState(readRememberedLogin);
     const [showForm, setShowForm] = useState(() => readRememberedLogin() == null);
 
@@ -112,17 +120,24 @@ const LoginCard = ({ loading, color, onLogin }: LoginCardProps) => {
                 </Box>
             </Box>
             <Box>
-                {/* disabled 会把表单值清成空，输入框上的手机号还在，再提交会被判无效。 */}
+                {/* disabled 会把表单值清成空，输入框上的账号还在，再提交会被判无效。 */}
                 <TextInput
                     autoFocus
                     size="medium"
                     source="phone"
                     label={translate("pos.auth.phone")}
-                    validate={validatePhone}
+                    validate={validateLoginId}
                     fullWidth
                     name="phone"
                     sx={fieldSx}
-                    inputProps={{inputMode: "numeric", autoComplete: "username", readOnly: loading}}
+                    inputProps={{
+                        inputMode: 'email',
+                        autoComplete: 'username',
+                        autoCapitalize: 'none',
+                        autoCorrect: 'off',
+                        spellCheck: false,
+                        readOnly: loading,
+                    }}
                 />
                 <TextInput
                     source="password"

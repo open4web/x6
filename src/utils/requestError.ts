@@ -1,4 +1,5 @@
 import {playPosSound} from './touchSound';
+import {clearDeviceBlocked, isGuardedDevicePath, markDeviceBlocked} from './deviceGuard';
 
 export type RequestErrorInfo = {
     status: number;
@@ -76,6 +77,39 @@ export function hasAuthToken(): boolean {
 
 function skipUrl(url: string): boolean {
     return SKIP.test(url);
+}
+
+const PRINTER_LIST_PATH = /\/device\/pos\/printer(?:\/)?(?:\?|$)/;
+
+function errorText(body: unknown, message?: string): string {
+    if (typeof body === 'string') {
+        return `${message || ''} ${body}`;
+    }
+    if (body && typeof body === 'object') {
+        const record = body as {title?: unknown; message?: unknown; error?: unknown};
+        return `${message || ''} ${record.title || ''} ${record.message || ''} ${record.error || ''}`;
+    }
+    return message || '';
+}
+
+/** 门店未配置打印机，或打印机列表接口明确返回不存在。这类失败用导航提示，不弹错误框。 */
+export function isAbsentPrinterError(input: {
+    status?: number;
+    url?: string;
+    body?: unknown;
+    message?: string;
+}): boolean {
+    const url = String(input.url || '');
+    if (!PRINTER_LIST_PATH.test(url)) {
+        return false;
+    }
+    const status = Number(input.status) || 0;
+    if (status === 404) {
+        return true;
+    }
+    return /打印机不存在|暂无打印机|门店不存在|store not found|printer not found/i.test(
+        errorText(input.body, input.message),
+    );
 }
 
 function readHeader(headers: Headers | undefined, name: string): string {
@@ -217,7 +251,11 @@ export function reportHttpError(input: {
     if (skipUrl(url)) {
         return;
     }
-    if (status === 403 && (input.body?.error === 'device_not_allowed')) {
+    if (isAbsentPrinterError(input)) {
+        return;
+    }
+    if (status === 403 && (input.body?.error === 'device_not_allowed' || /设备白名单/.test(String(input.body?.message || '')))) {
+        markDeviceBlocked();
         return;
     }
     const message = messageFromBody(input.body, input.message || `HTTP ${status}`);
@@ -263,6 +301,9 @@ export async function reportFetchResponse(res: Response, url: string, method: st
 }
 
 export function reportXhr(xhr: XMLHttpRequest, url: string, method: string) {
+    if (xhr && xhr.status >= 200 && xhr.status < 300 && isGuardedDevicePath(url)) {
+        clearDeviceBlocked();
+    }
     if (!xhr || xhr.status < 400) {
         return;
     }

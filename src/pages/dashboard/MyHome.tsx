@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Badge, Box, CircularProgress, Fab, Grid, Paper, Typography} from '@mui/material';
+import {Badge, Box, Button, CircularProgress, Fab, Grid, Paper, Typography} from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import MyProducts from "../home/Components/MyProducts";
 import { toast } from "react-toastify";
@@ -12,11 +12,12 @@ import GradingIcon from '@mui/icons-material/Grading';
 import TablePicker from "../../common/TablePicker";
 import MyOrderDrawer from "../home/Components/MyOrderDrawer";
 import {CartItem} from "../../common/types";
-import {lookupProductUnitPrice} from "../../utils/catalogCache";
+import {invalidateCatalog, lookupProductUnitPrice} from "../../utils/catalogCache";
 import {resolveUnitPrice} from "../../utils/comboMatch";
 import {cartPanelWidth, useCartStyle} from "../../layout/cartStyle";
 import {readDeviceId} from "../../utils/deviceId";
 import {DEVICE_BLOCKED_EVENT, isDeviceBlocked} from "../../utils/deviceGuard";
+import {probeDeviceAllowed} from "../../utils/deviceProbe";
 import {useCallback, useEffect, useRef, useState} from "react";
 import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
 import OrderFlyOverlay from "../home/Components/OrderFlyOverlay";
@@ -71,6 +72,37 @@ export const MyHome = () => {
         window.addEventListener(DEVICE_BLOCKED_EVENT, sync);
         return () => window.removeEventListener(DEVICE_BLOCKED_EVENT, sync);
     }, []);
+
+    const recheckDevice = useCallback(async () => {
+        const ok = await probeDeviceAllowed(merchantId);
+        if (ok && merchantId) {
+            invalidateCatalog(merchantId);
+        }
+        return ok;
+    }, [merchantId]);
+
+    useEffect(() => {
+        if (!deviceBlocked) {
+            return;
+        }
+        let stopped = false;
+        const run = () => {
+            if (stopped || document.visibilityState === 'hidden') {
+                return;
+            }
+            void recheckDevice();
+        };
+        run();
+        const timer = window.setInterval(run, 8000);
+        window.addEventListener('focus', run);
+        document.addEventListener('visibilitychange', run);
+        return () => {
+            stopped = true;
+            window.clearInterval(timer);
+            window.removeEventListener('focus', run);
+            document.removeEventListener('visibilitychange', run);
+        };
+    }, [deviceBlocked, recheckDevice]);
 
     const guardOrdering = () => {
         if (deviceBlocked) {
@@ -206,6 +238,15 @@ export const MyHome = () => {
                                     <Typography sx={{mt: 1, fontFamily: 'monospace', fontWeight: 800}}>
                                         {translate('pos.device.id')}: {readDeviceId()}
                                     </Typography>
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        color="error"
+                                        sx={{mt: 1.25}}
+                                        onClick={() => { void recheckDevice(); }}
+                                    >
+                                        {translate('pos.device.retry', {_: '重新检查'})}
+                                    </Button>
                                 </Paper>
                             )}
                             {!ready && (

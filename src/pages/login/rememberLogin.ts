@@ -14,9 +14,17 @@ export type RememberedLogin = {
 };
 
 export function maskPhone(phone: string): string {
-    const digits = phone.trim();
-    if (digits.length < 7) return digits;
-    return `${digits.slice(0, 3)}****${digits.slice(-4)}`;
+    const raw = phone.trim();
+    if (raw.includes('@')) {
+        const at = raw.lastIndexOf('@');
+        const local = raw.slice(0, at);
+        const domain = raw.slice(at + 1);
+        if (!local || !domain) return raw;
+        const keep = local.length >= 2 ? 2 : 1;
+        return `${local.slice(0, keep)}***@${domain}`;
+    }
+    if (raw.length < 7) return raw;
+    return `${raw.slice(0, 3)}****${raw.slice(-4)}`;
 }
 
 export function formatRememberUntil(until: number): string {

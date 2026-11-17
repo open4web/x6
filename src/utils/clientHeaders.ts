@@ -1,4 +1,5 @@
 import {DEVICE_ID_HEADER, readDeviceId} from './deviceId';
+import {isGuardedDevicePath, clearDeviceBlocked} from './deviceGuard';
 import {reportFetchResponse, reportXhr} from './requestError';
 
 // 每个发往本站接口的请求都带上客户端标识、版本号和本机设备号。
@@ -36,7 +37,9 @@ export const installClientHeaders = (): void => {
         if (!headers.has('X-Client-Version')) headers.set('X-Client-Version', CLIENT_VERSION);
         if (!headers.has(DEVICE_ID_HEADER)) headers.set(DEVICE_ID_HEADER, readDeviceId());
         return rawFetch(input as any, { ...init, headers }).then((res: Response) => {
-            if (res && res.ok === false) {
+            if (res && res.ok && isGuardedDevicePath(url)) {
+                clearDeviceBlocked();
+            } else if (res && res.ok === false) {
                 void reportFetchResponse(res, url, (init && (init as RequestInit).method) || 'GET');
             }
             return res;

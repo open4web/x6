@@ -1,4 +1,5 @@
 import * as React from 'react';
+import axios from 'axios';
 import Badge from '@mui/material/Badge';
 import PrintIcon from '@mui/icons-material/Print';
 import Popover from '@mui/material/Popover';
@@ -12,6 +13,10 @@ import Paper from '@mui/material/Paper';
 import { useFetchData } from './FetchData';
 import { useCartContext } from "../dataProvider/MyCartProvider";
 import {Chip} from "@mui/material";
+import {tPos} from '../i18n/t';
+import {isAbsentPrinterError} from '../utils/requestError';
+
+const PRINTER_LIST_PATH = '/v1/hlj/device/pos/printer';
 
 export const PrinterTypes = [
     { id: '0', name: '前台' },
@@ -20,15 +25,24 @@ export const PrinterTypes = [
     { id: '3', name: '其他' },
 ];
 
+type PrinterPhase = 'loading' | 'ready' | 'absent';
+
 export default function MyPrinter() {
     const { merchantId } = useCartContext();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [printers, setPrinters] = React.useState<
         { name: string; status: boolean; online_status: string; type: string }[]
     >([]);
+    const [phase, setPhase] = React.useState<PrinterPhase>('loading');
+    const [hintOpen, setHintOpen] = React.useState(false);
     const { fetchData, alertComponent } = useFetchData();
+    const noneLabel = tPos('printer.none');
+    const unavailable = phase === 'absent';
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        if (phase !== 'ready') {
+            return;
+        }
         setAnchorEl(event.currentTarget);
     };
 
@@ -36,31 +50,133 @@ export default function MyPrinter() {
         setAnchorEl(null);
     };
 
-    const open = Boolean(anchorEl);
+    const open = Boolean(anchorEl) && phase === 'ready';
     const id = open ? 'printer-popover' : undefined;
 
     React.useEffect(() => {
+        let alive = true;
+        setAnchorEl(null);
+        setPhase('loading');
+        setHintOpen(false);
         const localMerchantId = localStorage.getItem('current_store_id');
-        fetchData('/v1/hlj/device/pos/printer', (response) => {
-            setPrinters(response || []);
-        }, "POST", { "merchant_id": localMerchantId });
+        fetchData(PRINTER_LIST_PATH, (response) => {
+            if (!alive) {
+                return;
+            }
+            const list = Array.isArray(response) ? response : [];
+            setPrinters(list);
+            setPhase(list.length === 0 ? 'absent' : 'ready');
+            setHintOpen(false);
+            if (list.length === 0) {
+                setAnchorEl(null);
+            }
+        }, "POST", { "merchant_id": localMerchantId }, true).catch((error) => {
+            if (!alive) {
+                return;
+            }
+            const absent = isAbsentPrinterError({
+                status: axios.isAxiosError(error) ? error.response?.status : 0,
+                url: PRINTER_LIST_PATH,
+                body: axios.isAxiosError(error) ? error.response?.data : undefined,
+                message: error instanceof Error ? error.message : '',
+            });
+            if (!absent) {
+                return;
+            }
+            setPrinters([]);
+            setPhase('absent');
+            setAnchorEl(null);
+            setHintOpen(true);
+        });
+        return () => {
+            alive = false;
+        };
     }, [fetchData, merchantId]);
+
+    React.useEffect(() => {
+        if (!hintOpen) {
+            return undefined;
+        }
+        const timer = window.setTimeout(() => setHintOpen(false), 2200);
+        return () => window.clearTimeout(timer);
+    }, [hintOpen]);
 
     return (
         <>
             <Box
                 sx={{
+                    position: 'relative',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    cursor: 'pointer',
+                    cursor: unavailable ? 'not-allowed' : phase === 'ready' ? 'pointer' : 'default',
+                    opacity: unavailable ? 0.38 : 1,
+                    '&:hover > .printer-missing-tip, &:focus-within > .printer-missing-tip': {
+                        opacity: 1,
+                        visibility: 'visible',
+                    },
                 }}
                 onClick={handleClick}
+                aria-disabled={unavailable || undefined}
+                aria-label={unavailable ? noneLabel : undefined}
             >
                 {alertComponent}
-                <Badge badgeContent={printers.length} color="success" variant="dot">
+                <Badge
+                    badgeContent={printers.length}
+                    color="success"
+                    variant="dot"
+                    invisible={printers.length === 0}
+                >
                     <PrintIcon color="inherit" />
                 </Badge>
+                {unavailable ? (
+                    <Box
+                        className="printer-missing-tip"
+                        role="tooltip"
+                        sx={{
+                            position: 'absolute',
+                            top: 'calc(100% + 8px)',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            bgcolor: 'rgba(33,33,33,0.92)',
+                            color: '#fff',
+                            fontSize: 12,
+                            lineHeight: 1.4,
+                            whiteSpace: 'nowrap',
+                            pointerEvents: 'none',
+                            opacity: 0,
+                            visibility: 'hidden',
+                            zIndex: 2,
+                        }}
+                    >
+                        {noneLabel}
+                    </Box>
+                ) : null}
             </Box>
+            {hintOpen ? (
+                <Box
+                    role="status"
+                    sx={{
+                        position: 'fixed',
+                        left: '50%',
+                        bottom: 24,
+                        transform: 'translateX(-50%)',
+                        zIndex: 1500,
+                        px: 2,
+                        py: 1,
+                        borderRadius: 1,
+                        bgcolor: 'rgba(33,33,33,0.92)',
+                        color: '#fff',
+                        fontSize: 14,
+                        lineHeight: 1.4,
+                        pointerEvents: 'none',
+                    }}
+                >
+                    {noneLabel}
+                </Box>
+            ) : null}
             <Popover
                 id={id}
                 open={open}

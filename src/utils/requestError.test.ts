@@ -122,4 +122,44 @@ assert.equal(getRequestErrorSoundCountForTests(), 2);
 
 setRequestErrorNowForTests(null);
 
+resetRequestErrorQueueForTests();
+seen.length = 0;
+reportHttpError({
+    status: 404,
+    message: 'store not found',
+    requestId: 'rid-printer',
+    url: '/v1/hlj/device/pos/printer',
+    method: 'POST',
+    body: {title: '门店不存在', message: 'store not found'},
+});
+assert.equal(seen.length, 0);
+assert.equal(getRequestErrorBatch().length, 0);
+
+reportHttpError({
+    status: 500,
+    message: 'printer not found',
+    url: 'https://pos.example/v1/hlj/device/pos/printer',
+    method: 'POST',
+    body: {error: 'printer not found'},
+});
+assert.equal(seen.length, 0);
+
+reportHttpError({
+    status: 500,
+    message: '获取列表失败',
+    requestId: 'rid-printer-500',
+    url: '/v1/hlj/device/pos/printer',
+    method: 'POST',
+    body: {message: '获取列表失败'},
+});
+assert.equal(seen.length, 1);
+
+reportHttpError({
+    status: 404,
+    message: 'missing',
+    url: '/v1/hlj/order/pos',
+    method: 'POST',
+});
+assert.equal(seen.length, 2);
+
 console.log('request error ok');
