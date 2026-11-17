@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { isLoginId, normalizeLoginId } from './loginId.ts';
+import { isLoginId, normalizeLoginId } from './loginId.js';
 
 assert.deepEqual(normalizeLoginId('13800138000'), { kind: 'phone', value: '13800138000' });
 assert.deepEqual(normalizeLoginId('+86 138-0013-8000'), { kind: 'phone', value: '13800138000' });

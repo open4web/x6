@@ -1,5 +1,5 @@
 import assert from 'assert';
-import {guardDecision, isGuardedDevicePath, isDeviceNotAllowed} from './deviceGuard.ts';
+import {guardDecision, isGuardedDevicePath, isDeviceNotAllowed} from './deviceGuard.js';
 
 assert.equal(isGuardedDevicePath('/v1/hlj/product/pos/menu'), true);
 assert.equal(isGuardedDevicePath('/v1/hlj/order/pos'), true);
