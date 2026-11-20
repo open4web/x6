@@ -15,6 +15,7 @@ import { useCartContext } from "../dataProvider/MyCartProvider";
 import {Chip} from "@mui/material";
 import {tPos} from '../i18n/t';
 import {isAbsentPrinterError} from '../utils/requestError';
+import {useShiftChecked} from './useShiftChecked';
 
 const PRINTER_LIST_PATH = '/v1/hlj/device/pos/printer';
 
@@ -29,6 +30,8 @@ type PrinterPhase = 'loading' | 'ready' | 'absent';
 
 export default function MyPrinter() {
     const { merchantId } = useCartContext();
+    // 顺序：选门店 → 核对交接班 → 查打印机。交接班没核对完之前不发打印机请求。
+    const shiftChecked = useShiftChecked(merchantId);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [printers, setPrinters] = React.useState<
         { name: string; status: boolean; online_status: string; type: string }[]
@@ -59,7 +62,7 @@ export default function MyPrinter() {
         setPhase('loading');
         setHintOpen(false);
         // 门店未选定前不查打印机：之前会带 merchant_id: null 去请求，得到误导性的“暂无打印机”。
-        if (!merchantId) {
+        if (!merchantId || !shiftChecked) {
             setPrinters([]);
             return () => {
                 alive = false;
@@ -97,7 +100,7 @@ export default function MyPrinter() {
         return () => {
             alive = false;
         };
-    }, [fetchData, merchantId]);
+    }, [fetchData, merchantId, shiftChecked]);
 
     React.useEffect(() => {
         if (!hintOpen) {
