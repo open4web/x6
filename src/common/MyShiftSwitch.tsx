@@ -25,6 +25,7 @@ import {
     readDutyPayload,
     writeLocalDuty,
 } from './shiftDuty';
+import {OVERTIME_SECONDS, markShiftChecked, resetShiftChecked, shiftCheckDone} from './startupSequence';
 
 const BAND_CHROME: Record<DutyBand, {bg: string; hover: string; fg: string; dot: string}> = {
     green: {bg: '#2e7d32', hover: '#256628', fg: '#fff', dot: '#b9f6ca'},
@@ -41,8 +42,12 @@ export default function MyShiftSwitch() {
     const [overtimeOpen, setOvertimeOpen] = React.useState(false);
     const [starting, setStarting] = React.useState(false);
     const [settled, setSettled] = React.useState(false);
+    // 交接班状态是为哪家门店读完的：换店那一帧 settled 还是旧值，靠它区分。
+    const [syncedFor, setSyncedFor] = React.useState('');
     const syncRef = React.useRef(0);
     const promptedRef = React.useRef(false);
+    // 超时提醒已被店员处理（稍后再说 / 去交接班）。
+    const overtimeHandledRef = React.useRef(false);
     const startMs = parseStartMs(startReady);
     const onDuty = ready && startMs > 0;
     const liveElapsed = onDuty ? elapsedSeconds(startMs, Date.now()) : 0;
@@ -78,9 +83,16 @@ export default function MyShiftSwitch() {
         return () => window.clearInterval(timer);
     }, [onDuty, startMs]);
 
+    // 换门店（含重新登录时先清空门店）后，打印机检查要等这家店的交接班重新核对完。
+    React.useEffect(() => {
+        resetShiftChecked();
+    }, [merchantId]);
+
     React.useEffect(() => {
         setSettled(false);
+        setSyncedFor('');
         promptedRef.current = false;
+        overtimeHandledRef.current = false;
         setOvertimeOpen(false);
         if (!merchantId) {
             applyDuty(false, 0);
@@ -99,13 +111,16 @@ export default function MyShiftSwitch() {
                     applyDuty(duty.ready, duty.start);
                 }
                 setSettled(true);
+                setSyncedFor(merchantId);
             })
             .catch(() => {
                 if (cancelled || ticket !== syncRef.current) {
                     return;
                 }
                 // 读不到服务端时保留本机缓存，避免一次网络失败把正在值班的计时清掉。
+                // 读失败也算核对结束，不能让打印机检查一直卡住。
                 setSettled(true);
+                setSyncedFor(merchantId);
             });
         return () => {
             cancelled = true;
@@ -123,7 +138,7 @@ export default function MyShiftSwitch() {
             return;
         }
         const elapsed = elapsedSeconds(startMs, Date.now());
-        if (elapsed < 12 * 3600) {
+        if (elapsed < OVERTIME_SECONDS) {
             promptedRef.current = false;
             if (overtimeOpen) {
                 setOvertimeOpen(false);
@@ -137,6 +152,24 @@ export default function MyShiftSwitch() {
         promptedRef.current = true;
         setOvertimeOpen(true);
     }, [settled, onDuty, startMs, elapsedTime, shiftOpen, overtimeOpen]);
+
+    // 交接班核对完成（状态已读完、超时提醒已处理、交接班抽屉已关）后，才放行打印机检查。
+    React.useEffect(() => {
+        if (!merchantId) {
+            return;
+        }
+        const overtime = onDuty && elapsedSeconds(startMs, Date.now()) >= OVERTIME_SECONDS;
+        if (shiftCheckDone({
+            storeId: merchantId,
+            syncedFor,
+            overtime,
+            overtimeHandled: overtimeHandledRef.current,
+            overtimeOpen,
+            shiftOpen,
+        })) {
+            markShiftChecked(merchantId);
+        }
+    }, [merchantId, syncedFor, onDuty, startMs, overtimeOpen, shiftOpen]);
 
     const startShift = async () => {
         const ticket = ++syncRef.current;
@@ -175,11 +208,13 @@ export default function MyShiftSwitch() {
 
     const dismissOvertime = () => {
         promptedRef.current = true;
+        overtimeHandledRef.current = true;
         setOvertimeOpen(false);
     };
 
     const goHandover = () => {
         promptedRef.current = true;
+        overtimeHandledRef.current = true;
         setOvertimeOpen(false);
         setShiftOpen(true);
     };
