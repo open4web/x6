@@ -58,7 +58,13 @@ export default function MyPrinter() {
         setAnchorEl(null);
         setPhase('loading');
         setHintOpen(false);
-        const localMerchantId = localStorage.getItem('current_store_id');
+        // 门店未选定前不查打印机：之前会带 merchant_id: null 去请求，得到误导性的“暂无打印机”。
+        if (!merchantId) {
+            setPrinters([]);
+            return () => {
+                alive = false;
+            };
+        }
         fetchData(PRINTER_LIST_PATH, (response) => {
             if (!alive) {
                 return;
@@ -70,7 +76,7 @@ export default function MyPrinter() {
             if (list.length === 0) {
                 setAnchorEl(null);
             }
-        }, "POST", { "merchant_id": localMerchantId }, true).catch((error) => {
+        }, "POST", { "merchant_id": merchantId }, true).catch((error) => {
             if (!alive) {
                 return;
             }

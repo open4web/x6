@@ -5,6 +5,7 @@ import NoticeHost from './NoticeHost';
 import SeatHoldWatch from '../common/SeatHoldWatch';
 import RequestErrorHost from '../common/RequestErrorHost';
 import {useApplyFontSize} from './fontScale';
+import StoreGate from '../common/StoreGate';
 
 function FontSizeBridge() {
     useApplyFontSize();
@@ -18,7 +19,9 @@ export default (props: LayoutProps) => {
             <NoticeHost channel="pos" />
             <RequestErrorHost />
             <SeatHoldWatch />
-            <Layout {...props} appBar={MyAppBar} menu={Menu}/>
+            <StoreGate>
+                <Layout {...props} appBar={MyAppBar} menu={Menu}/>
+            </StoreGate>
         </>
     );
 };

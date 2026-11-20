@@ -115,7 +115,8 @@ export const MyCartProvider = ({ children }: { children: ReactNode }) => {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [orderDrawerOpen, setOrderDrawerOpen] = useState(false);
     const [showProductImage, setShowProductImage] = useState(false);
-    const [merchantId, setMerchantId] = useState(localStorage.getItem("current_store_id") || '')
+    // 门店由 StoreGate 校验权限后再写入；校验前保持为空，依赖门店的检查和接口都不会先跑。
+    const [merchantId, setMerchantId] = useState('')
     const [dataDrawerOpen, setDataDrawerOpen] = useState(false);
     const [loginStep, setLoginStep] = useState<string>('password')
     const [shiftOpen, setShiftOpen] = useState(false);
