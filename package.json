@@ -46,7 +46,7 @@
         "recharts": "^2.10.3",
         "tailwind-merge": "^2.6.1",
         "zod": "^3.25.76",
-        "dompurify": "3.4.17"
+        "dompurify": "3.4.18"
     },
     "scripts": {
         "analyze": "source-map-explorer 'build/static/js/*.js'",
@@ -76,7 +76,7 @@
         "react-router": "6.30.6",
         "react-router-dom": "6.30.6",
         "form-data": "4.0.6",
-        "dompurify": "3.4.17"
+        "dompurify": "3.4.18"
     },
     "overrides": {
         "react-router": "6.30.6",
