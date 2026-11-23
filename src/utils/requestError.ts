@@ -1,5 +1,6 @@
 import {playPosSound} from './touchSound';
 import {clearDeviceBlocked, isGuardedDevicePath, markDeviceBlocked} from './deviceGuard';
+import {clearAuthStorage, readAuthToken} from './authToken';
 
 export type RequestErrorInfo = {
     status: number;
@@ -63,17 +64,64 @@ export function closeRequestErrorDialog() {
     quietUntil = currentNow() + REQUEST_ERROR_QUIET_MS;
 }
 
-export function hasAuthToken(): boolean {
+function storedAuthToken(): string {
     try {
-        return !!(
-            localStorage.getItem('token') ||
-            localStorage.getItem('cookie') ||
-            localStorage.getItem('accessToken')
-        );
+        return readAuthToken();
     } catch {
-        return false;
+        return '';
     }
 }
+
+function decodeJwtExp(token: string): number {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+        return 0;
+    }
+    try {
+        const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+        const json =
+            typeof atob === 'function'
+                ? atob(padded)
+                : (globalThis as any).Buffer.from(padded, 'base64').toString('binary');
+        const exp = Number(JSON.parse(json).exp);
+        return Number.isFinite(exp) ? exp : 0;
+    } catch {
+        return 0;
+    }
+}
+
+/**
+ * 登录 token 已过期（JWT exp 到点）。服务端 jwt cookie 与 token 同时到期（24h），
+ * 过期后所有接口都是空 body 的 401；localStorage 里的 token 却一直留着。
+ */
+export function authTokenExpired(nowMs: number = Date.now()): boolean {
+    const token = storedAuthToken();
+    if (!token) {
+        return false;
+    }
+    const exp = decodeJwtExp(token);
+    return exp > 0 && exp * 1000 <= nowMs;
+}
+
+/** 有 token 且没过期。过期 token 不算登录态，避免把“登录过期”当成“无权限”。 */
+export function hasAuthToken(): boolean {
+    return !!storedAuthToken() && !authTokenExpired();
+}
+
+/** 清掉本地登录态并回到 #/login，不再用 history.back() 离开站点。 */
+export function expireSession() {
+    if (typeof window === 'undefined') {
+        return;
+    }
+    clearAuthStorage();
+    const here = `${window.location.pathname}${window.location.hash}`;
+    if (/login/i.test(here)) {
+        return;
+    }
+    window.location.hash = '#/login';
+}
+
 
 function skipUrl(url: string): boolean {
     return SKIP.test(url);
@@ -198,16 +246,23 @@ export function goBackSafe() {
     if (/login/i.test(here)) {
         return;
     }
-    if (window.history.length > 1) {
+    // 只在站内有上一页时后退。history.length 会把新标签页（chrome://new-tab-page）也算进去，
+    // 直接 history.back() 会把人带出站点，看起来就是“闪一下变空白页”。
+    const idx = Number((window.history.state as any)?.idx);
+    if (Number.isFinite(idx) && idx > 0) {
         window.history.back();
         return;
     }
     const hash = window.location.hash || '';
     if (hash.startsWith('#')) {
-        window.location.hash = '#/';
+        if (hash !== '#/' && hash !== '#') {
+            window.location.hash = '#/';
+        }
         return;
     }
-    window.location.assign('/');
+    if (window.location.pathname !== '/') {
+        window.location.assign('/');
+    }
 }
 
 export function formatRequestErrorCopy(info: RequestErrorInfo): string {
@@ -259,18 +314,23 @@ export function reportHttpError(input: {
         return;
     }
     const message = messageFromBody(input.body, input.message || `HTTP ${status}`);
-    const noAccess = (status === 401 || status === 403) && hasAuthToken() && !SESSION_DEAD.test(message);
+    // 后端约定：401 {code:"session_expired"} = 登录失效 → 清本地登录态回 #/login；
+    // 403 {code:"permission_denied"} = 已登录但无权限 → 只提示。
+    if (status === 401 && storedAuthToken()) {
+        expireSession();
+        return;
+    }
+    const noAccess = status === 403 && hasAuthToken() && !SESSION_DEAD.test(message);
     emit({
         status,
-        message: noAccess ? (message && message !== 'Unauthorized' && message !== 'Forbidden' ? message : '该页面无访问权限') : message,
+        message: noAccess ? (message && message !== 'Unauthorized' && message !== 'Forbidden' && !/^HTTP 403$/.test(message) ? message : '该页面无访问权限') : message,
         requestId: input.requestId || requestIdFromBody(input.body) || '',
         url,
         method: (input.method || 'GET').toUpperCase(),
         noAccess,
     });
-    if (noAccess) {
-        window.setTimeout(goBackSafe, 50);
-    }
+    // 403 只弹“无访问权限”提示，不自动跳转：页面里的辅助接口 403 时不应把人带走，
+    // 更不能 history.back() 退回登录页或站外（chrome://new-tab-page）。
 }
 
 export async function reportFetchResponse(res: Response, url: string, method: string) {

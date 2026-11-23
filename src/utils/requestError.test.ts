@@ -41,7 +41,7 @@ const text = formatRequestErrorCopy(seen[0]);
 assert.ok(text.includes('Request-Id: rid-1'));
 assert.ok(text.includes('商品价格已变动'));
 
-reportHttpError({status: 401, url: '/v1/hlj/order/pos', method: 'GET', message: 'Unauthorized'});
+reportHttpError({status: 403, url: '/v1/hlj/order/pos', method: 'GET', message: 'Forbidden'});
 assert.equal(seen[1].noAccess, true);
 assert.equal(seen[1].message, '该页面无访问权限');
 
