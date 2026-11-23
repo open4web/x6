@@ -46,28 +46,41 @@ assert.equal(target.location.hash, '#/login');
 assert.equal(backs, 0);
 assert.equal(seen.length, 0);
 
-// 2. token 未过期但 jwt cookie 已没了：/user/prefs 空 body 401 → 视为登录失效
+// 2. token 未过期但服务端返回 401 session_expired（cookie 没了/被踢）→ 一律视为登录失效
 resetRequestErrorQueueForTests();
 target.location.hash = '#/';
 store.token = jwt(nowSec + 3600);
 assert.equal(hasAuthToken(), true);
-reportHttpError({status: 401, url: '/v1/system/auth/user/prefs', method: 'GET', message: ''});
+reportHttpError({
+    status: 401,
+    url: '/v1/hlj/member/account',
+    method: 'GET',
+    body: {code: 'session_expired', message: '登录已过期，请重新登录'},
+});
 assert.equal(store.token, undefined);
 assert.equal(target.location.hash, '#/login');
 assert.equal(backs, 0);
 
-// 3. 真正的无权限：新标签页直接打开（history.length=2 但站内 idx=0）→ 留在站内，不后退出站
+// 3. 403 permission_denied：只提示，不登出、不跳转、不后退（即使站内有上一页）
 resetRequestErrorQueueForTests();
 seen.length = 0;
-target.location.hash = '#/';
+target.location.hash = '#/orders';
 store.token = jwt(nowSec + 3600);
-target.history.state = {idx: 0};
-reportHttpError({status: 401, url: '/v1/data/dashboard/analytics/overview', method: 'GET', message: 'Unauthorized'});
+target.history.state = {idx: 3};
+reportHttpError({
+    status: 403,
+    url: '/v1/data/dashboard/analytics/overview',
+    method: 'GET',
+    body: {code: 'permission_denied', message: '没有访问该功能的权限'},
+});
 assert.equal(seen.length, 1);
 assert.equal(seen[0].noAccess, true);
+assert.equal(seen[0].message, '没有访问该功能的权限');
 assert.equal(backs, 0);
-assert.equal(target.location.hash, '#/');
+assert.equal(target.location.hash, '#/orders');
 assert.ok(store.token);
+target.location.hash = '#/';
+target.history.state = {idx: 0};
 
 // 4. 子页面无权限且新标签页打开 → 回 #/，不离站
 target.location.hash = '#/orders';

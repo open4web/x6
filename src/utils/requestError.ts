@@ -109,9 +109,6 @@ export function hasAuthToken(): boolean {
     return !!storedAuthToken() && !authTokenExpired();
 }
 
-/** 只走 JWT 校验、不查菜单权限的接口：它们空 body 401 就是登录态失效。 */
-const SESSION_PROBE = /\/v1\/system\/auth\/user\/(prefs|access|application)(\?|$)/;
-
 /** 清掉本地登录态并回到 #/login，不再用 history.back() 离开站点。 */
 export function expireSession() {
     if (typeof window === 'undefined') {
@@ -125,12 +122,6 @@ export function expireSession() {
     window.location.hash = '#/login';
 }
 
-function emptyBody(body: any): boolean {
-    if (body == null) {
-        return true;
-    }
-    return typeof body === 'string' && !body.trim();
-}
 
 function skipUrl(url: string): boolean {
     return SKIP.test(url);
@@ -323,26 +314,23 @@ export function reportHttpError(input: {
         return;
     }
     const message = messageFromBody(input.body, input.message || `HTTP ${status}`);
-    if (
-        status === 401 &&
-        storedAuthToken() &&
-        (authTokenExpired() || SESSION_DEAD.test(message) || (SESSION_PROBE.test(url) && emptyBody(input.body)))
-    ) {
+    // 后端约定：401 {code:"session_expired"} = 登录失效 → 清本地登录态回 #/login；
+    // 403 {code:"permission_denied"} = 已登录但无权限 → 只提示。
+    if (status === 401 && storedAuthToken()) {
         expireSession();
         return;
     }
-    const noAccess = (status === 401 || status === 403) && hasAuthToken() && !SESSION_DEAD.test(message);
+    const noAccess = status === 403 && hasAuthToken() && !SESSION_DEAD.test(message);
     emit({
         status,
-        message: noAccess ? (message && message !== 'Unauthorized' && message !== 'Forbidden' ? message : '该页面无访问权限') : message,
+        message: noAccess ? (message && message !== 'Unauthorized' && message !== 'Forbidden' && !/^HTTP 403$/.test(message) ? message : '该页面无访问权限') : message,
         requestId: input.requestId || requestIdFromBody(input.body) || '',
         url,
         method: (input.method || 'GET').toUpperCase(),
         noAccess,
     });
-    if (noAccess) {
-        window.setTimeout(goBackSafe, 50);
-    }
+    // 403 只弹“无访问权限”提示，不自动跳转：页面里的辅助接口 403 时不应把人带走，
+    // 更不能 history.back() 退回登录页或站外（chrome://new-tab-page）。
 }
 
 export async function reportFetchResponse(res: Response, url: string, method: string) {
