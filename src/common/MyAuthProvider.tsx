@@ -1,6 +1,7 @@
 // 示例实现
 import {AuthProvider} from "react-admin";
 import {HandleLogin, HandleLogout} from "./login";
+import {authTokenExpired, expireSession} from "../utils/requestError";
 
 const MyAuthProvider: AuthProvider = {
 
@@ -16,6 +17,10 @@ const MyAuthProvider: AuthProvider = {
     },
     checkAuth: async (params: any) => {
         // 实现检查身份验证逻辑
+        if (localStorage.getItem('token') && authTokenExpired()) {
+            expireSession();
+            return Promise.reject();
+        }
         return localStorage.getItem('token') ? Promise.resolve() : Promise.reject();
     },
     checkError: async (error: any) => {
@@ -23,6 +28,10 @@ const MyAuthProvider: AuthProvider = {
         const payload = error.body || error.response?.data || error;
         if (status === 403 && (payload?.error === 'device_not_allowed' || /设备白名单/.test(String(payload?.message || '')))) {
             return Promise.resolve();
+        }
+        if (status === 401 && (localStorage.getItem('token') || localStorage.getItem('cookie')) && authTokenExpired()) {
+            expireSession();
+            return Promise.reject();
         }
         if ((status === 401 || status === 403) && (localStorage.getItem('token') || localStorage.getItem('cookie'))) {
             return Promise.resolve();
